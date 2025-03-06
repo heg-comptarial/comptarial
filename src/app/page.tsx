@@ -82,7 +82,7 @@ export default function Home() {
 
                 <div className="mt-6 flex gap-4">
                   <Link href="/inscription">
-                    <Button size="lg">S'inscrire</Button>
+                    <Button size="lg">S&apos;inscrire</Button>
                   </Link>
                   <Link href="#contact">
                     <Button variant="outline" size="lg">

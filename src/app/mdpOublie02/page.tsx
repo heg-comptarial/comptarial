@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -8,7 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-function ConfirmationMotDePasseOublie() {
+export default function ConfirmationMotDePasseOublie() {
   return (
     <div className="flex items-center justify-center min-h-screen py-12">
       <Card className="w-full max-w-md">
@@ -24,7 +23,7 @@ function ConfirmationMotDePasseOublie() {
           <p className="text-center text-muted-foreground">
             Veuillez vérifier votre boîte de réception et suivre les
             instructions pour réinitialiser votre mot de passe. Si vous ne
-            recevez pas l'e-mail dans les prochaines minutes, vérifiez votre
+            recevez pas l&apos;e-mail dans les prochaines minutes, vérifiez votre
             dossier de spam.
           </p>
           <div className="flex justify-center">
@@ -37,5 +36,3 @@ function ConfirmationMotDePasseOublie() {
     </div>
   );
 }
-
-export default ConfirmationMotDePasseOublie;

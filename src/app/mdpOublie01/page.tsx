@@ -9,7 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 
-function MotDePasseOublie() {
+export default function MotDePasseOublie() {
   return (
     <div className="flex items-center justify-center min-h-screen py-12">
       <Card className="w-full max-w-md">
@@ -46,5 +46,3 @@ function MotDePasseOublie() {
     </div>
   );
 }
-
-export default MotDePasseOublie;

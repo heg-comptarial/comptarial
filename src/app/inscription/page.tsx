@@ -309,10 +309,10 @@ export default function SignupPage() {
             {/* Champs spécifiques pour entreprises */}
             {userType === "entreprise" && (
               <div className="space-y-4 border p-4 rounded-lg">
-                <h3 className="font-medium text-lg">Informations de l'entreprise</h3>
+                <h3 className="font-medium text-lg">Informations de l&apos;entreprise</h3>
 
                 <div className="space-y-2">
-                  <Label>Type d'entreprise</Label>
+                  <Label>Type d&apos;entreprise</Label>
                   <RadioGroup
                     defaultValue={entrepriseType}
                     onValueChange={(value) => setEntrepriseType(value as "nouvelle" | "ancienne")}
@@ -450,7 +450,7 @@ export default function SignupPage() {
             </div>
 
             <Button type="submit" className="w-full">
-              S'inscrire
+              S&apos;inscrire
             </Button>
           </form>
         </CardContent>
