@@ -14,7 +14,7 @@ UZUN Boran
 First, install the dependencies.
 
 ```bash
-npm install i
+npm install
 ```
 
 Then, run the developpement server
