@@ -161,7 +161,7 @@ export default function Page() {
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
       <Card className="w-full md:w-3/4 lg:w-3/4">
         <CardHeader>
-          <CardTitle>File Manager</CardTitle>
+          <CardTitle>Déclarations</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="space-y-2">
