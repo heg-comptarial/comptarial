@@ -8,7 +8,7 @@ const cors = require("cors");
 const fs = require("fs");
 
 // Importer la connexion MySQL depuis models/db.js
-const pool = require("./models/db");
+const pool = require("./modelsTest/db");
 
 // const indexRouter = require("./routes/index");
 // const usersRouter = require("./routes/users");
@@ -131,6 +131,12 @@ app.use(function (err, req, res, next) {
   res.locals.error = req.app.get("env") === "development" ? err : {};
   res.status(err.status || 500);
   res.render("error");
+});
+
+// Démarrer le serveur après avoir défini `app`
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`✅ Backend running on http://localhost:${PORT}`);
 });
 
 module.exports = app;
