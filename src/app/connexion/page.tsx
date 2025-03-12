@@ -69,7 +69,7 @@ export default function LoginPage() {
                 </Button>
               </div>
               <div className="text-right">
-                <Link href="#" className="text-sm text-primary hover:underline">
+                <Link href="/mdpOublie01" className="text-sm text-primary hover:underline">
                   Mot oublié?
                 </Link>
               </div>
