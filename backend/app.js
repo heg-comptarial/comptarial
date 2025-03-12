@@ -134,3 +134,9 @@ app.use(function (err, req, res, next) {
 });
 
 module.exports = app;
+
+// Démarrer le serveur après avoir défini `app`
+const PORT = process.env.PORT || 4000;
+app.listen(PORT, () => {
+  console.log(`✅ Backend running on http://localhost:${PORT}`);
+});
