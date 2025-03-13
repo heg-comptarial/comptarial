@@ -1,10 +1,7 @@
 const Sequelize = require('sequelize');
-const Client = require('./Client');
-const Administrateur = require('./Administrateur');
-const Notification = require('./Notification');
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('utilisateur', {
+  const Utilisateur = sequelize.define('utilisateur', {
     utilisateur_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -70,22 +67,16 @@ module.exports = function(sequelize, DataTypes) {
   });
 
   // Associations
-  Utilisateur.hasOne(Client, { 
-    foreignKey: 'utilisateur_id', 
-    onDelete: 'CASCADE', as: 'client' 
-  });
+  Utilisateur.associate = (models) => {
+    // Un utilisateur a un admin
+    Utilisateur.hasOne(models.Admin, { foreignKey: 'utilisateur_id', as: 'admin' });
 
-  Utilisateur.hasOne(Administrateur, { 
-    foreignKey: 'utilisateur_id', 
-    onDelete: 'CASCADE', as: 'administrateur' 
-  });
+    // Un utilisateur a un client
+    Utilisateur.hasOne(models.Client, { foreignKey: 'utilisateur_id', as: 'client' });
 
-  Utilisateur.hasMany(Notification, { 
-    foreignKey: 'utilisateur_id', 
-    onDelete: 'CASCADE', as: 'notifications' 
-  });
+    // Un utilisateur a plusieurs notifications (1-n)
+    Utilisateur.hasMany(models.Notification, { foreignKey: 'utilisateur_id', as: 'notifications' });
+  };
 
   return Utilisateur;
-
-
 };

@@ -1,8 +1,7 @@
 const Sequelize = require('sequelize');
-const Utilisateur = require('./utilisateur');
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('notification', {
+  const Notification = sequelize.define('notification', {
     notification_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -58,11 +57,11 @@ module.exports = function(sequelize, DataTypes) {
     ]
   });
 
-  // Associations belongs to the utilisateur
-  
-  Notification.belongsTo(Utilisateur, { 
-    foreignKey: 'utilisateur_id', onDelete: 'CASCADE' 
-  });
+  // Association directe
+  Notification.associate = (models) => {
+    // Une notification appartient à un utilisateur
+    Notification.belongsTo(models.Utilisateur, { foreignKey: 'utilisateur_id', as: 'utilisateur' });
+  };
 
   return Notification;
 };

@@ -1,8 +1,7 @@
 const Sequelize = require('sequelize');
-const Client = require('./client');
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('entreprise', {
+  const Entreprise = sequelize.define('entreprise', {
     entreprise_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -13,8 +12,8 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
       references: {
-        model: 'client',
-        key: 'client_id'
+        model: 'client',  // Associe à la table 'client'
+        key: 'client_id'  // Clé étrangère dans 'client'
       }
     },
     raison_sociale: {
@@ -26,7 +25,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false
     },
     nouvelle_entreprise: {
-      type: DataTypes.ENUM('Y','N'),
+      type: DataTypes.ENUM('Y', 'N'),
       allowNull: false,
       defaultValue: "N"
     },
@@ -57,9 +56,11 @@ module.exports = function(sequelize, DataTypes) {
     ]
   });
 
-  // Associations
-  Entreprise.belongsTo(Client, { foreignKey: 'client_id', onDelete: 'CASCADE' });
-
+  // Association directe
+  Entreprise.associate = (models) => {
+    // Une entreprise appartient à un client
+    Entreprise.belongsTo(models.Client, { foreignKey: 'client_id', as: 'client' });
+  };
 
   return Entreprise;
 };

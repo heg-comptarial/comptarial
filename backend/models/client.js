@@ -1,10 +1,4 @@
 const Sequelize = require('sequelize');
-const Utilisateur = require('./Utilisateur');
-const Prive = require('./utilisateur');
-const Declaration = require('./declaration');
-const StatutClient = require('./statutclient');
-const Entreprise = require('./entreprise');
-
 
 module.exports = function(sequelize, DataTypes) {
   const Client = sequelize.define('client', {
@@ -43,23 +37,35 @@ module.exports = function(sequelize, DataTypes) {
         name: "PRIMARY",
         unique: true,
         using: "BTREE",
-        fields: [{ name: "client_id" }]
+        fields: [
+          { name: "client_id" },
+        ]
       },
       {
         name: "utilisateur_id",
         using: "BTREE",
-        fields: [{ name: "utilisateur_id" }]
+        fields: [
+          { name: "utilisateur_id" },
+        ]
       },
     ]
   });
 
   // Associations directes
-  Client.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
-  Client.hasOne(Prive, { foreignKey: 'client_id' });
-  Client.hasMany(Declaration, { foreignKey: 'client_id' });
-  Client.hasOne(StatutClient, { foreignKey: 'client_id' });
-  Client.hasOne(Entreprise, { foreignKey: 'client_id' });
+  Client.associate = (models) => {
+    // Client appartient à un utilisateur
+    Client.belongsTo(models.Utilisateur, { foreignKey: 'utilisateur_id', as: 'utilisateur' });
+
+    // Un client a soit un compte privé ou une entreprise, relation one-to-one
+    Client.hasOne(models.Prive, { foreignKey: 'client_id', as: 'prive' });
+    Client.hasOne(models.Entreprise, { foreignKey: 'client_id', as: 'entreprise' });
+
+    // Un client a un statut, relation one-to-one
+    Client.hasOne(models.StatutClient, { foreignKey: 'client_id', as: 'statutclient' });
+
+    // Un client a plusieurs déclarations, relation one-to-many
+    Client.hasMany(models.Declaration, { foreignKey: 'client_id', as: 'declarations' });
+  };
 
   return Client;
-
 };

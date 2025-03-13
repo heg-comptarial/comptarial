@@ -1,9 +1,7 @@
 const Sequelize = require('sequelize');
-const Declaration = require('./Declaration');
-const SousRubrique = require('./SousRubrique');
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('rubrique', {
+  const Rubrique = sequelize.define('rubrique', {
     rubrique_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -49,17 +47,14 @@ module.exports = function(sequelize, DataTypes) {
     ]
   });
 
-  // belongsto the declaration
-  rubrique.belongsTo(Declaration, { 
-    foreignKey: 'declaration_id', 
-    targetKey: 'declaration_id' 
-  });
+  // Associations directes
+  Rubrique.associate = (models) => {
+    // Une Rubrique appartient à une Déclaration
+    Rubrique.belongsTo(models.Declaration, { foreignKey: 'declaration_id', as: 'declaration' });
 
-  //hasmany sous_rubrique
-  rubrique.hasMany(SousRubrique, { 
-    foreignKey: 'rubrique_id', 
-    targetKey: 'rubrique_id' 
-  });
+    // Une Rubrique a plusieurs SousRubriques
+    Rubrique.hasMany(models.Sousrubrique, { foreignKey: 'rubrique_id', as: 'sousrubriques' });
+  };
 
-  return rubrique;
+  return Rubrique;
 };

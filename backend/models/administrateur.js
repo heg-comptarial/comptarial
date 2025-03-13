@@ -1,7 +1,8 @@
 const Sequelize = require('sequelize');
+
 module.exports = function(sequelize, DataTypes) {
-  const Administrateur = sequelize.define('Administrateur', {
-    admin_id: {
+  const Administrateur = sequelize.define('administrateur', {
+    administrateur_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
@@ -11,34 +12,45 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
       references: {
-        model: 'Utilisateur', // Table Utilisateurs
-        key: 'utilisateur_id' // Colonne correspondant dans la table Utilisateurs
+        model: 'utilisateur',
+        key: 'utilisateur_id'
       }
-    },
-    niveau_acces: {
+    },    niveau_acces: {
       type: DataTypes.STRING(255),
       allowNull: false
     }
+
   }, {
     sequelize,
     tableName: 'administrateur',
-    timestamps: false, // Enlever les champs createdAt et updatedAt si tu ne les veux pas
+    timestamps: false,
     indexes: [
       {
         name: "PRIMARY",
         unique: true,
         using: "BTREE",
         fields: [
-          { name: "admin_id" }, // Index pour admin_id
+          { name: "administrateur_id" },
         ]
       },
       {
         name: "utilisateur_id",
         using: "BTREE",
         fields: [
-          { name: "utilisateur_id" }, // Index pour utilisateur_id
+          { name: "utilisateur_id" },
         ]
       },
     ]
   });
+
+  // Associations
+  Administrateur.associate = (models) => {
+    // L'administrateur appartient à un utilisateur
+    Administrateur.belongsTo(models.Utilisateur, { foreignKey: 'utilisateur_id', as: 'utilisateur' });
+    
+    // Un administrateur peut avoir plusieurs commentaires
+    Administrateur.hasMany(models.Commentaire, { foreignKey: 'admin_id', as: 'commentaires' });
+  };
+
+  return Administrateur;
 };

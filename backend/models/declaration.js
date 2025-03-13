@@ -1,11 +1,7 @@
 const Sequelize = require('sequelize');
-const Client = require('./client');
-const Rubrique = require('./rubrique');
-const Formulaire = require('./formulaire');
-
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('declaration', {
+  const Declaration = sequelize.define('declaration', {
     declaration_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -16,8 +12,8 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
       references: {
-        model: 'client',
-        key: 'client_id'
+        model: 'client',  // Associe à la table 'client'
+        key: 'client_id'  // Clé étrangère dans 'client'
       }
     },
     titre: {
@@ -56,15 +52,17 @@ module.exports = function(sequelize, DataTypes) {
     ]
   });
 
-  // Association: A Declaration belongs to a Client
-Declaration.belongsTo(Client, { foreignKey: 'client_id', onDelete: 'CASCADE', as: 'client' });
+  // Associations directes
+  Declaration.associate = (models) => {
+    // Une Déclaration appartient à un Client
+    Declaration.belongsTo(models.Client, { foreignKey: 'client_id', as: 'client' });
 
-// Association: A Declaration has many Rubriques
-Declaration.hasMany(Rubrique, { foreignKey: 'declaration_id', onDelete: 'CASCADE', as: 'rubriques' });
+    // Une Déclaration a un Formulaires
+    Declaration.hasOne(models.Formulaire, { foreignKey: 'declaration_id', as: 'formulaires' });
 
-// Association: A Declaration has many Formulaires
-Declaration.hasMany(Formulaire, { foreignKey: 'declaration_id', onDelete: 'CASCADE', as: 'formulaires' });
+    // Une Déclaration a plusieurs rubriques
+    Declaration.hasMany(models.Rubrique, { foreignKey: 'rubrique_id', as: 'rubrique' });
+  };
 
-
-return Declaration;
+  return Declaration;
 };

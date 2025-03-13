@@ -1,8 +1,7 @@
 const Sequelize = require('sequelize');
-const Commentaire = require('./commentaire');
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('document', {
+  const Document = sequelize.define('document', {
     doc_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -76,13 +75,14 @@ module.exports = function(sequelize, DataTypes) {
     ]
   });
 
+  // Associations directes
+  Document.associate = (models) => {
+    // Un document appartient à un client
+    Document.belongsTo(models.Client, { foreignKey: 'client_id', as: 'client' });
+    
+    // Un document appartient à une sous-rubrique
+    Document.belongsTo(models.Sousrubrique, { foreignKey: 'sous_rub_id', as: 'sousrubrique' });
+  };
 
-// Association: A Document belongs to a SousRubrique
-Document.belongsTo(SousRubrique, { foreignKey: 'sous_rub_id', onDelete: 'CASCADE', as: 'sousRubrique' });
-
-// Association: A Document has many Commentaires
-Document.hasMany(Commentaire, { foreignKey: 'doc_id', onDelete: 'CASCADE', as: 'commentaires' });
-
-
-return Document;
+  return Document;
 };
