@@ -1,4 +1,6 @@
 const Sequelize = require('sequelize');
+const Utilisateur = require('./utilisateur');
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('notification', {
     notification_id: {
@@ -55,4 +57,12 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+  // Associations belongs to the utilisateur
+  
+  Notification.belongsTo(Utilisateur, { 
+    foreignKey: 'utilisateur_id', onDelete: 'CASCADE' 
+  });
+
+  return Notification;
 };

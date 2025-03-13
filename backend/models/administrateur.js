@@ -11,7 +11,7 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
       references: {
-        model: 'Utilisateurs', // Table Utilisateurs
+        model: 'Utilisateur', // Table Utilisateurs
         key: 'utilisateur_id' // Colonne correspondant dans la table Utilisateurs
       }
     },

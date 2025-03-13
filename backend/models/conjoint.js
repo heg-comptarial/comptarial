@@ -65,4 +65,10 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+  Conjoint.associate = (models) => {
+    Conjoint.belongsTo(models.Prive, { foreignKey: 'prive_id', as: 'prive' });
+  };
+
+  return Conjoint;
 };

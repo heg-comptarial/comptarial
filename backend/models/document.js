@@ -1,4 +1,6 @@
 const Sequelize = require('sequelize');
+const Commentaire = require('./commentaire');
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('document', {
     doc_id: {
@@ -73,4 +75,14 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+
+// Association: A Document belongs to a SousRubrique
+Document.belongsTo(SousRubrique, { foreignKey: 'sous_rub_id', onDelete: 'CASCADE', as: 'sousRubrique' });
+
+// Association: A Document has many Commentaires
+Document.hasMany(Commentaire, { foreignKey: 'doc_id', onDelete: 'CASCADE', as: 'commentaires' });
+
+
+return Document;
 };

@@ -1,4 +1,7 @@
 const Sequelize = require('sequelize');
+const Client = require('./client');
+
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('statutclient', {
     statut_id: {
@@ -41,4 +44,12 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+  // Association : Un StatutClient appartient à un Client
+  StatutClient.belongsTo(Client, { 
+    foreignKey: 'client_id', 
+    onDelete: 'CASCADE', as: 'client' 
+  });
+
+  return StatutClient;
 };

@@ -1,4 +1,7 @@
 const Sequelize = require('sequelize');
+const Declaration = require('./Declaration');
+const SousRubrique = require('./SousRubrique');
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('rubrique', {
     rubrique_id: {
@@ -45,4 +48,18 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+  // belongsto the declaration
+  rubrique.belongsTo(Declaration, { 
+    foreignKey: 'declaration_id', 
+    targetKey: 'declaration_id' 
+  });
+
+  //hasmany sous_rubrique
+  rubrique.hasMany(SousRubrique, { 
+    foreignKey: 'rubrique_id', 
+    targetKey: 'rubrique_id' 
+  });
+
+  return rubrique;
 };

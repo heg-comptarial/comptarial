@@ -1,4 +1,9 @@
 const Sequelize = require('sequelize');
+const Client = require('./client');
+const Rubrique = require('./rubrique');
+const Formulaire = require('./formulaire');
+
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('declaration', {
     declaration_id: {
@@ -50,4 +55,16 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+  // Association: A Declaration belongs to a Client
+Declaration.belongsTo(Client, { foreignKey: 'client_id', onDelete: 'CASCADE', as: 'client' });
+
+// Association: A Declaration has many Rubriques
+Declaration.hasMany(Rubrique, { foreignKey: 'declaration_id', onDelete: 'CASCADE', as: 'rubriques' });
+
+// Association: A Declaration has many Formulaires
+Declaration.hasMany(Formulaire, { foreignKey: 'declaration_id', onDelete: 'CASCADE', as: 'formulaires' });
+
+
+return Declaration;
 };

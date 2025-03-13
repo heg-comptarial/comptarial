@@ -1,4 +1,6 @@
 const Sequelize = require('sequelize');
+const Client = require('./client');
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('entreprise', {
     entreprise_id: {
@@ -54,4 +56,10 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+  // Associations
+  Entreprise.belongsTo(Client, { foreignKey: 'client_id', onDelete: 'CASCADE' });
+
+
+  return Entreprise;
 };

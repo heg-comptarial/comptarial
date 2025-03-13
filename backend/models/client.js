@@ -1,4 +1,11 @@
 const Sequelize = require('sequelize');
+const Utilisateur = require('./Utilisateur');
+const Prive = require('./utilisateur');
+const Declaration = require('./declaration');
+const StatutClient = require('./statutclient');
+const Entreprise = require('./entreprise');
+
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('client', {
     client_id: {
@@ -57,3 +64,5 @@ module.exports = function(sequelize, DataTypes) {
   Client.hasMany(Declaration, { foreignKey: 'client_id' });
   Client.hasOne(StatutClient, { foreignKey: 'client_id' });
   Client.hasOne(Entreprise, { foreignKey: 'client_id' });
+
+  return Client;

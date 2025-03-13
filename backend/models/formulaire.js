@@ -1,4 +1,8 @@
 const Sequelize = require('sequelize');
+const Prive = require('./prive');
+const Declaration = require('./declaration');
+
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('formulaire', {
     id: {
@@ -76,4 +80,10 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+  // Associations
+Formulaire.belongsTo(Prive, { foreignKey: 'prive_id', onDelete: 'CASCADE' });
+Formulaire.belongsTo(Declaration, { foreignKey: 'declaration_id', onDelete: 'CASCADE' });
+
+return Formulaire;
 };

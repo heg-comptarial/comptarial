@@ -1,4 +1,8 @@
 const Sequelize = require('sequelize');
+const Document = require('./document');
+const Rubrique = require('./rubrique');
+
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('sousrubrique', {
     sous_rub_id: {
@@ -45,4 +49,19 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+  // Association: A SousRubrique belongs to a Rubrique
+  SousRubrique.belongsTo(Rubrique, { 
+    foreignKey: 'rubrique_id', 
+    onDelete: 'CASCADE', as: 'rubrique' 
+  });
+
+  // Association: A SousRubrique has many Documents
+  SousRubrique.hasMany(Document, { 
+    foreignKey: 'sous_rub_id', 
+    onDelete: 'CASCADE', as: 'documents' 
+  });
+
+  return SousRubrique;
+  
 };

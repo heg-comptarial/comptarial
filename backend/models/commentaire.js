@@ -61,4 +61,11 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+  Commentaire.associate = (models) => {
+    Commentaire.belongsTo(models.Administrateur, { foreignKey: 'admin_id', as: 'administrateur' });
+    Commentaire.belongsTo(models.Document, { foreignKey: 'doc_id', as: 'document' });
+  };
+
+  return Commentaire;
 };

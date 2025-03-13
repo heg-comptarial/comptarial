@@ -1,4 +1,8 @@
 const Sequelize = require('sequelize');
+const Client = require('./Client');
+const Administrateur = require('./Administrateur');
+const Notification = require('./Notification');
+
 module.exports = function(sequelize, DataTypes) {
   return sequelize.define('utilisateur', {
     utilisateur_id: {
@@ -64,4 +68,24 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
+
+  // Associations
+  Utilisateur.hasOne(Client, { 
+    foreignKey: 'utilisateur_id', 
+    onDelete: 'CASCADE', as: 'client' 
+  });
+
+  Utilisateur.hasOne(Administrateur, { 
+    foreignKey: 'utilisateur_id', 
+    onDelete: 'CASCADE', as: 'administrateur' 
+  });
+
+  Utilisateur.hasMany(Notification, { 
+    foreignKey: 'utilisateur_id', 
+    onDelete: 'CASCADE', as: 'notifications' 
+  });
+
+  return Utilisateur;
+
+
 };
