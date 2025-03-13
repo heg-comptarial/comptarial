@@ -61,3 +61,5 @@ module.exports = function(sequelize, DataTypes) {
   Client.hasOne(Entreprise, { foreignKey: 'client_id' });
 
   return Client;
+
+};
