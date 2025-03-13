@@ -1,7 +1,6 @@
 const Sequelize = require('sequelize');
-
 module.exports = function(sequelize, DataTypes) {
-  const Commentaire = sequelize.define('commentaire', {
+  return sequelize.define('commentaire', {
     commentaire_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -62,15 +61,4 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
-
-  // Associations directes
-  Commentaire.associate = (models) => {
-    // Un commentaire appartient à un administrateur
-    Commentaire.belongsTo(models.Administrateur, { foreignKey: 'admin_id', as: 'admin' });
-
-    // Un commentaire appartient à un document
-    Commentaire.belongsTo(models.Document, { foreignKey: 'doc_id', as: 'doc' });
-  };
-
-  return Commentaire;
 };

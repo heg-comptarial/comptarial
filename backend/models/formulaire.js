@@ -1,7 +1,6 @@
 const Sequelize = require('sequelize');
-
 module.exports = function(sequelize, DataTypes) {
-  const Formulaire = sequelize.define('formulaire', {
+  return sequelize.define('formulaire', {
     id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -77,15 +76,4 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
-
-  // Associations directes
-  Formulaire.associate = (models) => {
-    // Un formulaire appartient à un 'prive'
-    Formulaire.belongsTo(models.Prive, { foreignKey: 'prive_id', as: 'prive' });
-    
-    // Un formulaire appartient à une 'declaration'
-    Formulaire.belongsTo(models.Declaration, { foreignKey: 'declaration_id', as: 'declaration' });
-  };
-
-  return Formulaire;
 };

@@ -1,7 +1,6 @@
 const Sequelize = require('sequelize');
-
 module.exports = function(sequelize, DataTypes) {
-  const Prive = sequelize.define('prive', {
+  return sequelize.define('prive', {
     prive_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -50,18 +49,4 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
-
-  // Associations directes
-  Prive.associate = (models) => {
-    // Un Prive appartient à un Client
-    Prive.belongsTo(models.Client, { foreignKey: 'client_id', as: 'client' });
-
-    // Un Prive a plusieurs Formulaire
-    Prive.hasMany(models.Formulaire, { foreignKey: 'prive_id', as: 'formulaire' });
-
-    // Un Prive a un Conjoints
-    Prive.hasOne(models.Conjoint, { foreignKey: 'prive_id', as: 'conjoints' });
-  };
-
-  return Prive;
 };

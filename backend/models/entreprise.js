@@ -1,7 +1,6 @@
 const Sequelize = require('sequelize');
-
 module.exports = function(sequelize, DataTypes) {
-  const Entreprise = sequelize.define('entreprise', {
+  return sequelize.define('entreprise', {
     entreprise_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -12,8 +11,8 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
       references: {
-        model: 'client',  // Associe à la table 'client'
-        key: 'client_id'  // Clé étrangère dans 'client'
+        model: 'client',
+        key: 'client_id'
       }
     },
     raison_sociale: {
@@ -25,7 +24,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false
     },
     nouvelle_entreprise: {
-      type: DataTypes.ENUM('Y', 'N'),
+      type: DataTypes.ENUM('Y','N'),
       allowNull: false,
       defaultValue: "N"
     },
@@ -55,12 +54,4 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
-
-  // Association directe
-  Entreprise.associate = (models) => {
-    // Une entreprise appartient à un client
-    Entreprise.belongsTo(models.Client, { foreignKey: 'client_id', as: 'client' });
-  };
-
-  return Entreprise;
 };

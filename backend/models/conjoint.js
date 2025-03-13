@@ -1,7 +1,6 @@
 const Sequelize = require('sequelize');
-
 module.exports = function(sequelize, DataTypes) {
-  const Conjoint = sequelize.define('conjoint', {
+  return sequelize.define('conjoint', {
     conjoint_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -12,8 +11,8 @@ module.exports = function(sequelize, DataTypes) {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
       references: {
-        model: 'prive',  // Associe à la table 'prive'
-        key: 'prive_id'  // Clé étrangère dans 'prive'
+        model: 'prive',
+        key: 'prive_id'
       }
     },
     nom: {
@@ -66,11 +65,4 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
-
-  // Associations directes
-  Conjoint.associate = (models) => {
-    Conjoint.belongsTo(models.Prive, { foreignKey: 'prive_id', as: 'prive' });
-  };
-
-  return Conjoint;
 };

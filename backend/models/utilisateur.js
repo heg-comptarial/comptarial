@@ -1,7 +1,6 @@
 const Sequelize = require('sequelize');
-
 module.exports = function(sequelize, DataTypes) {
-  const Utilisateur = sequelize.define('utilisateur', {
+  return sequelize.define('utilisateur', {
     utilisateur_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -65,18 +64,4 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
-
-  // Associations
-  Utilisateur.associate = (models) => {
-    // Un utilisateur a un admin
-    Utilisateur.hasOne(models.Admin, { foreignKey: 'utilisateur_id', as: 'admin' });
-
-    // Un utilisateur a un client
-    Utilisateur.hasOne(models.Client, { foreignKey: 'utilisateur_id', as: 'client' });
-
-    // Un utilisateur a plusieurs notifications (1-n)
-    Utilisateur.hasMany(models.Notification, { foreignKey: 'utilisateur_id', as: 'notifications' });
-  };
-
-  return Utilisateur;
 };

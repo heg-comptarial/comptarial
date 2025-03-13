@@ -1,7 +1,6 @@
 const Sequelize = require('sequelize');
-
 module.exports = function(sequelize, DataTypes) {
-  const StatutClient = sequelize.define('statutclient', {
+  return sequelize.define('statutclient', {
     statut_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -42,12 +41,4 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
-
-  // Association directe
-  StatutClient.associate = (models) => {
-    // Un StatutClient appartient à un Client
-    StatutClient.belongsTo(models.Client, { foreignKey: 'client_id', as: 'client' });
-  };
-
-  return StatutClient;
 };

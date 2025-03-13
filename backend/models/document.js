@@ -1,7 +1,6 @@
 const Sequelize = require('sequelize');
-
 module.exports = function(sequelize, DataTypes) {
-  const Document = sequelize.define('document', {
+  return sequelize.define('document', {
     doc_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -74,15 +73,4 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
-
-  // Associations directes
-  Document.associate = (models) => {
-    // Un document appartient à un client
-    Document.belongsTo(models.Client, { foreignKey: 'client_id', as: 'client' });
-    
-    // Un document appartient à une sous-rubrique
-    Document.belongsTo(models.Sousrubrique, { foreignKey: 'sous_rub_id', as: 'sousrubrique' });
-  };
-
-  return Document;
 };

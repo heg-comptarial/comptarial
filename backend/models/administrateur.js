@@ -1,8 +1,7 @@
 const Sequelize = require('sequelize');
-
 module.exports = function(sequelize, DataTypes) {
-  const Administrateur = sequelize.define('administrateur', {
-    administrateur_id: {
+  return sequelize.define('administrateur', {
+    admin_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,
@@ -15,11 +14,11 @@ module.exports = function(sequelize, DataTypes) {
         model: 'utilisateur',
         key: 'utilisateur_id'
       }
-    },    niveau_acces: {
+    },
+    niveau_acces: {
       type: DataTypes.STRING(255),
       allowNull: false
     }
-
   }, {
     sequelize,
     tableName: 'administrateur',
@@ -30,7 +29,7 @@ module.exports = function(sequelize, DataTypes) {
         unique: true,
         using: "BTREE",
         fields: [
-          { name: "administrateur_id" },
+          { name: "admin_id" },
         ]
       },
       {
@@ -42,15 +41,4 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
-
-  // Associations
-  Administrateur.associate = (models) => {
-    // L'administrateur appartient à un utilisateur
-    Administrateur.belongsTo(models.Utilisateur, { foreignKey: 'utilisateur_id', as: 'utilisateur' });
-    
-    // Un administrateur peut avoir plusieurs commentaires
-    Administrateur.hasMany(models.Commentaire, { foreignKey: 'admin_id', as: 'commentaires' });
-  };
-
-  return Administrateur;
 };
