@@ -41,18 +41,4 @@ module.exports = function(sequelize, DataTypes) {
       },
     ]
   });
-
-  // Association : un administrateur appartient à un utilisateur
-  Administrateur.belongsTo(sequelize.models.Utilisateur, {
-    foreignKey: 'utilisateur_id',
-    as: 'utilisateur' // Un administrateur appartient à un utilisateur
-  });
-
-  // Association : un administrateur peut avoir plusieurs commentaires
-  Administrateur.hasMany(sequelize.models.Commentaire, {
-    foreignKey: 'admin_id',
-    as: 'commentaires' // Un administrateur peut avoir plusieurs commentaires
-  });
-
-  return Administrateur;
 };

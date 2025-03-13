@@ -7,7 +7,7 @@ const Entreprise = require('./entreprise');
 
 
 module.exports = function(sequelize, DataTypes) {
-  return sequelize.define('client', {
+  const Client = sequelize.define('client', {
     client_id: {
       autoIncrement: true,
       type: DataTypes.BIGINT.UNSIGNED,
@@ -43,20 +43,15 @@ module.exports = function(sequelize, DataTypes) {
         name: "PRIMARY",
         unique: true,
         using: "BTREE",
-        fields: [
-          { name: "client_id" },
-        ]
+        fields: [{ name: "client_id" }]
       },
       {
         name: "utilisateur_id",
         using: "BTREE",
-        fields: [
-          { name: "utilisateur_id" },
-        ]
+        fields: [{ name: "utilisateur_id" }]
       },
     ]
   });
-};
 
   // Associations directes
   Client.belongsTo(Utilisateur, { foreignKey: 'utilisateur_id' });
