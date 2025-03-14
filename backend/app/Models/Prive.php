@@ -50,7 +50,7 @@ class Prive extends Model
 
 	public function conjoints()
 	{
-		return $this->hasMany(Conjoint::class);
+		return $this->hasOne(Conjoint::class);
 	}
 
 	public function formulaires()

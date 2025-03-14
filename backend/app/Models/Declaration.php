@@ -50,7 +50,7 @@ class Declaration extends Model
 
 	public function formulaires()
 	{
-		return $this->hasMany(Formulaire::class);
+		return $this->hasOne(Formulaire::class);
 	}
 
 	public function rubriques()

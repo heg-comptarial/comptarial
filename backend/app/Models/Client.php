@@ -55,16 +55,16 @@ class Client extends Model
 
 	public function entreprises()
 	{
-		return $this->hasMany(Entreprise::class);
+		return $this->hasOne(Entreprise::class);
 	}
 
 	public function prives()
 	{
-		return $this->hasMany(Prive::class);
+		return $this->hasOne(Prive::class);
 	}
 
 	public function statutclients()
 	{
-		return $this->hasMany(Statutclient::class);
+		return $this->hasOne(Statutclient::class);
 	}
 }

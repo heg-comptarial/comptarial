@@ -53,6 +53,6 @@ class Document extends Model
 
 	public function commentaires()
 	{
-		return $this->hasMany(Commentaire::class, 'doc_id');
+		return $this->hasOne(Commentaire::class, 'doc_id');
 	}
 }

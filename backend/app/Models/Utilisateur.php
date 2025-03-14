@@ -52,12 +52,12 @@ class Utilisateur extends Model
 
 	public function administrateurs()
 	{
-		return $this->hasMany(Administrateur::class);
+		return $this->hasOne(Administrateur::class);
 	}
 
 	public function clients()
 	{
-		return $this->hasMany(Client::class);
+		return $this->hasOne(Client::class);
 	}
 
 	public function notifications()
