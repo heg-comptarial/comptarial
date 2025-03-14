@@ -7,14 +7,7 @@ module.exports = function(sequelize, DataTypes) {
       allowNull: false,
       primaryKey: true
     },
-    client_id: {
-      type: DataTypes.BIGINT.UNSIGNED,
-      allowNull: false,
-      references: {
-        model: 'client',
-        key: 'client_id'
-      }
-    },
+    
     sous_rub_id: {
       type: DataTypes.BIGINT.UNSIGNED,
       allowNull: false,

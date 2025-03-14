@@ -9,9 +9,6 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      client_id: {
-        type: Sequelize.INTEGER
-      },
       sous_rub_id: {
         type: Sequelize.INTEGER
       },

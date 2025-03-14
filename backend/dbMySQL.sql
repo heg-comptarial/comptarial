@@ -76,14 +76,12 @@ CREATE TABLE SousRubrique (
 -- Table Document
 CREATE TABLE Document (
     doc_id BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
-    client_id BIGINT UNSIGNED NOT NULL,
     sous_rub_id BIGINT UNSIGNED NOT NULL,
     titre VARCHAR(255) NOT NULL,
     type VARCHAR(255) NOT NULL,
     date_ajout DATETIME DEFAULT CURRENT_TIMESTAMP,
     chemin_fichier VARCHAR(255) NOT NULL,
     statut VARCHAR(255) NOT NULL,
-    FOREIGN KEY (client_id) REFERENCES Client (client_id) ON DELETE CASCADE,
     FOREIGN KEY (sous_rub_id) REFERENCES SousRubrique (sous_rub_id) ON DELETE CASCADE
 );
 
