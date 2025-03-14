@@ -12,8 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('document', function (Blueprint $table) {
-            $table->foreign(['client_id'], 'document_ibfk_1')->references(['client_id'])->on('client')->onUpdate('restrict')->onDelete('cascade');
-            $table->foreign(['sous_rub_id'], 'document_ibfk_2')->references(['sous_rub_id'])->on('sousrubrique')->onUpdate('restrict')->onDelete('cascade');
+            $table->foreign(['sous_rub_id'], 'document_ibfk_1')->references(['sous_rub_id'])->on('sousrubrique')->onUpdate('restrict')->onDelete('cascade');
         });
     }
 
@@ -24,7 +23,6 @@ return new class extends Migration
     {
         Schema::table('document', function (Blueprint $table) {
             $table->dropForeign('document_ibfk_1');
-            $table->dropForeign('document_ibfk_2');
         });
     }
 };

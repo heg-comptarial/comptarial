@@ -13,7 +13,6 @@ return new class extends Migration
     {
         Schema::create('document', function (Blueprint $table) {
             $table->bigIncrements('doc_id');
-            $table->unsignedBigInteger('client_id')->index('client_id');
             $table->unsignedBigInteger('sous_rub_id')->index('sous_rub_id');
             $table->string('titre');
             $table->string('type');
