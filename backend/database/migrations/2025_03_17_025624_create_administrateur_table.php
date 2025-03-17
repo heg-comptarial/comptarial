@@ -11,11 +11,16 @@ return new class extends Migration
      */
     public function up(): void
     {
+        Schema::disableForeignKeyConstraints();
+
         Schema::create('administrateur', function (Blueprint $table) {
             $table->bigIncrements('admin_id');
-            $table->unsignedBigInteger('utilisateur_id')->unique('utilisateur_id');
+            $table->unsignedBigInteger('user_id')->unique('user_id');
+            //$table->foreign('user_id')->references('user_id')->on('users');
             $table->string('niveau_acces');
         });
+
+        Schema::enableForeignKeyConstraints();
     }
 
     /**

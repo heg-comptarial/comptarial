@@ -13,11 +13,11 @@ return new class extends Migration
     {
         Schema::create('client', function (Blueprint $table) {
             $table->bigIncrements('client_id');
-            $table->unsignedBigInteger('utilisateur_id')->unique('utilisateur_id');
+            $table->unsignedBigInteger('user_id')->unique('user_id');
             $table->string('type_entreprise');
             $table->string('adresse');
             $table->string('numero_fiscal');
-            $table->enum('statut_client', ['Accepté', 'Suspendu', 'Refusé'])->nullable()->default('Suspendu');
+            $table->enum('statut_client', ['Accepté', 'Suspendu', 'Refusé']);
         });
     }
 

@@ -7,6 +7,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -18,34 +19,35 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $adresse
  * @property string $numero_fiscal
  * 
- * @property Utilisateur $utilisateur
  * @property Collection|Declaration[] $declarations
  * @property Collection|Entreprise[] $entreprises
  * @property Collection|Prive[] $prives
  * @property Collection|Statutclient[] $statutclients
  *
- * @package App\Models
+ * @package App\Models    
  */
 class Client extends Model
 {
+
+	use HasFactory;
 	protected $table = 'client';
 	protected $primaryKey = 'client_id';
 	public $timestamps = false;
 
 	protected $casts = [
-		'utilisateur_id' => 'int'
+		'user_id' => 'int'
 	];
 
 	protected $fillable = [
-		'utilisateur_id',
+		'user_id', // user id de laravel
 		'type_entreprise',
 		'adresse',
 		'numero_fiscal'
 	];
 
-	public function utilisateur()
+	public function user()
 	{
-		return $this->belongsTo(Utilisateur::class);
+		return $this->belongsTo(User::class);
 	}
 
 	public function declarations()

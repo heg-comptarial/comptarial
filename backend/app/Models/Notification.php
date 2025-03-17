@@ -13,13 +13,13 @@ use Illuminate\Database\Eloquent\Model;
  * Class Notification
  * 
  * @property int $notification_id
- * @property int $utilisateur_id
+ * @property int $user_id
  * @property string $type_notif
  * @property string $contenu
  * @property Carbon $date_envoi
  * @property string $lecture_statut
  * 
- * @property Utilisateur $utilisateur
+ * @property User $user
  *
  * @package App\Models
  */
@@ -30,20 +30,20 @@ class Notification extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'utilisateur_id' => 'int',
+		'user_id' => 'int',
 		'date_envoi' => 'datetime'
 	];
 
 	protected $fillable = [
-		'utilisateur_id',
+		'user_id',
 		'type_notif',
 		'contenu',
 		'date_envoi',
 		'lecture_statut'
 	];
 
-	public function utilisateur()
+	public function user()
 	{
-		return $this->belongsTo(Utilisateur::class);
+		return $this->belongsTo(User::class);
 	}
 }

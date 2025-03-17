@@ -1,41 +1,25 @@
 <?php
 
-/**
- * Created by Reliese Model.
- */
-
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
-/**
- * Class Statutclient
- * 
- * @property int $statut_id
- * @property int $client_id
- * @property string $nom
- * 
- * @property Client $client
- *
- * @package App\Models
- */
-class Statutclient extends Model
+class StatutClient extends Model
 {
-	protected $table = 'statutclient';
-	protected $primaryKey = 'statut_id';
-	public $timestamps = false;
+    use HasFactory;
 
-	protected $casts = [
-		'client_id' => 'int'
-	];
+    protected $table = 'StatutClient';  // Spécifier le nom de la table si nécessaire
 
-	protected $fillable = [
-		'client_id',
-		'nom'
-	];
+    protected $fillable = [
+        'client_id', 
+        'statut', 
+        'date_statut'
+    ];
 
-	public function client()
-	{
-		return $this->belongsTo(Client::class);
-	}
+    // Si vous avez une relation avec la table Client
+    public function client()
+    {
+        return $this->belongsTo(Client::class, 'client_id');
+    }
 }

@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('administrateur', function (Blueprint $table) {
-            $table->foreign(['utilisateur_id'], 'administrateur_ibfk_1')->references(['utilisateur_id'])->on('utilisateur')->onUpdate('restrict')->onDelete('cascade');
+        Schema::table('users', function (Blueprint $table) {
+            //
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('administrateur', function (Blueprint $table) {
-            $table->dropForeign('administrateur_ibfk_1');
+        Schema::table('users', function (Blueprint $table) {
+            //
         });
     }
 };
