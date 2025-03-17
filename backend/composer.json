@@ -1,0 +1,8 @@
+{
+    "require-dev": {
+        "kitloong/laravel-migrations-generator": "^7.1"
+    },
+    "require": {
+        "reliese/laravel": "^1.3"
+    }
+}
