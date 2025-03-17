@@ -31,25 +31,36 @@ export async function POST(req: NextRequest) {
 
     console.log("File name:", file.name); // Log file name for debugging
 
-    const buffer = Buffer.from(await file.arrayBuffer()); // Avoid the experimental warning
-    const fileName = `${Date.now()}-${file.name}`;
+    const buffer = await file.arrayBuffer();
+    const fileName = file.name;
+    const fileBuffer = Buffer.from(buffer);
+
+    // Hardcoded year (you can replace this with dynamic logic later)
+    const year = new Date().getFullYear().toString();
+
+    // Hardcoded user (replace later with actual user logic) --> we will need to retrieve the user from the session
+    const user = "user1"; // Placeholder user
+
+    // Set the file path structure to: year/user/fileName
+    const fileKey = `${year}/${user}/${fileName}`;
+
+    console.log("Uploading file with key:", fileKey); // Log the upload path
 
     // Set the parameters for the S3 upload
     const params = {
-      Bucket: s3BucketName, // Ensure this is the correct bucket name
-      Key: fileName,
-      Body: buffer,
+      Bucket: s3BucketName,
+      Key: fileKey,
+      Body: fileBuffer,
       ContentType: file.type,
-      ACL: "public-read", // You can change this to another access level as per your requirements
     };
 
-    // Upload the file to the S3 bucket
+    // Upload the file to S3
     await s3.upload(params).promise();
 
-    // Return the file URL from the S3 bucket
-    const fileUrl = `${s3Endpoint}/${s3BucketName}/${fileName}`;
-
-    return NextResponse.json({ url: fileUrl });
+    // Return the file URL
+    return NextResponse.json({
+      url: `https://${s3Endpoint}/${s3BucketName}/${fileKey}`,
+    });
   } catch (error) {
     console.error("Upload failed:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });

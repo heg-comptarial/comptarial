@@ -20,7 +20,7 @@ const s3 = new AWS.S3({
   s3ForcePathStyle: true, // Required for some S3-compatible APIs like Infomaniak
 });
 
-export async function GET(req: NextRequest) {
+export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const fileName = searchParams.get("fileName");
@@ -32,36 +32,24 @@ export async function GET(req: NextRequest) {
       );
     }
 
-    console.log("Trying to fetch file with name:", fileName); // Log file name
-
-    // Get the current year and user (you may replace this with actual logic)
     const year = new Date().getFullYear().toString();
     const user = "user1"; // Placeholder user
 
-    // Adjusted: Include 'default/' folder in the file key
-    const fileKey = `${year}/${user}/${fileName}`; // The file is in the 'default/' folder
+    // Set the file key (adjust this to your actual file structure)
+    const fileKey = `${year}/${user}/${fileName}`;
 
-    // Set the parameters for the S3 getObject call
+    // Set the parameters for the S3 deleteObject call
     const params = {
       Bucket: s3BucketName,
-      Key: fileKey, // Include 'default/' in the key
+      Key: fileKey,
     };
 
-    console.log("Fetching file with key:", fileKey); // Log full file path for debugging
+    // Delete the file from S3
+    await s3.deleteObject(params).promise();
 
-    // Fetch the file from the S3 bucket
-    const s3Object = await s3.getObject(params).promise();
-
-    // Return the file as a stream with the appropriate headers
-    return new NextResponse(s3Object.Body as Buffer, {
-      status: 200,
-      headers: {
-        "Content-Type": s3Object.ContentType as string,
-        "Content-Disposition": `attachment; filename="${fileName}"`,
-      },
-    });
+    return NextResponse.json({ message: "File deleted successfully" });
   } catch (error) {
-    console.error("Download failed:", error);
-    return NextResponse.json({ error: "Download failed" }, { status: 500 });
+    console.error("Delete failed:", error);
+    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }

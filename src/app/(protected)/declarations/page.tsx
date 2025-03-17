@@ -131,10 +131,31 @@ export default function Page() {
     }
   };
 
-  const handleDelete = () => {
-    if (!selectedYear) return;
-    localStorage.removeItem(`file-${selectedYear}`);
-    setFile(null);
+  const handleDelete = async () => {
+    if (!selectedYear || !file) return;
+
+    try {
+      // Call the API to delete the file from S3
+      const response = await fetch(
+        `/api/delete?fileName=${encodeURIComponent(file.name)}`,
+        {
+          method: "DELETE",
+        }
+      );
+
+      const data = await response.json();
+      if (response.ok) {
+        // Remove the file from local storage and update the UI
+        localStorage.removeItem(`file-${selectedYear}`);
+        setFile(null);
+        alert("File deleted successfully.");
+      } else {
+        alert(data.error || "Error deleting file.");
+      }
+    } catch (error) {
+      console.error("Error deleting file:", error);
+      alert("An error occurred while deleting the file.");
+    }
   };
 
   return (
