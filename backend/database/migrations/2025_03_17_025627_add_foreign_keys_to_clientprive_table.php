@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('administrateur', function (Blueprint $table) {
-            $table->bigIncrements('admin_id');
-            $table->unsignedBigInteger('utilisateur_id')->index('utilisateur_id');
-            $table->string('niveau_acces');
+        Schema::table('clientprive', function (Blueprint $table) {
+            $table->foreign(['client_id'], 'clientprive_ibfk_1')->references(['client_id'])->on('client')->onUpdate('restrict')->onDelete('cascade');
         });
     }
 
@@ -23,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('administrateur');
+        Schema::table('clientprive', function (Blueprint $table) {
+            $table->dropForeign('clientprive_ibfk_1');
+        });
     }
 };

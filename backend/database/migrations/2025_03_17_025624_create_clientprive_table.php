@@ -11,8 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('entreprise', function (Blueprint $table) {
-            $table->foreign(['client_id'], 'entreprise_ibfk_1')->references(['client_id'])->on('client')->onUpdate('restrict')->onDelete('cascade');
+        Schema::create('clientprive', function (Blueprint $table) {
+            $table->bigIncrements('prive_id');
+            $table->unsignedBigInteger('client_id')->unique('client_id');
+            $table->string('nationalite');
+            $table->date('date_de_naissance');
+            $table->string('etat_civil');
         });
     }
 
@@ -21,8 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('entreprise', function (Blueprint $table) {
-            $table->dropForeign('entreprise_ibfk_1');
-        });
+        Schema::dropIfExists('clientprive');
     }
 };

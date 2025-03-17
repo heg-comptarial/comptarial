@@ -11,13 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('entreprise', function (Blueprint $table) {
-            $table->bigIncrements('entreprise_id');
+        Schema::create('statutclient', function (Blueprint $table) {
+            $table->bigIncrements('statut_client_id');
             $table->unsignedBigInteger('client_id')->index('client_id');
-            $table->string('raison_sociale');
-            $table->text('prestations');
-            $table->enum('nouvelle_entreprise', ['Y', 'N'])->default('N');
-            $table->string('grand_livre');
+            $table->string('statut');
+            $table->dateTime('date_statut')->useCurrent();
         });
     }
 
@@ -26,6 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('entreprise');
+        Schema::dropIfExists('statutclient');
     }
 };

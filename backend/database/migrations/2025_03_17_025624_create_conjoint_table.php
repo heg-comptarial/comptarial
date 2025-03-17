@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('localite');
             $table->string('adresse');
             $table->string('code_postal', 10);
+            $table->string('situation_professionnelle');
         });
     }
 

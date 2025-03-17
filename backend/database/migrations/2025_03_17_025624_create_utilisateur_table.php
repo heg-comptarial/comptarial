@@ -21,6 +21,7 @@ return new class extends Migration
             $table->string('adresse');
             $table->string('code_postal', 10);
             $table->string('numero_telephone', 20);
+            $table->enum('role', ['admin', 'client_prive', 'client_entreprise']);
         });
     }
 

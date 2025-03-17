@@ -11,12 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('prive', function (Blueprint $table) {
-            $table->bigIncrements('prive_id');
-            $table->unsignedBigInteger('client_id')->index('client_id');
-            $table->string('nationalite');
-            $table->date('date_de_naissance');
-            $table->string('etat_civil');
+        Schema::create('administrateur', function (Blueprint $table) {
+            $table->bigIncrements('admin_id');
+            $table->unsignedBigInteger('utilisateur_id')->unique('utilisateur_id');
+            $table->string('niveau_acces');
         });
     }
 
@@ -25,6 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('prive');
+        Schema::dropIfExists('administrateur');
     }
 };

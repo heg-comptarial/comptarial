@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('prive', function (Blueprint $table) {
-            $table->foreign(['client_id'], 'prive_ibfk_1')->references(['client_id'])->on('client')->onUpdate('restrict')->onDelete('cascade');
+        Schema::table('cliententreprise', function (Blueprint $table) {
+            $table->foreign(['client_id'], 'cliententreprise_ibfk_1')->references(['client_id'])->on('client')->onUpdate('restrict')->onDelete('cascade');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('prive', function (Blueprint $table) {
-            $table->dropForeign('prive_ibfk_1');
+        Schema::table('cliententreprise', function (Blueprint $table) {
+            $table->dropForeign('cliententreprise_ibfk_1');
         });
     }
 };
