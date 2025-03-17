@@ -1,24 +1,11 @@
 "use client"
 
-import type React from "react"
-
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { FileText, Edit, Trash2 } from "lucide-react"
+import { FileText, Edit } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-  DialogFooter,
-  DialogClose,
-} from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Label } from "@/components/ui/label"
 
 interface Client {
   id: number
@@ -32,12 +19,6 @@ export default function Dashboard() {
   const [message, setMessage] = useState("")
   const [clients, setClients] = useState<Client[]>([])
   const [loading, setLoading] = useState(false)
-  const [selectedClient, setSelectedClient] = useState<Client | null>(null)
-  const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  })
 
   useEffect(() => {
     fetch("http://localhost:5000/api/test")
@@ -56,61 +37,6 @@ export default function Dashboard() {
       console.error("Error fetching clients:", error)
     } finally {
       setLoading(false)
-    }
-  }
-
-  const handleEditClient = (client: Client) => {
-    setSelectedClient(client)
-    setFormData({
-      name: client.name,
-      email: client.email,
-      phone: client.phone,
-    })
-  }
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target
-    setFormData((prev) => ({
-      ...prev,
-      [name]: value,
-    }))
-  }
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-
-    if (!selectedClient) return
-
-    try {
-      const response = await fetch(`http://localhost:8000/api/clients/${selectedClient.id}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      })
-
-      if (response.ok) {
-        fetchClients()
-      }
-    } catch (error) {
-      console.error("Error updating client:", error)
-    }
-  }
-
-  const handleDeleteClient = async (id: number) => {
-    if (!confirm("Êtes-vous sûr de vouloir supprimer ce client ?")) return
-
-    try {
-      const response = await fetch(`http://localhost:8000/api/clients/${id}`, {
-        method: "DELETE",
-      })
-
-      if (response.ok) {
-        fetchClients()
-      }
-    } catch (error) {
-      console.error("Error deleting client:", error)
     }
   }
 
@@ -186,63 +112,9 @@ export default function Dashboard() {
                           <TableCell>{client.phone}</TableCell>
                           <TableCell>{new Date(client.created_at).toLocaleDateString()}</TableCell>
                           <TableCell className="text-right">
-                            <div className="flex justify-end gap-2">
-                              <Dialog>
-                                <DialogTrigger asChild>
-                                  <Button variant="ghost" size="icon" onClick={() => handleEditClient(client)}>
-                                    <Edit className="h-4 w-4" />
-                                  </Button>
-                                </DialogTrigger>
-                                <DialogContent>
-                                  <DialogHeader>
-                                    <DialogTitle>Modifier le client</DialogTitle>
-                                  </DialogHeader>
-                                  <form onSubmit={handleSubmit}>
-                                    <div className="grid gap-4 py-4">
-                                      <div className="grid gap-2">
-                                        <Label htmlFor="name">Nom</Label>
-                                        <Input
-                                          id="name"
-                                          name="name"
-                                          value={formData.name}
-                                          onChange={handleInputChange}
-                                        />
-                                      </div>
-                                      <div className="grid gap-2">
-                                        <Label htmlFor="email">Email</Label>
-                                        <Input
-                                          id="email"
-                                          name="email"
-                                          type="email"
-                                          value={formData.email}
-                                          onChange={handleInputChange}
-                                        />
-                                      </div>
-                                      <div className="grid gap-2">
-                                        <Label htmlFor="phone">Téléphone</Label>
-                                        <Input
-                                          id="phone"
-                                          name="phone"
-                                          value={formData.phone}
-                                          onChange={handleInputChange}
-                                        />
-                                      </div>
-                                    </div>
-                                    <DialogFooter>
-                                      <DialogClose asChild>
-                                        <Button type="button" variant="outline">
-                                          Annuler
-                                        </Button>
-                                      </DialogClose>
-                                      <Button type="submit">Enregistrer</Button>
-                                    </DialogFooter>
-                                  </form>
-                                </DialogContent>
-                              </Dialog>
-                              <Button variant="ghost" size="icon" onClick={() => handleDeleteClient(client.id)}>
-                                <Trash2 className="h-4 w-4 text-destructive" />
-                              </Button>
-                            </div>
+                            <Button variant="ghost" size="icon">
+                              <Edit className="h-4 w-4" />
+                            </Button>
                           </TableCell>
                         </TableRow>
                       ))
@@ -263,3 +135,4 @@ export default function Dashboard() {
     </div>
   )
 }
+
