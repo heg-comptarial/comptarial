@@ -24,19 +24,22 @@ export async function DELETE(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const fileName = searchParams.get("fileName");
+    const year = searchParams.get("year"); // Retrieve year from query params
 
-    if (!fileName) {
+    if (!fileName || !year) {
       return NextResponse.json(
-        { error: "File name is required" },
+        { error: "File name and year are required" },
         { status: 400 }
       );
     }
 
-    const year = new Date().getFullYear().toString();
-    const user = "user1"; // Placeholder user
+    console.log("Trying to delete file:", fileName, "from year:", year);
 
-    // Set the file key (adjust this to your actual file structure)
+    // Hardcoded user (replace with session-based user retrieval)
+    const user = "user1";
     const fileKey = `${year}/${user}/${fileName}`;
+
+    console.log("Deleting file with key:", fileKey);
 
     // Set the parameters for the S3 deleteObject call
     const params = {

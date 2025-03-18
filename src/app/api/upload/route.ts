@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import AWS from "aws-sdk";
+import { allowedFileTypes } from "@/utils/allowedFileTypes";
 
 // Ensure environment variables are set correctly
 const s3Endpoint = process.env.INFOMANIAK_ENDPOINT!;
@@ -24,27 +25,32 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
+    const year =
+      (formData.get("year") as string) || new Date().getFullYear().toString(); // Get year from request or use current year
 
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
     }
 
-    console.log("File name:", file.name); // Log file name for debugging
+    // Validate file type
+    if (!allowedFileTypes.includes(file.type)) {
+      return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
+    }
+
+    console.log("File name:", file.name);
+    console.log("Selected year:", year);
 
     const buffer = await file.arrayBuffer();
     const fileName = file.name;
     const fileBuffer = Buffer.from(buffer);
 
-    // Hardcoded year (you can replace this with dynamic logic later)
-    const year = new Date().getFullYear().toString();
+    // Hardcoded user (replace later with actual user logic, e.g., session-based user retrieval)
+    const user = "user1";
 
-    // Hardcoded user (replace later with actual user logic) --> we will need to retrieve the user from the session
-    const user = "user1"; // Placeholder user
-
-    // Set the file path structure to: year/user/fileName
+    // Set the file path structure to: selectedYear/user/fileName
     const fileKey = `${year}/${user}/${fileName}`;
 
-    console.log("Uploading file with key:", fileKey); // Log the upload path
+    console.log("Uploading file with key:", fileKey);
 
     // Set the parameters for the S3 upload
     const params = {

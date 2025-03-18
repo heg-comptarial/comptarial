@@ -3,6 +3,9 @@
 import type React from "react";
 
 import { useState } from "react";
+
+import { allowedFileTypes } from "../../../utils/allowedFileTypes";
+
 import {
   Select,
   SelectContent,
@@ -50,10 +53,20 @@ export default function Page() {
     if (!e.target.files || e.target.files.length === 0 || !selectedYear) return;
 
     const selectedFile = e.target.files[0];
+
+    // Check if the file type is allowed
+    if (!allowedFileTypes.includes(selectedFile.type)) {
+      toast.error("Invalid file type", {
+        description: "Only documents and images are allowed.",
+      });
+      return;
+    }
+
     setIsUploading(true);
 
     const formData = new FormData();
     formData.append("file", selectedFile);
+    formData.append("year", selectedYear);
 
     try {
       const response = await fetch("/api/upload", {
@@ -63,25 +76,22 @@ export default function Page() {
 
       const data = await response.json();
       if (response.ok) {
-        const fileData: FileData = {
+        setFile({
           name: selectedFile.name,
           type: selectedFile.type,
           size: selectedFile.size,
           url: data.url,
           lastModified: Date.now(),
-        };
-        setFile(fileData);
+        });
         toast.success("Upload successful", {
           description: `${selectedFile.name} has been uploaded.`,
         });
       } else {
-        console.error("Upload failed:", data.error);
         toast.error("Upload failed", {
           description: data.error || "An error occurred during upload.",
         });
       }
-    } catch (error) {
-      console.error("Error uploading file:", error);
+    } catch {
       toast.error("Upload error", {
         description: "An unexpected error occurred during upload.",
       });
@@ -91,18 +101,19 @@ export default function Page() {
   };
 
   const handleDownload = async () => {
-    if (!file) return;
+    if (!file || !selectedYear) return;
 
     const fileName = file.name;
     const downloadUrl = `/api/download?fileName=${encodeURIComponent(
       fileName
-    )}`;
+    )}&year=${encodeURIComponent(selectedYear)}`;
 
     try {
       const response = await fetch(downloadUrl);
       if (!response.ok) {
         throw new Error("File download failed");
       }
+
       const blob = await response.blob();
       const downloadLink = document.createElement("a");
       downloadLink.href = URL.createObjectURL(blob);
@@ -125,7 +136,9 @@ export default function Page() {
 
     try {
       const response = await fetch(
-        `/api/delete?fileName=${encodeURIComponent(file.name)}`,
+        `/api/delete?fileName=${encodeURIComponent(
+          file.name
+        )}&year=${encodeURIComponent(selectedYear)}`,
         {
           method: "DELETE",
         }

@@ -24,30 +24,28 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url);
     const fileName = searchParams.get("fileName");
+    const year = searchParams.get("year"); // Retrieve year from query params
 
-    if (!fileName) {
+    if (!fileName || !year) {
       return NextResponse.json(
-        { error: "File name is required" },
+        { error: "File name and year are required" },
         { status: 400 }
       );
     }
 
-    console.log("Trying to fetch file with name:", fileName); // Log file name
+    console.log("Trying to fetch file:", fileName, "from year:", year);
 
-    // Get the current year and user (you may replace this with actual logic)
-    const year = new Date().getFullYear().toString();
-    const user = "user1"; // Placeholder user
+    // Hardcoded user (replace with session-based user retrieval)
+    const user = "user1";
+    const fileKey = `${year}/${user}/${fileName}`;
 
-    // Adjusted: Include 'default/' folder in the file key
-    const fileKey = `${year}/${user}/${fileName}`; // The file is in the 'default/' folder
+    console.log("Fetching file with key:", fileKey);
 
     // Set the parameters for the S3 getObject call
     const params = {
       Bucket: s3BucketName,
-      Key: fileKey, // Include 'default/' in the key
+      Key: fileKey,
     };
-
-    console.log("Fetching file with key:", fileKey); // Log full file path for debugging
 
     // Fetch the file from the S3 bucket
     const s3Object = await s3.getObject(params).promise();
