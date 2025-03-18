@@ -13,9 +13,8 @@ class ClientService
      *
      * @return Collection
      */
-    public function getAllClients(): Collection
-    {
-        return Client::all();
+    public function getAllClients(): Collection{
+        return Client::with('user')->get();
     }
 
     /**
