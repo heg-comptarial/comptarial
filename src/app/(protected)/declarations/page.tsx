@@ -1,11 +1,7 @@
 "use client";
 
-import type React from "react";
-
-import { useState } from "react";
-
+import React, { useState, useEffect } from "react";
 import { allowedFileTypes } from "../../../utils/allowedFileTypes";
-
 import {
   Select,
   SelectContent,
@@ -41,12 +37,38 @@ export default function Page() {
   const [selectedYear, setSelectedYear] = useState<string | undefined>(
     undefined
   );
-  const [file, setFile] = useState<FileData | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [files, setFiles] = useState<FileData[]>([]);
+
+  useEffect(() => {
+    if (selectedYear) {
+      fetchFiles(selectedYear);
+    }
+  }, [selectedYear]);
+
+  const fetchFiles = async (year: string) => {
+    try {
+      const response = await fetch(
+        `/api/list?year=${encodeURIComponent(year)}`
+      );
+      const data = await response.json();
+      if (response.ok) {
+        setFiles(data.files);
+      } else {
+        toast.error("Failed to fetch files", {
+          description: data.error || "An error occurred while fetching files.",
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching files:", error);
+      toast.error("Fetch error", {
+        description: "An unexpected error occurred while fetching files.",
+      });
+    }
+  };
 
   const handleYearChange = (year: string) => {
     setSelectedYear(year);
-    setFile(null);
   };
 
   const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -54,7 +76,6 @@ export default function Page() {
 
     const selectedFile = e.target.files[0];
 
-    // Check if the file type is allowed
     if (!allowedFileTypes.includes(selectedFile.type)) {
       toast.error("Invalid file type", {
         description: "Only documents and images are allowed.",
@@ -76,13 +97,7 @@ export default function Page() {
 
       const data = await response.json();
       if (response.ok) {
-        setFile({
-          name: selectedFile.name,
-          type: selectedFile.type,
-          size: selectedFile.size,
-          url: data.url,
-          lastModified: Date.now(),
-        });
+        fetchFiles(selectedYear); // Refresh the file list
         toast.success("Upload successful", {
           description: `${selectedFile.name} has been uploaded.`,
         });
@@ -100,8 +115,8 @@ export default function Page() {
     }
   };
 
-  const handleDownload = async () => {
-    if (!file || !selectedYear) return;
+  const handleDownload = async (file: FileData) => {
+    if (!selectedYear) return;
 
     const fileName = file.name;
     const downloadUrl = `/api/download?fileName=${encodeURIComponent(
@@ -131,8 +146,8 @@ export default function Page() {
     }
   };
 
-  const handleDelete = async () => {
-    if (!selectedYear || !file) return;
+  const handleDelete = async (file: FileData) => {
+    if (!selectedYear) return;
 
     try {
       const response = await fetch(
@@ -146,7 +161,7 @@ export default function Page() {
 
       const data = await response.json();
       if (response.ok) {
-        setFile(null);
+        setFiles(files.filter((f) => f.name !== file.name));
         toast.success("File deleted", {
           description: "File has been deleted successfully.",
         });
@@ -194,37 +209,39 @@ export default function Page() {
                 <h3 className="text-lg font-medium mb-2">
                   Files for {selectedYear}
                 </h3>
-                {file ? (
-                  <Card>
-                    <CardContent className="p-6">
-                      <p className="font-medium text-lg break-all">
-                        {file.name}
-                      </p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {(file.size / 1048576).toFixed(1)} MB
-                      </p>
-                      <p className="text-xs text-gray-400 mt-1">
-                        Last modified:{" "}
-                        {new Date(file.lastModified).toLocaleString()}
-                      </p>
-                    </CardContent>
-                    <CardFooter className="flex justify-between bg-gray-50 p-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleDownload}
-                      >
-                        <Download className="h-4 w-4 mr-1" /> Download
-                      </Button>
-                      <Button
-                        variant="destructive"
-                        size="sm"
-                        onClick={handleDelete}
-                      >
-                        <Trash2 className="h-4 w-4 mr-1" /> Delete
-                      </Button>
-                    </CardFooter>
-                  </Card>
+                {files.length > 0 ? (
+                  files.map((file) => (
+                    <Card key={file.name} className="mb-4">
+                      <CardContent className="p-6">
+                        <p className="font-medium text-lg break-all">
+                          {file.name}
+                        </p>
+                        <p className="text-sm text-gray-500 mt-1">
+                          {(file.size / 1048576).toFixed(1)} MB
+                        </p>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Last modified:{" "}
+                          {new Date(file.lastModified).toLocaleString()}
+                        </p>
+                      </CardContent>
+                      <CardFooter className="flex justify-between bg-gray-50 p-4">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleDownload(file)}
+                        >
+                          <Download className="h-4 w-4 mr-1" /> Download
+                        </Button>
+                        <Button
+                          variant="destructive"
+                          size="sm"
+                          onClick={() => handleDelete(file)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" /> Delete
+                        </Button>
+                      </CardFooter>
+                    </Card>
+                  ))
                 ) : (
                   <div className="space-y-4">
                     <Label htmlFor="file-upload" className="block">
