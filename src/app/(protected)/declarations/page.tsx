@@ -1,6 +1,8 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import type React from "react";
+
+import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -20,6 +22,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Trash2, Download, Upload } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { toast, Toaster } from "sonner";
 
 const years = Array.from({ length: 20 }, (_, i) => 2020 + i);
 
@@ -37,38 +40,13 @@ export default function Page() {
   );
   const [file, setFile] = useState<FileData | null>(null);
   const [isUploading, setIsUploading] = useState(false);
-  const [isClient, setIsClient] = useState(false);
-
-  useEffect(() => {
-    setIsClient(true);
-    const savedYear = localStorage.getItem("selectedYear");
-    if (savedYear) {
-      setSelectedYear(savedYear);
-    }
-  }, []);
-
-  useEffect(() => {
-    if (!isClient || !selectedYear) return;
-    const savedFile = localStorage.getItem(`file-${selectedYear}`);
-    if (savedFile) {
-      setFile(JSON.parse(savedFile));
-    } else {
-      setFile(null);
-    }
-  }, [selectedYear, isClient]);
 
   const handleYearChange = (year: string) => {
     setSelectedYear(year);
-    localStorage.setItem("selectedYear", year);
-    const savedFile = localStorage.getItem(`file-${year}`);
-    if (savedFile) {
-      setFile(JSON.parse(savedFile));
-    } else {
-      setFile(null);
-    }
+    setFile(null);
   };
 
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     if (!e.target.files || e.target.files.length === 0 || !selectedYear) return;
 
     const selectedFile = e.target.files[0];
@@ -92,13 +70,21 @@ export default function Page() {
           url: data.url,
           lastModified: Date.now(),
         };
-        localStorage.setItem(`file-${selectedYear}`, JSON.stringify(fileData));
         setFile(fileData);
+        toast.success("Upload successful", {
+          description: `${selectedFile.name} has been uploaded.`,
+        });
       } else {
         console.error("Upload failed:", data.error);
+        toast.error("Upload failed", {
+          description: data.error || "An error occurred during upload.",
+        });
       }
     } catch (error) {
       console.error("Error uploading file:", error);
+      toast.error("Upload error", {
+        description: "An unexpected error occurred during upload.",
+      });
     } finally {
       setIsUploading(false);
     }
@@ -112,22 +98,25 @@ export default function Page() {
       fileName
     )}`;
 
-    // Use the fetch API to download the file
     try {
       const response = await fetch(downloadUrl);
-
       if (!response.ok) {
         throw new Error("File download failed");
       }
-
-      // Create a Blob from the response and download the file
       const blob = await response.blob();
       const downloadLink = document.createElement("a");
       downloadLink.href = URL.createObjectURL(blob);
       downloadLink.download = fileName;
       downloadLink.click();
+
+      toast.success("Download successful", {
+        description: `${fileName} has been downloaded.`,
+      });
     } catch (error) {
       console.error("Error downloading file:", error);
+      toast.error("Download failed", {
+        description: "An error occurred while downloading the file.",
+      });
     }
   };
 
@@ -135,7 +124,6 @@ export default function Page() {
     if (!selectedYear || !file) return;
 
     try {
-      // Call the API to delete the file from S3
       const response = await fetch(
         `/api/delete?fileName=${encodeURIComponent(file.name)}`,
         {
@@ -145,21 +133,27 @@ export default function Page() {
 
       const data = await response.json();
       if (response.ok) {
-        // Remove the file from local storage and update the UI
-        localStorage.removeItem(`file-${selectedYear}`);
         setFile(null);
-        alert("File deleted successfully.");
+        toast.success("File deleted", {
+          description: "File has been deleted successfully.",
+        });
       } else {
-        alert(data.error || "Error deleting file.");
+        toast.error("Delete failed", {
+          description: data.error || "Error deleting file.",
+        });
       }
     } catch (error) {
       console.error("Error deleting file:", error);
-      alert("An error occurred while deleting the file.");
+      toast.error("Delete error", {
+        description: "An unexpected error occurred while deleting the file.",
+      });
     }
   };
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4">
+      <Toaster position="bottom-right" richColors />
+
       <Card className="w-full md:w-3/4 lg:w-3/4">
         <CardHeader>
           <CardTitle>Déclarations</CardTitle>
@@ -232,7 +226,7 @@ export default function Page() {
                       id="file-upload"
                       type="file"
                       className="hidden"
-                      onChange={handleFileChange}
+                      onChange={handleUpload}
                     />
                   </div>
                 )}
