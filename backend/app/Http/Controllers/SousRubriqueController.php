@@ -3,7 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
-use App\Models\SousRubrique;
+use App\Models\Sousrubrique;
 
 class SousRubriqueController extends Controller
 {
@@ -12,7 +12,7 @@ class SousRubriqueController extends Controller
      */
     public function index()
     {
-        $sousRubriques = SousRubrique::all();
+        $sousRubriques = Sousrubrique::all();
         return response()->json($sousRubriques);
     }
 }

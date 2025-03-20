@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\UtilisateurController;
+use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdministrateurController;
 use App\Http\Controllers\DeclarationController;
 use App\Http\Controllers\RubriqueController;
@@ -21,7 +21,7 @@ Route::get('/', function () {
 });
 
 
-Route::get('utilisateurs', [UtilisateurController::class, 'index']);
+Route::get('users', [UserController::class, 'index']);
 Route::get('administrateurs', [AdministrateurController::class, 'index']);
 Route::get('declarations', [DeclarationController::class, 'index']);
 Route::get('rubriques', [RubriqueController::class, 'index']);
@@ -31,7 +31,6 @@ Route::get('notifications', [NotificationController::class, 'index']);
 Route::get('commentaires', [CommentaireController::class, 'index']);
 Route::get('entreprises', [EntrepriseController::class, 'index']);
 Route::get('prives', [PriveController::class, 'index']);
-Route::get('statut-clients', [StatutClientController::class, 'index']);
 Route::get('conjoints', [ConjointController::class, 'index']);
 Route::get('formulaires', [FormulaireController::class, 'index']);
 

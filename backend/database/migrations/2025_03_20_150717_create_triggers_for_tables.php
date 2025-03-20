@@ -15,7 +15,7 @@ class CreateTriggersForTables extends Migration
         // Définir les triggers pour la table Prive
         DB::statement('
             CREATE TRIGGER before_insert_prive
-            BEFORE INSERT ON Prive
+            BEFORE INSERT ON prive
             FOR EACH ROW
             BEGIN
                 DECLARE user_exists INT;
@@ -23,9 +23,9 @@ class CreateTriggersForTables extends Migration
                 -- Vérifier si le user_id existe déjà dans Entreprise ou Administrateur
                 SELECT COUNT(*) INTO user_exists
                 FROM (
-                    SELECT user_id FROM Entreprise WHERE user_id = NEW.user_id
+                    SELECT user_id FROM entreprise WHERE user_id = NEW.user_id
                     UNION
-                    SELECT user_id FROM Administrateur WHERE user_id = NEW.user_id
+                    SELECT user_id FROM administrateur WHERE user_id = NEW.user_id
                 ) AS combined_users;
 
                 -- Si user_id existe, empêcher l\'insertion
@@ -39,7 +39,7 @@ class CreateTriggersForTables extends Migration
         // Définir les triggers pour la table Entreprise
         DB::statement('
             CREATE TRIGGER before_insert_entreprise
-            BEFORE INSERT ON Entreprise
+            BEFORE INSERT ON entreprise
             FOR EACH ROW
             BEGIN
                 DECLARE user_exists INT;
@@ -47,9 +47,9 @@ class CreateTriggersForTables extends Migration
                 -- Vérifier si le user_id existe déjà dans Prive ou Administrateur
                 SELECT COUNT(*) INTO user_exists
                 FROM (
-                    SELECT user_id FROM Prive WHERE user_id = NEW.user_id
+                    SELECT user_id FROM prive WHERE user_id = NEW.user_id
                     UNION
-                    SELECT user_id FROM Administrateur WHERE user_id = NEW.user_id
+                    SELECT user_id FROM administrateur WHERE user_id = NEW.user_id
                 ) AS combined_users;
 
                 -- Si user_id existe, empêcher l\'insertion
@@ -63,7 +63,7 @@ class CreateTriggersForTables extends Migration
         // Définir les triggers pour la table Administrateur
         DB::statement('
             CREATE TRIGGER before_insert_administrateur
-            BEFORE INSERT ON Administrateur
+            BEFORE INSERT ON administrateur
             FOR EACH ROW
             BEGIN
                 DECLARE user_exists INT;
@@ -71,9 +71,9 @@ class CreateTriggersForTables extends Migration
                 -- Vérifier si le user_id existe déjà dans Prive ou Entreprise
                 SELECT COUNT(*) INTO user_exists
                 FROM (
-                    SELECT user_id FROM Prive WHERE user_id = NEW.user_id
+                    SELECT user_id FROM prive WHERE user_id = NEW.user_id
                     UNION
-                    SELECT user_id FROM Entreprise WHERE user_id = NEW.user_id
+                    SELECT user_id FROM entreprise WHERE user_id = NEW.user_id
                 ) AS combined_users;
 
                 -- Si user_id existe, empêcher l\'insertion
