@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property Carbon $date_envoi
  * @property string $lecture_statut
  * 
- * @property Utilisateur $utilisateur
+ * @property User $user
  *
  * @package App\Models
  */
@@ -30,8 +30,7 @@ class Notification extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'utilisateur_id' => 'int',
-		'date_envoi' => 'datetime'
+		'utilisateur_id' => 'int'
 	];
 
 	protected $fillable = [
@@ -42,8 +41,8 @@ class Notification extends Model
 		'lecture_statut'
 	];
 
-	public function utilisateur()
+	public function user()
 	{
-		return $this->belongsTo(Utilisateur::class);
+		return $this->belongsTo(User::class);
 	}
 }

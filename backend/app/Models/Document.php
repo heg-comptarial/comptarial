@@ -33,8 +33,7 @@ class Document extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'sous_rub_id' => 'int',
-		'date_ajout' => 'datetime'
+		'sous_rub_id' => 'int'
 	];
 
 	protected $fillable = [

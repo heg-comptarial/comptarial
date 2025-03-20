@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class NotificationSeeder extends Seeder
 {
@@ -14,14 +15,18 @@ class NotificationSeeder extends Seeder
     {
         $notifications = [
             [
-                'utilisateur_id' => 1, // Assure-toi que l'utilisateur avec ID 1 existe
-                'type_notif' => 'Nouveau message',
+                'user_id' => 1, // Assure-toi que l'utilisateur avec ID 1 existe
+                'typeNotif' => 'Nouveau message',
                 'contenu' => 'Vous avez un nouveau message concernant votre déclaration.',
+                'dateEnvoi' => Carbon::now(),
+                'lectureStatut' => false,
             ],
             [
-                'utilisateur_id' => 2, // Assure-toi que l'utilisateur avec ID 2 existe
-                'type_notif' => 'Erreur de soumission',
+                'user_id' => 2, // Assure-toi que l'utilisateur avec ID 2 existe
+                'typeNotif' => 'Erreur de soumission',
                 'contenu' => 'Il y a une erreur dans la déclaration soumise.',
+                'dateEnvoi' => Carbon::now(),
+                'lectureStatut' => false,
             ],
         ];
 

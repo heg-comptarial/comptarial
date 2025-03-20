@@ -9,6 +9,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Class Declaration
@@ -19,7 +20,6 @@ use Illuminate\Database\Eloquent\Model;
  * @property Carbon $date_creation
  * @property string $statut
  * 
- * @property Client $client
  * @property Collection|Formulaire[] $formulaires
  * @property Collection|Rubrique[] $rubriques
  *
@@ -32,21 +32,21 @@ class Declaration extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'client_id' => 'int',
-		'date_creation' => 'datetime'
+		'user_id' => 'int'
 	];
 
 	protected $fillable = [
-		'client_id',
+		'user_id',
 		'titre',
 		'date_creation',
 		'statut'
 	];
 
-	public function client()
-	{
-		return $this->belongsTo(Client::class);
-	}
+	public function user(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
 
 	public function formulaires()
 	{

@@ -33,8 +33,7 @@ class Conjoint extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'prive_id' => 'int',
-		'date_de_naissance' => 'datetime'
+		'prive_id' => 'int'
 	];
 
 	protected $fillable = [
@@ -42,10 +41,11 @@ class Conjoint extends Model
 		'nom',
 		'prenom',
 		'nationalite',
-		'date_de_naissance',
+		'dateDeNaissance',
 		'localite',
 		'adresse',
-		'code_postal'
+		'codePostal',
+		'SituationProfessionnelle'
 	];
 
 	public function prive()

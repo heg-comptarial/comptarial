@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class DocumentSeeder extends Seeder
 {
@@ -17,14 +18,16 @@ class DocumentSeeder extends Seeder
                 'sous_rub_id' => 1, // Assure-toi que la sous-rubrique avec ID 1 existe
                 'titre' => 'Document 1',
                 'type' => 'PDF',
-                'chemin_fichier' => '/chemin/vers/le/fichier1.pdf',
+                'dateAjout' => Carbon::now(),
+                'cheminFichier' => '/chemin/vers/le/fichier1.pdf',
                 'statut' => 'Validé',
             ],
             [
                 'sous_rub_id' => 2, // Assure-toi que la sous-rubrique avec ID 2 existe
                 'titre' => 'Document 2',
                 'type' => 'Word',
-                'chemin_fichier' => '/chemin/vers/le/fichier2.docx',
+                'dateAjout' => Carbon::now(),
+                'cheminFichier' => '/chemin/vers/le/fichier2.docx',
                 'statut' => 'En attente',
             ],
         ];

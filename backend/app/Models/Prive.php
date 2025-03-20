@@ -19,7 +19,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property Carbon $date_de_naissance
  * @property string $etat_civil
  * 
- * @property Client $client
+ * @property User $user
  * @property Collection|Conjoint[] $conjoints
  * @property Collection|Formulaire[] $formulaires
  *
@@ -32,20 +32,20 @@ class Prive extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'client_id' => 'int',
-		'date_de_naissance' => 'datetime'
+		'user_id' => 'int'
 	];
 
 	protected $fillable = [
-		'client_id',
-		'nationalite',
-		'date_de_naissance',
-		'etat_civil'
+		'user_id',
+		'nationalité',
+		'dateDeNaissance',
+		'etatCivil',
+		'numeroFiscal'
 	];
 
-	public function client()
+	public function user()
 	{
-		return $this->belongsTo(Client::class);
+		return $this->belongsTo(User::class);
 	}
 
 	public function conjoints()

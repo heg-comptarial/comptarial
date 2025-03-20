@@ -14,19 +14,13 @@ class EntrepriseSeeder extends Seeder
     {
         $entreprises = [
             [
-                'client_id' => 1, // Assure-toi que le client avec ID 1 existe
-                'raison_sociale' => 'Entreprise A',
+                'user_id' => 3, // Assure-toi que le client avec ID 1 existe
+                'raisonSociale' => 'Comptarial',
                 'prestations' => 'Services informatiques',
-                'nouvelle_entreprise' => 'Y',
-                'grand_livre' => 'Livre A',
-            ],
-            [
-                'client_id' => 2, // Assure-toi que le client avec ID 2 existe
-                'raison_sociale' => 'Entreprise B',
-                'prestations' => 'Consultation financière',
-                'nouvelle_entreprise' => 'N',
-                'grand_livre' => 'Livre B',
-            ],
+                'nouvelleEntreprise' => false,
+                'grandLivre' => 'Livre A',
+                'numeroFiscal' => 'FR987654321',
+            ]
         ];
 
         // Insérer les entreprises dans la base de données

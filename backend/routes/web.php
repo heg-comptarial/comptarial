@@ -2,7 +2,6 @@
 
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UtilisateurController;
-use App\Http\Controllers\ClientController;
 use App\Http\Controllers\AdministrateurController;
 use App\Http\Controllers\DeclarationController;
 use App\Http\Controllers\RubriqueController;
@@ -23,7 +22,6 @@ Route::get('/', function () {
 
 
 Route::get('utilisateurs', [UtilisateurController::class, 'index']);
-Route::get('clients', [ClientController::class, 'index']);
 Route::get('administrateurs', [AdministrateurController::class, 'index']);
 Route::get('declarations', [DeclarationController::class, 'index']);
 Route::get('rubriques', [RubriqueController::class, 'index']);

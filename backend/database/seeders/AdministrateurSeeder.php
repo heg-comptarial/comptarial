@@ -14,13 +14,9 @@ class AdministrateurSeeder extends Seeder
     {
         $administrateurs = [
             [
-                'utilisateur_id' => 1, // Assure-toi que l'utilisateur avec ID 1 existe
-                'niveau_acces' => 'Super Admin',
-            ],
-            [
-                'utilisateur_id' => 2, // Assure-toi que l'utilisateur avec ID 2 existe
-                'niveau_acces' => 'Admin',
-            ],
+                'user_id' => 2, // Assure-toi que l'utilisateur avec ID 1 existe
+                'niveauAcces' => 'Super Admin',
+            ]
         ];
 
         // Insérer les administrateurs dans la base de données

@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 
 class CommentaireSeeder extends Seeder
 {
@@ -14,14 +15,16 @@ class CommentaireSeeder extends Seeder
     {
         $commentaires = [
             [
-                'doc_id' => 1, // Assure-toi que le document avec ID 1 existe
+                'document_id' => 1, // Assure-toi que le document avec ID 1 existe
                 'admin_id' => 1, // Assure-toi que l'administrateur avec ID 1 existe
                 'contenu' => 'Vérifier les informations dans ce document.',
+                'dateCreation' => Carbon::now(),
             ],
             [
-                'doc_id' => 2, // Assure-toi que le document avec ID 2 existe
-                'admin_id' => 2, // Assure-toi que l'administrateur avec ID 2 existe
+                'document_id' => 2, // Assure-toi que le document avec ID 2 existe
+                'admin_id' => 1, // Assure-toi que l'administrateur avec ID 2 existe
                 'contenu' => 'Documents incomplets, besoin d\'ajouter plus de détails.',
+                'dateCreation' => Carbon::now(),
             ],
         ];
 

@@ -16,20 +16,20 @@ class FormulaireSeeder extends Seeder
             [
                 'prive_id' => 1, // Assure-toi que le privé avec ID 1 existe
                 'declaration_id' => 1, // Assure-toi que la déclaration avec ID 1 existe
-                'titre_formulaire' => 'Formulaire 1',
-                'banques' => 'Y',
-                'dettes' => 'N',
-                'enfants' => 'Y',
-                'immobiliers' => 'N',
+                'titreFormulaire' => 'Formulaire 1',
+                'banques' => true,
+                'dettes' => false,
+                'enfants' => true,
+                'immobiliers' => false,
             ],
             [
                 'prive_id' => 2, // Assure-toi que le privé avec ID 2 existe
                 'declaration_id' => 2, // Assure-toi que la déclaration avec ID 2 existe
-                'titre_formulaire' => 'Formulaire 2',
-                'banques' => 'N',
-                'dettes' => 'Y',
-                'enfants' => 'N',
-                'immobiliers' => 'Y',
+                'titreFormulaire' => 'Formulaire 2',
+                'banques' => false,
+                'dettes' => true,
+                'enfants' => false,
+                'immobiliers' => true,
             ],
         ];
 

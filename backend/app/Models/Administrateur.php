@@ -16,7 +16,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $utilisateur_id
  * @property string $niveau_acces
  * 
- * @property Utilisateur $utilisateur
+ * @property User $user
  * @property Collection|Commentaire[] $commentaires
  *
  * @package App\Models
@@ -28,17 +28,17 @@ class Administrateur extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'utilisateur_id' => 'int'
+		'user_id' => 'int'
 	];
 
 	protected $fillable = [
-		'utilisateur_id',
+		'user_id',
 		'niveau_acces'
 	];
 
-	public function utilisateur()
+	public function user()
 	{
-		return $this->belongsTo(Utilisateur::class);
+		return $this->belongsTo(User::class);
 	}
 
 	public function commentaires()

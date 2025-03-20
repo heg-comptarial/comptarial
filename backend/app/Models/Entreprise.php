@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $nouvelle_entreprise
  * @property string $grand_livre
  * 
- * @property Client $client
+ * @property User $user
  *
  * @package App\Models
  */
@@ -29,19 +29,20 @@ class Entreprise extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'client_id' => 'int'
+		'user_id' => 'int'
 	];
 
 	protected $fillable = [
-		'client_id',
+		'user_id',
 		'raison_sociale',
 		'prestations',
 		'nouvelle_entreprise',
-		'grand_livre'
+		'grand_livre',
+		'numeroFiscal'
 	];
 
 	public function client()
 	{
-		return $this->belongsTo(Client::class);
+		return $this->belongsTo(User::class);
 	}
 }
