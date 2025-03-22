@@ -1,16 +1,27 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Edit } from "lucide-react";
 
-export default function RegistrationPage() {
+export default function Dashboard() {
+  const [message, setMessage] = useState("");
+
+  useEffect(() => {
+    fetch("http://localhost:3001/api/test")
+      .then((response) => response.json())
+      .then((data) => setMessage(data.message))
+      .catch((error) => console.error("Error:", error));
+  }, []);
+
   return (
     <div className="container mx-auto py-10 px-4 max-w-3xl">
       <h1 className="text-2xl font-semibold mb-8">
         Infos générales (page s&apos;inscrire)
+        <p>Backend Response: {message}</p>
       </h1>
 
-      <div className="space-y-6 mb-12">
-      
-      </div>
+      <div className="space-y-6 mb-12"></div>
 
       <div className="flex items-center justify-between mt-16">
         <h2 className="text-xl font-medium">Grand livre (pdf à consulter)</h2>
