@@ -16,17 +16,13 @@ class NotificationSeeder extends Seeder
         $notifications = [
             [
                 'user_id' => 1, // Assure-toi que l'utilisateur avec ID 1 existe
-                'typeNotif' => 'Nouveau message',
                 'contenu' => 'Vous avez un nouveau message concernant votre déclaration.',
-                'dateEnvoi' => Carbon::now(),
-                'lectureStatut' => false,
+                'dateCreation' => Carbon::now(),
             ],
             [
                 'user_id' => 2, // Assure-toi que l'utilisateur avec ID 2 existe
-                'typeNotif' => 'Erreur de soumission',
                 'contenu' => 'Il y a une erreur dans la déclaration soumise.',
-                'dateEnvoi' => Carbon::now(),
-                'lectureStatut' => false,
+                'dateCreation' => Carbon::now(),
             ],
         ];
 

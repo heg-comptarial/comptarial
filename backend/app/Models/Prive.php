@@ -14,14 +14,25 @@ use Illuminate\Database\Eloquent\Model;
  * Class Prive
  * 
  * @property int $prive_id
- * @property int $client_id
+ * @property int $user_id
+ * @property Carbon $dateNaissance
  * @property string $nationalite
- * @property Carbon $date_de_naissance
- * @property string $etat_civil
+ * @property string $etatCivil
+ * @property bool $fo_banques
+ * @property bool $fo_dettes
+ * @property bool $fo_immobiliers
+ * @property bool $fo_salarie
+ * @property bool $fo_autrePersonneCharge
+ * @property bool $fo_independant
+ * @property bool $fo_rentier
+ * @property bool $fo_autreRevenu
+ * @property bool $fo_assurance
+ * @property bool $fo_autreDeduction
+ * @property bool $fo_autreInformations
  * 
  * @property User $user
  * @property Collection|Conjoint[] $conjoints
- * @property Collection|Formulaire[] $formulaires
+ * @property Collection|Enfant[] $enfants
  *
  * @package App\Models
  */
@@ -32,15 +43,37 @@ class Prive extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'user_id' => 'int'
+		'user_id' => 'int',
+		'dateNaissance' => 'datetime',
+		'fo_banques' => 'bool',
+		'fo_dettes' => 'bool',
+		'fo_immobiliers' => 'bool',
+		'fo_salarie' => 'bool',
+		'fo_autrePersonneCharge' => 'bool',
+		'fo_independant' => 'bool',
+		'fo_rentier' => 'bool',
+		'fo_autreRevenu' => 'bool',
+		'fo_assurance' => 'bool',
+		'fo_autreDeduction' => 'bool',
+		'fo_autreInformations' => 'bool'
 	];
 
 	protected $fillable = [
 		'user_id',
-		'nationalité',
-		'dateDeNaissance',
+		'dateNaissance',
+		'nationalite',
 		'etatCivil',
-		'numeroFiscal'
+		'fo_banques',
+		'fo_dettes',
+		'fo_immobiliers',
+		'fo_salarie',
+		'fo_autrePersonneCharge',
+		'fo_independant',
+		'fo_rentier',
+		'fo_autreRevenu',
+		'fo_assurance',
+		'fo_autreDeduction',
+		'fo_autreInformations'
 	];
 
 	public function user()
@@ -53,8 +86,8 @@ class Prive extends Model
 		return $this->hasOne(Conjoint::class);
 	}
 
-	public function formulaires()
+	public function enfants()
 	{
-		return $this->hasMany(Formulaire::class);
+		return $this->hasMany(Enfant::class);
 	}
 }

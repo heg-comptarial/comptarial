@@ -23,7 +23,7 @@ class DatabaseSeeder extends Seeder
         $this->call(CommentaireSeeder::class);
         $this->call(EntrepriseSeeder::class);
         $this->call(PriveSeeder::class);
+        $this->call(EnfantSeeder::class);
         $this->call(ConjointSeeder::class);
-        $this->call(FormulaireSeeder::class);
     }
 }

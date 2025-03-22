@@ -12,11 +12,12 @@ use Illuminate\Database\Eloquent\Model;
  * Class Entreprise
  * 
  * @property int $entreprise_id
- * @property int $client_id
- * @property string $raison_sociale
+ * @property int $user_id
+ * @property string $raisonSociale
  * @property string $prestations
- * @property string $nouvelle_entreprise
- * @property string $grand_livre
+ * @property string $grandLivre
+ * @property string $numeroFiscal
+ * @property bool $nouvelleEntreprise
  * 
  * @property User $user
  *
@@ -29,19 +30,20 @@ class Entreprise extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'user_id' => 'int'
+		'user_id' => 'int',
+		'nouvelleEntreprise' => 'bool'
 	];
 
 	protected $fillable = [
 		'user_id',
-		'raison_sociale',
+		'raisonSociale',
 		'prestations',
-		'nouvelle_entreprise',
-		'grand_livre',
-		'numeroFiscal'
+		'grandLivre',
+		'numeroFiscal',
+		'nouvelleEntreprise'
 	];
 
-	public function client()
+	public function user()
 	{
 		return $this->belongsTo(User::class);
 	}

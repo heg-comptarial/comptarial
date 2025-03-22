@@ -13,8 +13,8 @@ use Illuminate\Database\Eloquent\Model;
  * Class Administrateur
  * 
  * @property int $admin_id
- * @property int $utilisateur_id
- * @property string $niveau_acces
+ * @property int $user_id
+ * @property string $niveauAcces
  * 
  * @property User $user
  * @property Collection|Commentaire[] $commentaires
@@ -33,7 +33,7 @@ class Administrateur extends Model
 
 	protected $fillable = [
 		'user_id',
-		'niveau_acces'
+		'niveauAcces'
 	];
 
 	public function user()

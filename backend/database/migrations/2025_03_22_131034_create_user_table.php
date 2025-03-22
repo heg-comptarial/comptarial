@@ -11,17 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('conjoint', function (Blueprint $table) {
-            $table->bigIncrements('conjoint_id');
-            $table->unsignedBigInteger('prive_id')->index('conjoint_prive_id_foreign');
+        Schema::create('user', function (Blueprint $table) {
+            $table->bigIncrements('user_id');
             $table->string('nom');
-            $table->string('prenom');
-            $table->string('nationalité');
-            $table->date('dateDeNaissance');
+            $table->string('email');
+            $table->string('motDePasse');
             $table->string('localite');
             $table->string('adresse');
-            $table->integer('codePostal');
-            $table->string('SituationProfessionnelle');
+            $table->string('codePostal');
+            $table->string('numeroTelephone');
+            $table->string('role');
+            $table->string('statut');
+            $table->dateTime('dateCreation');
         });
     }
 
@@ -30,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('conjoint');
+        Schema::dropIfExists('user');
     }
 };

@@ -14,10 +14,20 @@ return new class extends Migration
         Schema::create('prive', function (Blueprint $table) {
             $table->bigIncrements('prive_id');
             $table->unsignedBigInteger('user_id')->index('prive_user_id_foreign');
-            $table->string('nationalité');
-            $table->date('dateDeNaissance');
+            $table->date('dateNaissance');
+            $table->string('nationalite');
             $table->string('etatCivil');
-            $table->string('numeroFiscal');
+            $table->boolean('fo_banques');
+            $table->boolean('fo_dettes');
+            $table->boolean('fo_immobiliers');
+            $table->boolean('fo_salarie');
+            $table->boolean('fo_autrePersonneCharge');
+            $table->boolean('fo_independant');
+            $table->boolean('fo_rentier');
+            $table->boolean('fo_autreRevenu');
+            $table->boolean('fo_assurance');
+            $table->boolean('fo_autreDeduction');
+            $table->boolean('fo_autreInformations');
         });
     }
 

@@ -16,9 +16,9 @@ return new class extends Migration
             $table->unsignedBigInteger('user_id')->index('entreprise_user_id_foreign');
             $table->string('raisonSociale');
             $table->string('prestations');
-            $table->boolean('nouvelleEntreprise');
             $table->string('grandLivre');
             $table->string('numeroFiscal');
+            $table->boolean('nouvelleEntreprise');
         });
     }
 

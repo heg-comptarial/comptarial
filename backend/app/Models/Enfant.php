@@ -10,27 +10,28 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class Conjoint
+ * Class Enfant
  * 
- * @property int $conjoint_id
+ * @property int $id
  * @property int $prive_id
  * @property string $nom
  * @property string $prenom
- * @property string $nationalite
  * @property Carbon $dateNaissance
- * @property string $localite
  * @property string $adresse
  * @property string $codePostal
- * @property string $situationProfessionnelle
+ * @property string $localite
+ * @property string $noAVS
+ * @property string $noContribuable
+ * @property string $revenuBrut
+ * @property string $fortuneNet
  * 
  * @property Prive $prive
  *
  * @package App\Models
  */
-class Conjoint extends Model
+class Enfant extends Model
 {
-	protected $table = 'conjoint';
-	protected $primaryKey = 'conjoint_id';
+	protected $table = 'enfants';
 	public $timestamps = false;
 
 	protected $casts = [
@@ -42,12 +43,14 @@ class Conjoint extends Model
 		'prive_id',
 		'nom',
 		'prenom',
-		'nationalite',
 		'dateNaissance',
-		'localite',
 		'adresse',
 		'codePostal',
-		'situationProfessionnelle'
+		'localite',
+		'noAVS',
+		'noContribuable',
+		'revenuBrut',
+		'fortuneNet'
 	];
 
 	public function prive()

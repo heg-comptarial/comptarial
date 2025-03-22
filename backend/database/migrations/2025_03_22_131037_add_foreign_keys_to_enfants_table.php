@@ -11,8 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('formulaire', function (Blueprint $table) {
-            $table->foreign(['declaration_id'])->references(['declaration_id'])->on('declaration')->onUpdate('restrict')->onDelete('restrict');
+        Schema::table('enfants', function (Blueprint $table) {
             $table->foreign(['prive_id'])->references(['prive_id'])->on('prive')->onUpdate('restrict')->onDelete('restrict');
         });
     }
@@ -22,9 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('formulaire', function (Blueprint $table) {
-            $table->dropForeign('formulaire_declaration_id_foreign');
-            $table->dropForeign('formulaire_prive_id_foreign');
+        Schema::table('enfants', function (Blueprint $table) {
+            $table->dropForeign('enfants_prive_id_foreign');
         });
     }
 };

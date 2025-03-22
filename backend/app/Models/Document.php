@@ -17,9 +17,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property int $sous_rub_id
  * @property string $titre
  * @property string $type
- * @property Carbon|null $date_ajout
- * @property string $chemin_fichier
+ * @property string $cheminFichier
  * @property string $statut
+ * @property Carbon $dateCreation
  * 
  * @property Sousrubrique $sousrubrique
  * @property Collection|Commentaire[] $commentaires
@@ -33,16 +33,17 @@ class Document extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'sous_rub_id' => 'int'
+		'sous_rub_id' => 'int',
+		'dateCreation' => 'datetime'
 	];
 
 	protected $fillable = [
 		'sous_rub_id',
 		'titre',
 		'type',
-		'date_ajout',
-		'chemin_fichier',
-		'statut'
+		'cheminFichier',
+		'statut',
+		'dateCreation'
 	];
 
 	public function sousrubrique()
@@ -52,6 +53,6 @@ class Document extends Model
 
 	public function commentaires()
 	{
-		return $this->hasOne(Commentaire::class, 'doc_id');
+		return $this->hasMany(Commentaire::class);
 	}
 }

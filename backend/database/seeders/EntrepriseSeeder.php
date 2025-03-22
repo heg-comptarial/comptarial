@@ -14,12 +14,12 @@ class EntrepriseSeeder extends Seeder
     {
         $entreprises = [
             [
-                'user_id' => 3, // Assure-toi que le client avec ID 1 existe
+                'user_id' => 3, // Assure-toi que le client avec ID 1 existe,
                 'raisonSociale' => 'Comptarial',
                 'prestations' => 'Services informatiques',
-                'nouvelleEntreprise' => false,
                 'grandLivre' => 'Livre A',
                 'numeroFiscal' => 'FR987654321',
+                'nouvelleEntreprise' => false,
             ]
         ];
 

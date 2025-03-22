@@ -13,13 +13,13 @@ use Illuminate\Database\Eloquent\Model;
  * Class Commentaire
  * 
  * @property int $commentaire_id
- * @property int $doc_id
+ * @property int $document_id
  * @property int $admin_id
  * @property string $contenu
- * @property Carbon $date_creation
+ * @property Carbon $dateCreation
  * 
- * @property Document $document
  * @property Administrateur $administrateur
+ * @property Document $document
  *
  * @package App\Models
  */
@@ -30,25 +30,25 @@ class Commentaire extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'doc_id' => 'int',
+		'document_id' => 'int',
 		'admin_id' => 'int',
-		'date_creation' => 'datetime'
+		'dateCreation' => 'datetime'
 	];
 
 	protected $fillable = [
-		'doc_id',
+		'document_id',
 		'admin_id',
 		'contenu',
-		'date_creation'
+		'dateCreation'
 	];
-
-	public function document()
-	{
-		return $this->belongsTo(Document::class, 'doc_id');
-	}
 
 	public function administrateur()
 	{
 		return $this->belongsTo(Administrateur::class, 'admin_id');
+	}
+
+	public function document()
+	{
+		return $this->belongsTo(Document::class);
 	}
 }

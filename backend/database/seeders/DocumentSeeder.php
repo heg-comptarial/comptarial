@@ -18,17 +18,17 @@ class DocumentSeeder extends Seeder
                 'sous_rub_id' => 1, // Assure-toi que la sous-rubrique avec ID 1 existe
                 'titre' => 'Document 1',
                 'type' => 'PDF',
-                'dateAjout' => Carbon::now(),
                 'cheminFichier' => '/chemin/vers/le/fichier1.pdf',
                 'statut' => 'Validé',
+                'dateCreation' => Carbon::now(),
             ],
             [
                 'sous_rub_id' => 2, // Assure-toi que la sous-rubrique avec ID 2 existe
                 'titre' => 'Document 2',
                 'type' => 'Word',
-                'dateAjout' => Carbon::now(),
                 'cheminFichier' => '/chemin/vers/le/fichier2.docx',
                 'statut' => 'En attente',
+                'dateCreation' => Carbon::now(),
             ],
         ];
 

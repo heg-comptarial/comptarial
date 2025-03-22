@@ -11,12 +11,14 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('declaration', function (Blueprint $table) {
-            $table->bigIncrements('declaration_id');
-            $table->unsignedBigInteger('user_id')->index('declaration_user_id_foreign');
+        Schema::create('document', function (Blueprint $table) {
+            $table->bigIncrements('doc_id');
+            $table->unsignedBigInteger('sous_rub_id')->index('document_sous_rub_id_foreign');
             $table->string('titre');
-            $table->dateTime('dateCreation');
+            $table->string('type');
+            $table->string('cheminFichier');
             $table->string('statut');
+            $table->dateTime('dateCreation');
         });
     }
 
@@ -25,6 +27,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('declaration');
+        Schema::dropIfExists('document');
     }
 };

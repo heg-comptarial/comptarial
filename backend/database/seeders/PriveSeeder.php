@@ -15,10 +15,20 @@ class PriveSeeder extends Seeder
         $priveRecords = [
             [
                 'user_id' => 1, // Assure-toi que le client avec ID 1 existe
-                'nationalité' => 'Française',
-                'dateDeNaissance' => '2000-01-01',
+                'dateNaissance' => '2000-01-01',
+                'nationalite' => 'Française',
                 'etatCivil' => 'Marié',
-                'numeroFiscal' => 'FR123456789',
+                'fo_banques' => true,
+                'fo_dettes' => false,
+                'fo_immobiliers' => true,
+                'fo_salarie' => true,
+                'fo_autrePersonneCharge' => false,
+                'fo_independant' => false,
+                'fo_rentier' => false,
+                'fo_autreRevenu' => false,
+                'fo_assurance' => true,
+                'fo_autreDeduction' => false,
+                'fo_autreInformations' => false
             ]
         ];
 

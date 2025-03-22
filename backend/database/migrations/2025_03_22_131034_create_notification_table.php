@@ -14,10 +14,8 @@ return new class extends Migration
         Schema::create('notification', function (Blueprint $table) {
             $table->bigIncrements('notification_id');
             $table->unsignedBigInteger('user_id')->index('notification_user_id_foreign');
-            $table->string('typeNotif');
             $table->string('contenu');
-            $table->dateTime('dateEnvoi');
-            $table->boolean('lectureStatut');
+            $table->dateTime('dateCreation');
         });
     }
 

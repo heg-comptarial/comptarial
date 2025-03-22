@@ -17,12 +17,12 @@ class ConjointSeeder extends Seeder
                 'prive_id' => 1, // Assure-toi que le privé avec ID 1 existe
                 'nom' => 'Conjoint 1',
                 'prenom' => 'Marie',
-                'nationalité' => 'Française',
-                'dateDeNaissance' => '1986-05-21',
+                'nationalite' => 'Française',
+                'dateNaissance' => '1986-05-21',
                 'localite' => 'Paris',
                 'adresse' => '123 Rue de Paris',
                 'codePostal' => '75001',
-                'SituationProfessionnelle' => 'Enseignante',
+                'situationProfessionnelle' => 'Enseignante',
             ]
         ];
 
