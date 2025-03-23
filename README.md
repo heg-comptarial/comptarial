@@ -25,7 +25,9 @@ npm run dev
 
 ```bash
 cd backend
-node server.js
+composer install
+php artisan api:install (au cas les routes /api marchent pas, faire cette commande)
+php artisan migrate:refresh --seed  
 ```
 
 ## Tech Stack
@@ -35,4 +37,4 @@ node server.js
 - [TypeScript](https://www.typescriptlang.org/)
 - [Tailwind CSS](https://tailwindcss.com/)
 - [shadcn/ui](https://ui.shadcn.com/)
-- [Express](https://expressjs.com/)
+- [Laravel](https://laravel.com/)
