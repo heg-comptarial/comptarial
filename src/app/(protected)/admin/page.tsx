@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { FileText, Edit, Search } from 'lucide-react'
+import { Edit, Search } from 'lucide-react'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -139,7 +139,7 @@ export default function Dashboard() {
                       <TableHead>Nom</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Téléphone</TableHead>
-                      <TableHead>Type d'entreprise</TableHead>
+                      <TableHead>Type d&apos;entreprise</TableHead>
                       <TableHead>Numéro fiscal</TableHead>
                       <TableHead>Statut</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
