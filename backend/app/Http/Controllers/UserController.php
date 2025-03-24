@@ -97,4 +97,14 @@ class UserController extends Controller
         return response()->json($pendingUsers);
     }
 
+    public function getApproved()
+    {
+        // Récupère uniquement les utilisateurs acceptés
+        $approvedUsers = User::where('statut', 'approved')
+            ->with(['administrateurs', 'declarations', 'entreprises', 'notifications', 'prives'])
+            ->get();
+        
+        return response()->json($approvedUsers);
+    }
+
 }

@@ -23,8 +23,11 @@ Route::get('/user', function (Request $request) {
 // Routes pour les utilisateurs
 Route::apiResource('users', UserController::class);
 
-// Routes supplémentaires pour les utilisateurs
+// Routes supplémentaires pour les utilisateurs qui ont un statur pending
 Route::get('/users/status/pending', [UserController::class, 'getPending']);
+
+// Routes supplémentaires pour les utilisateurs qui ont un statut approved
+Route::get('/users/status/approved', [UserController::class, 'getApproved']);
 
 // Routes pour les administrateurs
 Route::apiResource('administrateurs', AdministrateurController::class);
