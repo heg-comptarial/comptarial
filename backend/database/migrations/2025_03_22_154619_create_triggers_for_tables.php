@@ -84,43 +84,43 @@ class CreateTriggersForTables extends Migration
             END;
         ');
 
-        // Définir un trigger pour empêcher l'ajout d'un privé si l'utilisateur n'est pas accepté
+        // Définir un trigger pour empêcher l'ajout d'un 'prive' si l'utilisateur n'est pas 'approved'
         DB::statement('
-            CREATE TRIGGER check_user_status_before_prive
-            BEFORE INSERT ON prive
-            FOR EACH ROW
-            BEGIN
-                DECLARE user_statut VARCHAR(50);
-                
-                -- Vérifier le statut de l\'utilisateur
-                SELECT statut INTO user_statut FROM `user` WHERE user_id = NEW.user_id LIMIT 1;
-                
-                -- Si l\'utilisateur n\'est pas accepté, empêcher l\'insertion
-                IF user_statut <> "approved" THEN
-                    SIGNAL SQLSTATE "45000"
-                    SET MESSAGE_TEXT = "L\'utilisateur doit être accepté avant de pouvoir être ajouté comme Privé.";
-                END IF;
-            END;
-        ');
+        CREATE TRIGGER check_user_status_before_prive
+        BEFORE INSERT ON prive
+        FOR EACH ROW
+        BEGIN
+            DECLARE user_statut VARCHAR(50);
+            
+            -- Vérifier le statut de l\'utilisateur
+            SELECT statut INTO user_statut FROM `user` WHERE user_id = NEW.user_id LIMIT 1;
+            
+            -- Si l\'utilisateur n\'est pas "approved", empêcher l\'insertion
+            IF user_statut <> "approved" THEN
+                SIGNAL SQLSTATE "45000"
+                SET MESSAGE_TEXT = "L\'utilisateur doit être accepté avant de pouvoir être ajouté comme Privé.";
+            END IF;
+        END;
+    ');
 
-        // Définir un trigger pour empêcher l'ajout d'une entreprise si l'utilisateur n'est pas accepté
-        DB::statement('
-            CREATE TRIGGER check_user_status_before_entreprise
-            BEFORE INSERT ON entreprise
-            FOR EACH ROW
-            BEGIN
-                DECLARE user_statut VARCHAR(50);
-                
-                -- Vérifier le statut de l\'utilisateur
-                SELECT statut INTO user_statut FROM `user` WHERE user_id = NEW.user_id LIMIT 1;
-                
-                -- Si l\'utilisateur n\'est pas accepté, empêcher l\'insertion
-                IF user_statut <> "approved" THEN
-                    SIGNAL SQLSTATE "45000"
-                    SET MESSAGE_TEXT = "L\'utilisateur doit être accepté avant de pouvoir être ajouté comme Entreprise.";
-                END IF;
-            END;
-        ');
+    // Définir un trigger pour empêcher l'ajout d'une 'entreprise' si l'utilisateur n'est pas 'approved'
+    DB::statement('
+        CREATE TRIGGER check_user_status_before_entreprise
+        BEFORE INSERT ON entreprise
+        FOR EACH ROW
+        BEGIN
+            DECLARE user_statut VARCHAR(50);
+            
+            -- Vérifier le statut de l\'utilisateur
+            SELECT statut INTO user_statut FROM `user` WHERE user_id = NEW.user_id LIMIT 1;
+            
+            -- Si l\'utilisateur n\'est pas "approved", empêcher l\'insertion
+            IF user_statut <> "approved" THEN
+                SIGNAL SQLSTATE "45000"
+                SET MESSAGE_TEXT = "L\'utilisateur doit être accepté avant de pouvoir être ajouté comme Entreprise.";
+            END IF;
+        END;
+    ');
 
 
     }
@@ -152,5 +152,7 @@ class CreateTriggersForTables extends Migration
         DB::statement('
             DROP TRIGGER IF EXISTS check_user_status_before_entreprise;
         ');
+
+        
     }
 }
