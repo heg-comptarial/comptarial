@@ -87,4 +87,14 @@ class UserController extends Controller
         return response()->json(null, 204);
     }
 
+    public function getPending()
+    {
+        // Récupère uniquement les utilisateurs en attente
+        $pendingUsers = User::where('statut', 'pending')
+            ->with(['administrateurs', 'declarations', 'entreprises', 'notifications', 'prives'])
+            ->get();
+        
+        return response()->json($pendingUsers);
+    }
+
 }

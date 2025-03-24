@@ -8,6 +8,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+// Supprimer cette ligne
+// import { toast } from "@/components/ui/use-toast"
 
 interface User {
   user_id: number
@@ -22,7 +24,19 @@ interface User {
   dateCreation: string
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
+
+// Configuration par défaut pour les requêtes fetch
+const fetchConfig = {
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    // Vous pouvez ajouter un token d'authentification ici si nécessaire
+    // 'Authorization': `Bearer ${token}`
+  },
+  // Ne pas inclure credentials pour éviter les problèmes CORS
+  // credentials: "include"
+}
 
 export default function Dashboard() {
   const [message, setMessage] = useState("")
@@ -32,28 +46,37 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("general")
 
   useEffect(() => {
-    fetch(`${API_URL}/test`, { credentials: "include" })
+    fetch(`${API_URL}/test`, fetchConfig)
       .then((response) => response.json())
       .then((data) => setMessage(data.message))
       .catch((error) => console.error("Erreur:", error))
   }, [])
 
-  const fetchUsers = async (status: string) => {
+  const fetchPendingUsers = async () => {
     setLoading(true)
     try {
-      // Dans un environnement réel, vous auriez un endpoint qui filtre par statut
-      // Par exemple: `${API_URL}/users?statut=${status}`
-      const response = await fetch(`${API_URL}/users`, { credentials: "include" })
+      const response = await fetch(`${API_URL}/users/status/pending`, fetchConfig)
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
 
       const data = await response.json()
-
-      // Filtrer les utilisateurs par statut côté client
-      // Dans un environnement de production, ce filtrage devrait idéalement être fait côté serveur
-      const filteredUsers = data.filter((user: User) => user.statut === status)
-      setUsers(filteredUsers)
+      setUsers(data)
     } catch (error) {
-      console.error(`Erreur lors du chargement des utilisateurs ${status}:`, error)
+      console.error("Erreur lors du chargement des demandes:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchApprovedUsers = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`${API_URL}/users/status/approved`, fetchConfig)
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+
+      const data = await response.json()
+      setUsers(data)
+    } catch (error) {
+      console.error("Erreur lors du chargement des clients:", error)
     } finally {
       setLoading(false)
     }
@@ -63,35 +86,25 @@ export default function Dashboard() {
     if (!searchTerm.trim()) {
       // Si la recherche est vide, on recharge les utilisateurs selon l'onglet actif
       if (activeTab === "demandes") {
-        fetchUsers("pending")
+        fetchPendingUsers()
       } else if (activeTab === "clients") {
-        fetchUsers("approved")
+        fetchApprovedUsers()
       }
       return
     }
 
     setLoading(true)
     try {
-      // Dans un environnement réel, vous auriez un endpoint de recherche
-      // Par exemple: `${API_URL}/users/search?q=${searchTerm}&statut=${activeTab === "demandes" ? "pending" : "approved"}`
-      const response = await fetch(`${API_URL}/users`, { credentials: "include" })
+      const statut = activeTab === "demandes" ? "pending" : "approved"
+      const response = await fetch(
+        `${API_URL}/users/search?q=${encodeURIComponent(searchTerm)}&statut=${statut}`,
+        fetchConfig,
+      )
+
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
 
       const data = await response.json()
-
-      // Filtrer les résultats par statut et terme de recherche
-      const filteredUsers = data.filter((user: User) => {
-        const matchesStatus = activeTab === "demandes" ? user.statut === "pending" : user.statut === "approved"
-
-        const matchesSearch =
-          user.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.numeroTelephone.includes(searchTerm)
-
-        return matchesStatus && matchesSearch
-      })
-
-      setUsers(filteredUsers)
+      setUsers(data)
     } catch (error) {
       console.error("Erreur lors de la recherche des utilisateurs:", error)
     } finally {
@@ -130,9 +143,69 @@ export default function Dashboard() {
     setSearchTerm("")
 
     if (value === "demandes") {
-      fetchUsers("pending")
+      fetchPendingUsers()
     } else if (value === "clients") {
-      fetchUsers("approved")
+      fetchApprovedUsers()
+    }
+  }
+
+  const updateUserStatus = async (userId: number, newStatus: string) => {
+    const previousUsers = users; // Sauvegarde de l'état actuel
+
+      try {
+          // Supprime immédiatement l'utilisateur de la liste pour un effet optimiste
+          setUsers((prevUsers) => prevUsers.filter((user) => user.user_id !== userId));
+
+          // Envoi de la requête au backend
+          const response = await fetch(`${API_URL}/users/${userId}`, {
+              method: "PATCH",
+              ...fetchConfig,
+              body: JSON.stringify({ statut: newStatus }),
+          });
+
+          if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+          }
+
+          console.log("Statut mis à jour avec succès");
+
+          // Recharger uniquement si nécessaire
+          if (activeTab === "demandes") {
+              fetchPendingUsers(); // Recharge uniquement les utilisateurs en attente
+          }
+      } catch (error) {
+          console.error("Erreur lors de la mise à jour du statut:", error);
+          setUsers(previousUsers); // Rétablir la liste en cas d'échec
+      }
+  };
+
+
+  const deleteUser = async (userId: number, userName: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir refuser et supprimer l'utilisateur ${userName} ?`)) {
+      return
+    }
+
+    try {
+      // Optimistic UI update - Supprimer immédiatement l'utilisateur de la liste
+      setUsers((prevUsers) => prevUsers.filter((user) => user.user_id !== userId))
+
+      // Envoyer la requête au backend
+      const response = await fetch(`${API_URL}/users/${userId}`, {
+        method: "DELETE",
+        ...fetchConfig,
+      })
+
+      if (!response.ok) {
+        // En cas d'erreur, recharger la liste pour restaurer l'état
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
+
+      // Pas besoin de recharger la liste car nous avons déjà mis à jour l'UI
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'utilisateur:", error)
+      // En cas d'erreur, recharger la liste pour restaurer l'état correct
+      fetchPendingUsers()
     }
   }
 
@@ -184,7 +257,7 @@ export default function Dashboard() {
                   <Button size="sm" onClick={searchUsers}>
                     Rechercher
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => fetchUsers("pending")} disabled={loading}>
+                  <Button size="sm" variant="outline" onClick={fetchPendingUsers} disabled={loading}>
                     {loading ? "Chargement..." : "Toutes les demandes"}
                   </Button>
                 </div>
@@ -223,9 +296,22 @@ export default function Dashboard() {
                               {getStatusLabel(user.statut)}
                             </Badge>
                           </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="icon">
-                              <Edit className="h-4 w-4" />
+                          <TableCell className="text-right space-x-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
+                              onClick={() => updateUserStatus(user.user_id, "approved", user.nom)}
+                            >
+                              Accepter
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
+                              onClick={() => deleteUser(user.user_id, user.nom)}
+                            >
+                              Refuser
                             </Button>
                           </TableCell>
                         </TableRow>
@@ -264,7 +350,7 @@ export default function Dashboard() {
                   <Button size="sm" onClick={searchUsers}>
                     Rechercher
                   </Button>
-                  <Button size="sm" variant="outline" onClick={() => fetchUsers("approved")} disabled={loading}>
+                  <Button size="sm" variant="outline" onClick={fetchApprovedUsers} disabled={loading}>
                     {loading ? "Chargement..." : "Tous les clients"}
                   </Button>
                 </div>
