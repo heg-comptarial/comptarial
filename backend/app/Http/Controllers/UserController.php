@@ -99,9 +99,14 @@ class UserController extends Controller
 
     public function getApproved()
     {
-        // Récupère uniquement les utilisateurs acceptés
+        // Récupère uniquement les utilisateurs acceptés qui ne sont pas administrateurs
         $approvedUsers = User::where('statut', 'approved')
-            ->with(['administrateurs', 'declarations', 'entreprises', 'notifications', 'prives'])
+            ->whereDoesntHave('administrateurs') // Exclure les administrateurs
+            ->where(function ($query) {
+                $query->whereHas('entreprises') // Inclure ceux qui ont des entreprises
+                    ->orWhereHas('prives');  // Inclure ceux qui ont des privés
+            })
+            ->with(['declarations', 'entreprises', 'notifications', 'prives'])
             ->get();
         
         return response()->json($approvedUsers);
