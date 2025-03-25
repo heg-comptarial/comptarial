@@ -60,4 +60,14 @@ class DocumentController extends Controller
         $document->delete();
         return response()->json(null, 204);
     }
+
+    public function getDocumentsByUser($userId)
+{
+    // Récupère tous les documents liés à un utilisateur via les déclarations
+    $documents = Document::whereHas('sous_rubrique.rubrique.declaration', function ($query) use ($userId) {
+        $query->where('user_id', $userId);
+    })->with(['sous_rubrique.rubrique.declaration'])->get();
+
+    return response()->json($documents);
+}
 }

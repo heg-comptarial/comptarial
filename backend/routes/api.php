@@ -55,3 +55,6 @@ Route::apiResource('enfants', EnfantController::class);
 
 // Routes pour les entreprises
 Route::apiResource('entreprises', EntrepriseController::class);
+
+// Route pour obtenir les documents d'un utilisateur
+Route::get('users/{userId}/documents', [DocumentController::class, 'getDocumentsByUser']);
