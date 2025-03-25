@@ -44,7 +44,7 @@ class UserSeeder extends Seeder
                 'codePostal' => '69001',
                 'numeroTelephone' => '0987654321',
                 'role' => 'entreprise',
-                'statut' => 'pending',
+                'statut' => 'approved',
                 'dateCreation' => now(),
             ],
             [
@@ -56,7 +56,7 @@ class UserSeeder extends Seeder
                 'codePostal' => '13001',
                 'numeroTelephone' => '0678901234',
                 'role' => 'prive',
-                'statut' => 'rejected',
+                'statut' => 'approved',
                 'dateCreation' => now(),
             ],
             [

@@ -80,6 +80,29 @@ export default function Dashboard() {
     }
   }
 
+  const approveUser = async (userId: number, role: string) => {
+    try {
+      const response = await fetch(`${API_URL}/users/${userId}/approve`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ role: role }),
+        });
+
+        if (response.ok) {
+            console.log("Utilisateur approuvé avec succès.");
+            // Rafraîchir la liste des utilisateurs en attente ou faire d'autres actions
+        } else {
+            const data = await response.json();
+            console.log("Erreur : ", data.message);
+        }
+    } catch (error) {
+        console.error("Erreur lors de l'approbation de l'utilisateur :", error);
+    }
+  };
+
+
   const searchUsers = async () => {
     if (!searchTerm.trim()) {
       // Si la recherche est vide, on recharge les utilisateurs selon l'onglet actif
@@ -299,7 +322,15 @@ export default function Dashboard() {
                               variant="outline"
                               size="sm"
                               className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
-                              onClick={() => updateUserStatus(user.user_id, "approved", user.nom)}
+                              onClick={() => {
+
+                                // Mettre à jour le statut de l'utilisateur (en passant "approved")
+                                updateUserStatus(user.user_id, "approved")
+
+                                // Puis, associer l'utilisateur à l'entité correspondante (Prive ou Entreprise)
+                                approveUser(user.user_id, user.role);
+                                
+                              }}
                             >
                               Accepter
                             </Button>

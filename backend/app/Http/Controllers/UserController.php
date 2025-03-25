@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\User;
+use App\Models\Prive;
+use App\Models\Entreprise;
 use Illuminate\Http\Request;
 
 class UserController extends Controller
@@ -112,4 +114,45 @@ class UserController extends Controller
         return response()->json($approvedUsers);
     }
 
+    public function approveUser(Request $request, $id)
+    {
+        try {
+            // Récupère l'utilisateur en utilisant le user_id
+            $user = User::where('user_id', $id)->firstOrFail();
+        
+            // Création de Prive ou Entreprise en fonction du rôle
+            if ($user->role === 'prive') {
+                Prive::create([
+                    'user_id' => $user->user_id, // Utilisez user_id ici
+                    'dateNaissance' => now(), // Par défaut
+                    'nationalite' => 'Non spécifiée',
+                    'etatCivil' => 'Non spécifié',
+                    'fo_banques' => false,
+                    'fo_dettes' => false,
+                    'fo_immobiliers' => false,
+                    'fo_salarie' => false,
+                    'fo_autrePersonneCharge' => false,
+                    'fo_independant' => false,
+                    'fo_rentier' => false,
+                    'fo_autreRevenu' => false,
+                    'fo_assurance' => false,
+                    'fo_autreDeduction' => false,
+                    'fo_autreInformations' => false,
+                ]);
+            } elseif ($user->role === 'entreprise') {
+                Entreprise::create([
+                    'user_id' => $user->user_id, // Utilisez user_id ici
+                    'raisonSociale' => 'Non spécifiée',
+                    'prestations' => 'Non spécifiées',
+                    'grandLivre' => 'Non spécifié',
+                    'numeroFiscal' => 'Non spécifié',
+                    'nouvelleEntreprise' => true, // Par défaut
+                ]);
+            }
+        
+            return response()->json(['message' => 'Utilisateur approuvé et type créé avec succès.'], 200);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Erreur : ' . $e->getMessage()], 500);
+        }
+    }
 }

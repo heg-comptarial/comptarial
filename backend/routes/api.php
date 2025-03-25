@@ -29,6 +29,10 @@ Route::get('/users/status/pending', [UserController::class, 'getPending']);
 // Routes supplémentaires pour les utilisateurs qui ont un statut approved
 Route::get('/users/status/approved', [UserController::class, 'getApproved']);
 
+// Routes supplémentaires pour les utilisateurs afin de créer soit un privé soit une entreprise
+Route::post('/users/{id}/approve', [UserController::class, 'approveUser']);
+
+
 // Routes pour les administrateurs
 Route::apiResource('administrateurs', AdministrateurController::class);
 
