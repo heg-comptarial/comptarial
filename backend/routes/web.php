@@ -13,6 +13,7 @@ use App\Http\Controllers\ConjointController;
 use App\Http\Controllers\EnfantController;
 use App\Http\Controllers\EntrepriseController;
 use App\Http\Controllers\UserController;
+use App\Http\Controllers\AuthController;
 
 Route::get('/', function () {
     return view('welcome');

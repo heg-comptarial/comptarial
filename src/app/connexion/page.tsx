@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,16 +8,47 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // Ici vous pouvez ajouter la logique d'authentification
-    console.log("Email:", email, "Password:", password)
+
+    // On envoie la requête POST à l'API backend Laravel pour l'authentification
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          email,
+          password,
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        // Si la connexion réussit, on stocke le token d'authentification
+        localStorage.setItem("auth_token", data.token)
+
+        // Redirection vers la page des utilisateurs (ou dashboard)
+        router.push("/dashboard")
+      } else {
+        // Si la connexion échoue, on affiche une erreur
+        setError(data.message || "Une erreur s'est produite.")
+      }
+    } catch (err) {
+      console.error(err)
+      setError("Une erreur s'est produite lors de la connexion.")
+    }
   }
 
   return (
@@ -74,6 +104,7 @@ export default function LoginPage() {
                 </Link>
               </div>
             </div>
+            {error && <p className="text-red-500 text-sm">{error}</p>}
             <Button type="submit" className="w-full">
               Se connecter
             </Button>
@@ -88,4 +119,3 @@ export default function LoginPage() {
     </div>
   )
 }
-

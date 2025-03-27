@@ -10,6 +10,9 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Notifications\Notifiable;
+use Laravel\Sanctum\HasApiTokens;
 
 /**
  * Class User
@@ -34,16 +37,12 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  *
  * @package App\Models
  */
-class User extends Model
+class User extends Authenticatable
 {
-	use HasFactory;
+	use HasApiTokens, Notifiable;
 	protected $table = 'user';
 	protected $primaryKey = 'user_id';
 	public $timestamps = false;
-
-	protected $casts = [
-		'dateCreation' => 'datetime'
-	];
 
 	protected $fillable = [
 		'nom',
@@ -57,6 +56,18 @@ class User extends Model
 		'statut',
 		'dateCreation'
 	];
+
+    protected $hidden = [
+        'password',
+        'motDePasse',
+        'remember_token',
+    ];
+
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'dateCreation' => 'datetime',
+    ];
 
 	public function administrateurs()
 	{

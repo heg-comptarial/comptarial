@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -15,10 +16,6 @@ use App\Http\Controllers\ConjointController;
 use App\Http\Controllers\EnfantController;
 use App\Http\Controllers\EntrepriseController;
 
-// Route pour l'utilisateur authentifié (si vous utilisez Sanctum)
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
 
 // Routes pour les utilisateurs
 Route::apiResource('users', UserController::class);
@@ -55,3 +52,7 @@ Route::apiResource('enfants', EnfantController::class);
 
 // Routes pour les entreprises
 Route::apiResource('entreprises', EntrepriseController::class);
+
+Route::post('login', [AuthController::class, 'login']);
+Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::get('test', [AuthController::class, 'test']);

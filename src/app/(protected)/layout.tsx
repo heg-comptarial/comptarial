@@ -1,5 +1,6 @@
 "use client";
-import { usePathname } from "next/navigation";
+
+import { usePathname, useRouter } from "next/navigation";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import {
   Breadcrumb,
@@ -15,6 +16,8 @@ import {
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
+import { Button } from "@/components/ui/button";
+import { LogOut } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -22,11 +25,38 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const router = useRouter();
   const currentPage = pathname.split("/").pop()?.replace(/-/g, " ");
   const capitalizedPage =
     currentPage && currentPage !== "dashboard"
       ? currentPage.charAt(0).toUpperCase() + currentPage.slice(1)
       : "Dashboard";
+
+  // Fonction de déconnexion
+  const handleLogout = async () => {
+    try {
+      const response = await fetch('http://localhost:8000/api/logout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, // Utilise le token stocké
+        },
+        credentials: 'include', // Pour inclure les cookies si nécessaires
+      });
+  
+      if (response.ok) {
+        console.log('Déconnexion réussie');
+        localStorage.removeItem('auth_token'); // Supprime le token d'authentification
+        router.push('/connexion'); // Redirection vers la page de connexion
+      } else {
+        const errorData = await response.json();
+        console.error('Erreur lors de la déconnexion', errorData);
+      }
+    } catch (error) {
+      console.error('Erreur réseau lors de la déconnexion', error);
+    }
+  };
+  
 
   return (
     <SidebarProvider>
@@ -37,6 +67,7 @@ export default function DashboardLayout({
             <SidebarTrigger className="-ml-1" />
             <Separator orientation="vertical" className="mr-2 h-4" />
             <div className="flex flex-1 items-center justify-between">
+              {/* Breadcrumb */}
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem className="hidden md:block">
@@ -52,6 +83,11 @@ export default function DashboardLayout({
                   )}
                 </BreadcrumbList>
               </Breadcrumb>
+
+              {/* Bouton de déconnexion */}
+              <Button variant="outline" onClick={handleLogout}>
+                <LogOut className="h-4 w-4 mr-2" /> Déconnexion
+              </Button>
             </div>
           </div>
         </header>
