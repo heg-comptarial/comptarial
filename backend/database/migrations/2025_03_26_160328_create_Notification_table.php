@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('entreprise', function (Blueprint $table) {
-            $table->foreign(['user_id'], 'entreprise_ibfk_1')->references(['user_id'])->on('User')->onUpdate('no action')->onDelete('cascade');
+        Schema::create('Notification', function (Blueprint $table) {
+            $table->bigIncrements('notification_id');
+            $table->unsignedBigInteger('user_id')->index('notification_user_id_foreign');
+            $table->string('contenu');
+            $table->dateTime('dateCreation')->useCurrent();
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('entreprise', function (Blueprint $table) {
-            $table->dropForeign('entreprise_ibfk_1');
-        });
+        Schema::dropIfExists('Notification');
     }
 };

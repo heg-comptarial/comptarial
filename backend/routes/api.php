@@ -6,7 +6,6 @@ use App\Http\Controllers\UserController;
 use App\Http\Controllers\AdministrateurController;
 use App\Http\Controllers\DocumentController;
 use App\Http\Controllers\CommentaireController;
-use App\Http\Controllers\SousRubriqueController;
 use App\Http\Controllers\RubriqueController;
 use App\Http\Controllers\DeclarationController;
 use App\Http\Controllers\NotificationController;
@@ -32,9 +31,6 @@ Route::apiResource('documents', DocumentController::class);
 // Routes pour les commentaires
 Route::apiResource('commentaires', CommentaireController::class);
 
-// Routes pour les sous-rubriques
-Route::apiResource('sousrubriques', SousRubriqueController::class);
-
 // Routes pour les rubriques
 Route::apiResource('rubriques', RubriqueController::class);
 
@@ -58,3 +54,8 @@ Route::apiResource('entreprises', EntrepriseController::class);
 
 // Route pour obtenir les documents d'un utilisateur
 Route::get('users/{userId}/documents', [DocumentController::class, 'getDocumentsByUser']);
+
+// Route pour obtenir une déclaration spécifique d'un user
+Route::get('/users/{userId}/declarations/{declarationId}', [UserController::class, 'getUserDeclarationWithDetails']);
+
+Route::get('/users/{userId}/declarations', [UserController::class, 'getAllDeclarationsByUser']);

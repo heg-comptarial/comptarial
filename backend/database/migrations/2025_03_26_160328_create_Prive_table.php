@@ -11,12 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('prive', function (Blueprint $table) {
+        Schema::create('Prive', function (Blueprint $table) {
             $table->bigIncrements('prive_id');
-            $table->unsignedBigInteger('user_id')->index('user_id');
-            $table->date('dateNaissance');
-            $table->string('nationalite');
-            $table->string('etatCivil');
+            $table->unsignedBigInteger('user_id')->index('prive_user_id_foreign');
+            $table->date('dateNaissance')->nullable();
+            $table->string('nationalite')->nullable();
+            $table->string('etatCivil')->nullable();
             $table->boolean('fo_banques')->default(false);
             $table->boolean('fo_dettes')->default(false);
             $table->boolean('fo_immobiliers')->default(false);
@@ -36,6 +36,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('prive');
+        Schema::dropIfExists('Prive');
     }
 };

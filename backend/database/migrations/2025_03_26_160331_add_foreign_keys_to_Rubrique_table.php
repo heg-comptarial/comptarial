@@ -11,10 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('administrateur', function (Blueprint $table) {
-            $table->bigIncrements('admin_id');
-            $table->unsignedBigInteger('user_id')->index('user_id');
-            $table->enum('niveauAcces', ['admin', 'super_admin'])->default('admin');
+        Schema::table('Rubrique', function (Blueprint $table) {
+            $table->foreign(['declaration_id'])->references(['declaration_id'])->on('Declaration')->onUpdate('no action')->onDelete('no action');
         });
     }
 
@@ -23,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('administrateur');
+        Schema::table('Rubrique', function (Blueprint $table) {
+            $table->dropForeign('rubrique_declaration_id_foreign');
+        });
     }
 };

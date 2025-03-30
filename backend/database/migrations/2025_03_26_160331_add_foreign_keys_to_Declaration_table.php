@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('sousrubrique', function (Blueprint $table) {
-            $table->bigIncrements('sous_rub_id');
-            $table->unsignedBigInteger('rubrique_id')->index('rubrique_id');
-            $table->string('titre');
-            $table->string('description');
+        Schema::table('Declaration', function (Blueprint $table) {
+            $table->foreign(['user_id'])->references(['user_id'])->on('User')->onUpdate('no action')->onDelete('no action');
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('sousrubrique');
+        Schema::table('Declaration', function (Blueprint $table) {
+            $table->dropForeign('declaration_user_id_foreign');
+        });
     }
 };

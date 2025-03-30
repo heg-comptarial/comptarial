@@ -21,7 +21,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $statut
  * @property Carbon $dateCreation
  * 
- * @property SousRubrique $sous_rubrique
+ * @property Rubrique $rubrique
  * @property Collection|Commentaire[] $commentaires
  *
  * @package App\Models
@@ -33,22 +33,22 @@ class Document extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'sous_rub_id' => 'int',
+		'rubrique_id' => 'int',
 		'dateCreation' => 'datetime'
 	];
 
 	protected $fillable = [
-		'sous_rub_id',
-		'titre',
+		'rubrique_id',
+		'nom',
 		'type',
 		'cheminFichier',
 		'statut',
 		'dateCreation'
 	];
 
-	public function sous_rubrique()
+	public function rubrique()
 	{
-		return $this->belongsTo(SousRubrique::class, 'sous_rub_id');
+		return $this->belongsTo(Rubrique::class, 'rubrique_id');
 	}
 
 	public function commentaires()

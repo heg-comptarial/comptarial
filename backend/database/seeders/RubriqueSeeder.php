@@ -21,7 +21,7 @@ class RubriqueSeeder extends Seeder
                 'description' => 'Description de la rubrique 2',
             ],
             [
-                'declaration_id' => 2,
+                'declaration_id' => 1,
                 'titre' => 'Rubrique 3',
                 'description' => 'Description de la rubrique 3',
             ],

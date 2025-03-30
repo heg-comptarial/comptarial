@@ -11,8 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('sousrubrique', function (Blueprint $table) {
-            $table->foreign(['rubrique_id'], 'sousrubrique_ibfk_1')->references(['rubrique_id'])->on('Rubrique')->onUpdate('no action')->onDelete('cascade');
+        Schema::table('Prive', function (Blueprint $table) {
+            $table->foreign(['user_id'])->references(['user_id'])->on('User')->onUpdate('no action')->onDelete('no action');
         });
     }
 
@@ -21,8 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('sousrubrique', function (Blueprint $table) {
-            $table->dropForeign('sousrubrique_ibfk_1');
+        Schema::table('Prive', function (Blueprint $table) {
+            $table->dropForeign('prive_user_id_foreign');
         });
     }
 };

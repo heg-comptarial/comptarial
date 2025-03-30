@@ -11,8 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('document', function (Blueprint $table) {
-            $table->foreign(['sous_rub_id'], 'document_ibfk_1')->references(['sous_rub_id'])->on('SousRubrique')->onUpdate('no action')->onDelete('cascade');
+        Schema::create('Rubrique', function (Blueprint $table) {
+            $table->bigIncrements('rubrique_id');
+            $table->unsignedBigInteger('declaration_id')->index('rubrique_declaration_id_foreign');
+            $table->string('titre');
+            $table->string('description');
         });
     }
 
@@ -21,8 +24,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('document', function (Blueprint $table) {
-            $table->dropForeign('document_ibfk_1');
-        });
+        Schema::dropIfExists('Rubrique');
     }
 };

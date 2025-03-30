@@ -11,8 +11,10 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('administrateur', function (Blueprint $table) {
-            $table->foreign(['user_id'], 'administrateur_ibfk_1')->references(['user_id'])->on('User')->onUpdate('no action')->onDelete('cascade');
+        Schema::create('Administrateur', function (Blueprint $table) {
+            $table->bigIncrements('admin_id');
+            $table->unsignedBigInteger('user_id')->index('administrateur_user_id_foreign');
+            $table->enum('niveauAcces', ['admin', 'super_admin'])->default('admin');
         });
     }
 
@@ -21,8 +23,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('administrateur', function (Blueprint $table) {
-            $table->dropForeign('administrateur_ibfk_1');
-        });
+        Schema::dropIfExists('Administrateur');
     }
 };

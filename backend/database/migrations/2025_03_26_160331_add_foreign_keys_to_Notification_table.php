@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('rubrique', function (Blueprint $table) {
-            $table->bigIncrements('rubrique_id');
-            $table->unsignedBigInteger('declaration_id')->index('declaration_id');
-            $table->string('titre');
-            $table->string('description');
+        Schema::table('Notification', function (Blueprint $table) {
+            $table->foreign(['user_id'])->references(['user_id'])->on('User')->onUpdate('no action')->onDelete('no action');
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('rubrique');
+        Schema::table('Notification', function (Blueprint $table) {
+            $table->dropForeign('notification_user_id_foreign');
+        });
     }
 };

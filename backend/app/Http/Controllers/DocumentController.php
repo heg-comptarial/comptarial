@@ -10,7 +10,7 @@ class DocumentController extends Controller
     public function index()
     {
         // Récupère tous les documents avec leurs relations
-        $documents = Document::with(['sous_rubrique', 'commentaires'])->get();
+        $documents = Document::with(['rubrique', 'commentaires'])->get();
         return response()->json($documents);
     }
 
@@ -18,8 +18,8 @@ class DocumentController extends Controller
     {
         // Valide les données
         $request->validate([
-            'sous_rub_id' => 'required|exists:sous_rubrique,sous_rub_id',
-            'titre' => 'required|string|max:255',
+            'rubrique_id' => 'required|exists:rubrique,rubrique_id',
+            'nom' => 'required|string|max:255',
             'type' => 'required|in:pdf,doc,xls,ppt,image,other',
             'cheminFichier' => 'required|string|max:255',
             'statut' => 'required|in:pending,approved,rejected',
@@ -33,7 +33,7 @@ class DocumentController extends Controller
     public function show($id)
     {
         // Récupère un document spécifique avec ses relations
-        $document = Document::with(['sous_rubrique', 'commentaires'])->findOrFail($id);
+        $document = Document::with(['rubrique', 'commentaires'])->findOrFail($id);
         return response()->json($document);
     }
 
@@ -41,8 +41,8 @@ class DocumentController extends Controller
     {
         // Valide les données
         $request->validate([
-            'titre' => 'string|max:255',
-            'type' => 'in:pdf,doc,xls,ppt,image,other',
+            'nom' => 'string|max:255',
+            'type' => 'in:pdf,doc,xls,ppt,jpeg,jpg,png,other',
             'cheminFichier' => 'string|max:255',
             'statut' => 'in:pending,approved,rejected',
         ]);
@@ -64,9 +64,9 @@ class DocumentController extends Controller
     public function getDocumentsByUser($userId)
 {
     // Récupère tous les documents liés à un utilisateur via les déclarations
-    $documents = Document::whereHas('sous_rubrique.rubrique.declaration', function ($query) use ($userId) {
+    $documents = Document::whereHas('rubrique.declaration', function ($query) use ($userId) {
         $query->where('user_id', $userId);
-    })->with(['sous_rubrique.rubrique.declaration'])->get();
+    })->with(['rubrique.declaration'])->get();
 
     return response()->json($documents);
 }

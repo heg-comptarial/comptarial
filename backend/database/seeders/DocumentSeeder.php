@@ -11,27 +11,30 @@ class DocumentSeeder extends Seeder
     {
         DB::table('document')->insert([
             [
-                'sous_rub_id' => 1,
-                'titre' => 'Document 1',
+                'rubrique_id' => 1,
+                'nom' => 'Document 1',
                 'type' => 'pdf',
                 'cheminFichier' => 'documents/document1.pdf',
                 'statut' => 'approved',
+                'sous_rubrique' => null,
                 'dateCreation' => now(),
             ],
             [
-                'sous_rub_id' => 2,
-                'titre' => 'Document 2',
+                'rubrique_id' => 2,
+                'nom' => 'Document 2',
                 'type' => 'doc',
                 'cheminFichier' => 'documents/document2.doc',
                 'statut' => 'pending',
+                'sous_rubrique' => null,
                 'dateCreation' => now(),
             ],
             [
-                'sous_rub_id' => 1,
-                'titre' => 'Document 3',
-                'type' => 'image',
+                'rubrique_id' => 3,
+                'nom' => 'Document 3',
+                'type' => 'jpg',
                 'cheminFichier' => 'documents/image1.png',
                 'statut' => 'rejected',
+                'sous_rubrique' => null,
                 'dateCreation' => now(),
             ],
         ]);

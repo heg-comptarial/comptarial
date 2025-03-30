@@ -18,7 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string $description
  * 
  * @property Declaration $declaration
- * @property Collection|SousRubrique[] $sous_rubriques
+ * @property Collection|Document[] $document
  *
  * @package App\Models
  */
@@ -43,8 +43,8 @@ class Rubrique extends Model
 		return $this->belongsTo(Declaration::class, 'declaration_id');
 	}
 
-	public function sous_rubriques()
+	public function documents()
 	{
-		return $this->hasMany(SousRubrique::class, 'rubrique_id');
+		return $this->hasMany(Document::class, 'rubrique_id');
 	}
 }

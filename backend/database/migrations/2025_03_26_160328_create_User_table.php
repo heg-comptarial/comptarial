@@ -11,17 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('user', function (Blueprint $table) {
+        Schema::create('User', function (Blueprint $table) {
             $table->bigIncrements('user_id');
             $table->string('nom');
-            $table->string('email', 254)->unique('email')->comment('The email address of the user, used for login and communication.');
-            $table->string('motDePasse')->comment('Stores hashed password');
+            $table->string('email');
+            $table->string('motDePasse')->comment('stores only hashed passwords, not plain text');
             $table->string('localite');
             $table->string('adresse');
             $table->string('codePostal', 10);
-            $table->string('numeroTelephone', 15);
+            $table->string('numeroTelephone', 20);
             $table->enum('role', ['admin', 'prive', 'entreprise']);
-            $table->enum('statut', ['approved', 'rejected', 'pending']);
+            $table->enum('statut', ['pending', 'rejected', 'approved'])->default('pending');
             $table->dateTime('dateCreation')->useCurrent();
         });
     }
@@ -31,6 +31,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('user');
+        Schema::dropIfExists('User');
     }
 };

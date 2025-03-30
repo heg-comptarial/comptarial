@@ -11,7 +11,7 @@ class DeclarationSeeder extends Seeder
     {
         DB::table('declaration')->insert([
             [
-                'user_id' => 3,
+                'user_id' => 4,
                 'titre' => 'Déclaration 2025',
                 'statut' => 'approved',
                 'annee' => '2025',
@@ -25,12 +25,33 @@ class DeclarationSeeder extends Seeder
                 'dateCreation' => now(),
             ],
             [
-                'user_id' => 5,
+                'user_id' => 4,
                 'titre' => 'Déclaration 2023',
                 'statut' => 'rejected',
                 'annee' => '2023',
                 'dateCreation' => now(),
             ],
+            [
+                'user_id' => 5,
+                'titre' => 'Déclaration 2025',
+                'statut' => 'approved',
+                'annee' => '2025',
+                'dateCreation' => now(),
+            ],
+            [
+                'user_id' => 6,
+                'titre' => 'Déclaration 2030',
+                'statut' => 'pending',
+                'annee' => '2030',
+                'dateCreation' => now(),
+            ],
+            [
+                'user_id' => 7,
+                'titre' => 'Déclaration 2030',
+                'statut' => 'pending',
+                'annee' => '2030',
+                'dateCreation' => now(),
+            ]
         ]);
     }
 }

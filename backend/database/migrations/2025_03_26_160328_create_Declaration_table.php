@@ -11,10 +11,12 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('notification', function (Blueprint $table) {
-            $table->bigIncrements('notification_id');
-            $table->unsignedBigInteger('user_id')->index('user_id');
-            $table->string('contenu');
+        Schema::create('Declaration', function (Blueprint $table) {
+            $table->bigIncrements('declaration_id');
+            $table->unsignedBigInteger('user_id')->index('declaration_user_id_foreign');
+            $table->string('titre');
+            $table->enum('statut', ['pending', 'rejected', 'approved'])->default('pending');
+            $table->year('annee');
             $table->dateTime('dateCreation')->useCurrent();
         });
     }
@@ -24,6 +26,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('notification');
+        Schema::dropIfExists('Declaration');
     }
 };

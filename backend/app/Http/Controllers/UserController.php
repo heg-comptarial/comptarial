@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\User;
 use Illuminate\Http\Request;
+use App\Models\Declaration;
 
 class UserController extends Controller
 {
@@ -85,5 +86,26 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $user->delete();
         return response()->json(null, 204);
+    }
+
+    public function getUserDeclarationWithDetails($userId, $declarationId)
+    {
+    // Récupère la déclaration spécifique d'un utilisateur avec ses relations
+    $declaration = Declaration::where('user_id', $userId)
+        ->where('declaration_id', $declarationId)
+        ->with(['rubriques.documents'])
+        ->firstOrFail();
+
+    return response()->json($declaration);
+    }
+
+    public function getAllDeclarationsByUser($userId)
+    {
+    // Récupère toutes les déclarations d'un utilisateur avec leurs relations
+    $declarations = Declaration::where('user_id', $userId)
+        ->with(['rubriques.documents'])
+        ->get();
+
+    return response()->json($declarations);
     }
 }

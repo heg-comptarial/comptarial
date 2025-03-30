@@ -11,12 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('declaration', function (Blueprint $table) {
-            $table->bigIncrements('declaration_id');
-            $table->unsignedBigInteger('user_id')->index('user_id');
-            $table->string('titre');
-            $table->enum('statut', ['pending', 'approved', 'rejected']);
-            $table->string('annee', 4);
+        Schema::create('Commentaire', function (Blueprint $table) {
+            $table->bigIncrements('commentaire_id');
+            $table->unsignedBigInteger('document_id')->index('commentaire_document_id_foreign');
+            $table->unsignedBigInteger('admin_id')->index('commentaire_admin_id_foreign');
+            $table->string('contenu');
             $table->dateTime('dateCreation')->useCurrent();
         });
     }
@@ -26,6 +25,6 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('declaration');
+        Schema::dropIfExists('Commentaire');
     }
 };

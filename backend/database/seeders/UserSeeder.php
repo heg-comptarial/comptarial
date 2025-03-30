@@ -70,6 +70,30 @@ class UserSeeder extends Seeder
                 'role' => 'prive',
                 'statut' => 'approved',
                 'dateCreation' => now(),
+            ],
+            [
+                'nom' => 'Prive User 3',
+                'email' => 'prive3@example.com',
+                'motDePasse' => Hash::make('password'),
+                'localite' => 'Bordeaux',
+                'adresse' => '456 Rue Prive 3',
+                'codePostal' => '33000',
+                'numeroTelephone' => '0987654321',
+                'role' => 'prive',
+                'statut' => 'approved',
+                'dateCreation' => now(),
+            ],
+            [
+                'nom' => 'Prive User 4',
+                'email' => 'prive3@example.com',
+                'motDePasse' => Hash::make('password'),
+                'localite' => 'Bordeaux',
+                'adresse' => '456 Rue Prive 3',
+                'codePostal' => '33000',
+                'numeroTelephone' => '0987654321',
+                'role' => 'prive',
+                'statut' => 'approved',
+                'dateCreation' => now(),
             ]
         ]);
     }
