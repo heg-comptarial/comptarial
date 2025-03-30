@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
+import { toast, Toaster } from "sonner";
 
 interface Document {
   doc_id: number;
@@ -57,13 +58,13 @@ interface Prive {
 }
 
 export default function DeclarationTestPage() {
-  const userId = 7;
-  const declarationId = 6;
+  const userId = 7; // on récupère l'id de l'utilisateur connecté
+  const declarationId = 6; // on récupère l'id de la déclaration à afficher
 
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
-  const [creationStatus, setCreationStatus] = useState<string | null>(null);
+  const [toastShown, setToastShown] = useState<boolean>(false);
 
   useEffect(() => {
     fetchOrCreateRubrique();
@@ -97,7 +98,9 @@ export default function DeclarationTestPage() {
         const privesData: Prive[] = await priveResponse.json();
 
         // Find the prive data for the user
-        const userPrive: Prive | undefined = privesData.find((prive) => prive.user_id === userId);
+        const userPrive: Prive | undefined = privesData.find(
+          (prive) => prive.user_id === userId
+        );
 
         if (!userPrive) {
           setError("Données privées non trouvées pour cet utilisateur");
@@ -195,21 +198,6 @@ export default function DeclarationTestPage() {
           }
         }
 
-        // Set creation status message
-        if (createdRubriques.length > 0) {
-          if (creationErrors > 0) {
-            setCreationStatus(
-              `${createdRubriques.length} rubriques créées avec ${creationErrors} erreurs.`
-            );
-          } else {
-            setCreationStatus(
-              `${createdRubriques.length} rubriques créées avec succès.`
-            );
-          }
-        } else if (creationErrors > 0) {
-          setCreationStatus(`Échec de la création des rubriques.`);
-        }
-
         // Fetch the updated declaration with the newly created rubriques
         const updatedDeclarationResponse = await fetch(
           `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationId}`
@@ -225,6 +213,9 @@ export default function DeclarationTestPage() {
             rubriques: createdRubriques,
           });
         }
+
+        // Show toast notifications after state updates
+        setToastShown(true);
       }
     } catch (err) {
       setError("Erreur lors de la récupération ou création des données");
@@ -234,9 +225,31 @@ export default function DeclarationTestPage() {
     }
   }
 
+  // Show toasts after component has rendered and data is loaded
+  useEffect(() => {
+    if (!loading && toastShown) {
+      const createdRubriques = declaration?.rubriques || [];
+
+      if (createdRubriques.length > 0) {
+        toast.success(
+          `${createdRubriques.length} rubriques chargées avec succès.`,
+          {
+            duration: 5000,
+          }
+        );
+      } else {
+        toast.error("Aucune rubrique trouvée.", {
+          duration: 5000,
+        });
+      }
+
+      setToastShown(false);
+    }
+  }, [loading, toastShown, declaration]);
+
   // Group documents by sous_rubrique
   const groupDocumentsBySousRubrique = (documents: Document[]) => {
-    const grouped = {};
+    const grouped: Record<string, Document[]> = {};
 
     documents?.forEach((doc) => {
       if (!grouped[doc.sous_rubrique]) {
@@ -280,96 +293,92 @@ export default function DeclarationTestPage() {
   }
 
   return (
-    <div className="p-10">
-      {creationStatus && (
-        <div className="mb-6 p-4 bg-blue-100 border border-blue-400 rounded-md">
-          <p className="text-blue-800">
-            <strong>Statut:</strong> {creationStatus}
-          </p>
+    <>
+      <Toaster position="bottom-right" richColors closeButton />
+
+      <div className="p-10">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
+          {declaration?.statut && getStatusBadge(declaration.statut)}
         </div>
-      )}
 
-      <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
-        {declaration?.statut && getStatusBadge(declaration.statut)}
+        {declaration?.rubriques && declaration.rubriques.length > 0 ? (
+          <Accordion type="single" collapsible className="w-full">
+            {declaration.rubriques.map((rubrique) => {
+              // Group documents by sous_rubrique if they exist
+              const groupedDocuments = rubrique.documents
+                ? groupDocumentsBySousRubrique(rubrique.documents)
+                : {};
+
+              return (
+                <AccordionItem
+                  key={rubrique.rubrique_id}
+                  value={`rubrique-${rubrique.rubrique_id}`}
+                >
+                  <AccordionTrigger className="text-xl font-medium">
+                    {rubrique.titre}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          {rubrique.description}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {Object.keys(groupedDocuments).length > 0 ? (
+                          <div className="space-y-4">
+                            {Object.entries(groupedDocuments).map(
+                              ([sousRubriqueTitle, docs]) => (
+                                <Card
+                                  key={sousRubriqueTitle}
+                                  className="border border-gray-200"
+                                >
+                                  <CardHeader className="py-3">
+                                    <CardTitle className="text-md">
+                                      {sousRubriqueTitle}
+                                    </CardTitle>
+                                  </CardHeader>
+                                  <CardContent className="py-2">
+                                    <div className="mt-2">
+                                      <h4 className="font-medium mb-1">
+                                        Documents:
+                                      </h4>
+                                      <ul className="list-disc pl-5">
+                                        {docs.map((doc: Document) => (
+                                          <li
+                                            key={doc.doc_id}
+                                            className="text-sm"
+                                          >
+                                            {doc.nom} ({doc.type}){" "}
+                                            {getStatusBadge(doc.statut)}
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+                                  </CardContent>
+                                </Card>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 italic">
+                            Aucun document disponible
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </AccordionContent>
+                </AccordionItem>
+              );
+            })}
+          </Accordion>
+        ) : (
+          <p className="text-center text-gray-500 py-8">
+            Aucune rubrique trouvée pour cette déclaration
+          </p>
+        )}
       </div>
-
-      {declaration?.rubriques && declaration.rubriques.length > 0 ? (
-        <Accordion type="single" collapsible className="w-full">
-          {declaration.rubriques.map((rubrique) => {
-            // Group documents by sous_rubrique if they exist
-            const groupedDocuments = rubrique.documents
-              ? groupDocumentsBySousRubrique(rubrique.documents)
-              : {};
-
-            return (
-              <AccordionItem
-                key={rubrique.rubrique_id}
-                value={`rubrique-${rubrique.rubrique_id}`}
-              >
-                <AccordionTrigger className="text-xl font-medium">
-                  {rubrique.titre}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <Card>
-                    <CardHeader>
-                      <CardTitle className="text-lg">
-                        {rubrique.description}
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                      {Object.keys(groupedDocuments).length > 0 ? (
-                        <div className="space-y-4">
-                          {Object.entries(groupedDocuments).map(
-                            ([sousRubriqueTitle, docs]) => (
-                              <Card
-                                key={sousRubriqueTitle}
-                                className="border border-gray-200"
-                              >
-                                <CardHeader className="py-3">
-                                  <CardTitle className="text-md">
-                                    {sousRubriqueTitle}
-                                  </CardTitle>
-                                </CardHeader>
-                                <CardContent className="py-2">
-                                  <div className="mt-2">
-                                    <h4 className="font-medium mb-1">
-                                      Documents:
-                                    </h4>
-                                    <ul className="list-disc pl-5">
-                                      {docs.map((doc: Document) => (
-                                        <li
-                                          key={doc.doc_id}
-                                          className="text-sm"
-                                        >
-                                          {doc.nom} ({doc.type}){" "}
-                                          {getStatusBadge(doc.statut)}
-                                        </li>
-                                      ))}
-                                    </ul>
-                                  </div>
-                                </CardContent>
-                              </Card>
-                            )
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-gray-500 italic">
-                          Aucun document disponible
-                        </p>
-                      )}
-                    </CardContent>
-                  </Card>
-                </AccordionContent>
-              </AccordionItem>
-            );
-          })}
-        </Accordion>
-      ) : (
-        <p className="text-center text-gray-500 py-8">
-          Aucune rubrique trouvée pour cette déclaration
-        </p>
-      )}
-    </div>
+    </>
   );
 }

@@ -52,10 +52,11 @@ Route::apiResource('enfants', EnfantController::class);
 // Routes pour les entreprises
 Route::apiResource('entreprises', EntrepriseController::class);
 
-// Route pour obtenir les documents d'un utilisateur
+// Route pour obtenir tous les documents d'un user
 Route::get('users/{userId}/documents', [DocumentController::class, 'getDocumentsByUser']);
 
 // Route pour obtenir une déclaration spécifique d'un user
 Route::get('/users/{userId}/declarations/{declarationId}', [UserController::class, 'getUserDeclarationWithDetails']);
 
+// Route pour obtenir toutes les déclarations d'un user
 Route::get('/users/{userId}/declarations', [UserController::class, 'getAllDeclarationsByUser']);
