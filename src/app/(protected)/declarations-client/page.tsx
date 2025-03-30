@@ -296,7 +296,7 @@ export default function DeclarationTestPage() {
     <>
       <Toaster position="bottom-right" richColors closeButton />
 
-      <div className="p-10">
+      <div className="p-10 pt-0">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
           {declaration?.statut && getStatusBadge(declaration.statut)}
