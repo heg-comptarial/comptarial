@@ -158,12 +158,15 @@ export default function DeclarationTestPage() {
 
         // Create rubriques in the database for true fo_ fields
         const createdRubriques = [];
-        let creationErrors = 0;
 
         for (const [field, value] of Object.entries(userPrive)) {
-          if (field.startsWith("fo_") && value === true && foFieldsMap[field]) {
-            const rubriqueName = foFieldsMap[field].titre;
-            const rubriqueDescription = foFieldsMap[field].description;
+          if (
+            field.startsWith("fo_") &&
+            value === true && 
+            foFieldsMap[field as keyof typeof foFieldsMap]
+            ) {
+            const rubriqueName = foFieldsMap[field as keyof typeof foFieldsMap].titre;
+            const rubriqueDescription = foFieldsMap[field as keyof typeof foFieldsMap].description;
 
             try {
               // Create the rubrique via POST request to the correct endpoint
@@ -189,11 +192,9 @@ export default function DeclarationTestPage() {
                 console.error(
                   `Failed to create rubrique for ${field}: ${await createResponse.text()}`
                 );
-                creationErrors++;
               }
             } catch (err) {
               console.error(`Error creating rubrique for ${field}:`, err);
-              creationErrors++;
             }
           }
         }
@@ -294,9 +295,10 @@ export default function DeclarationTestPage() {
 
   return (
     <>
+      {/* Toast notifications for success and error messages */}
       <Toaster position="bottom-right" richColors closeButton />
 
-      <div className="p-10 pt-0">
+      <div className="p-10">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
           {declaration?.statut && getStatusBadge(declaration.statut)}
