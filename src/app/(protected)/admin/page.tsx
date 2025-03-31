@@ -2,52 +2,77 @@
 
 import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Edit, Search } from 'lucide-react'
+import { Edit, Search, UserPlus, Users } from "lucide-react"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
+import { Badge } from "@/components/ui/badge"
 
 interface User {
-  id: number;
-  name: string;
-  email: string;
-  numero_telephone: string;
+  user_id: number
+  nom: string
+  email: string
+  numeroTelephone: string
+  localite: string
+  adresse: string
+  codePostal: string
+  role: string
+  statut: string
+  dateCreation: string
 }
 
-interface Client {
-  client_id: number;
-  user_id: number;
-  type_entreprise: string;
-  adresse: string;
-  numero_fiscal: string;
-  statut_client: string;
-  user?: User;
-}
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:3000/api"
+// Configuration par défaut pour les requêtes fetch
+const fetchConfig = {
+  headers: {
+    "Content-Type": "application/json",
+    Accept: "application/json",
+    // Vous pouvez ajouter un token d'authentification ici si nécessaire
+    // 'Authorization': `Bearer ${token}`
+  },
+  // Ne pas inclure credentials pour éviter les problèmes CORS
+  // credentials: "include"
+}
 
 export default function Dashboard() {
   const [message, setMessage] = useState("")
-  const [clients, setClients] = useState<Client[]>([])
+  const [users, setUsers] = useState<User[]>([])
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
+  const [activeTab, setActiveTab] = useState("general")
 
   useEffect(() => {
-    fetch(`${API_URL}/test`, { credentials: "include" })
+    fetch(`${API_URL}/test`, fetchConfig)
       .then((response) => response.json())
       .then((data) => setMessage(data.message))
       .catch((error) => console.error("Erreur:", error))
   }, [])
 
-  const fetchClients = async () => {
+  const fetchPendingUsers = async () => {
     setLoading(true)
     try {
-      const response = await fetch(`${API_URL}/clients`, { credentials: "include" })
+      const response = await fetch(`${API_URL}/users/status/pending`, fetchConfig)
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
 
       const data = await response.json()
-      setClients(data)
+      setUsers(data)
+    } catch (error) {
+      console.error("Erreur lors du chargement des demandes:", error)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const fetchApprovedUsers = async () => {
+    setLoading(true)
+    try {
+      const response = await fetch(`${API_URL}/users/status/approved`, fetchConfig)
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+
+      const data = await response.json()
+      setUsers(data)
     } catch (error) {
       console.error("Erreur lors du chargement des clients:", error)
     } finally {
@@ -55,21 +80,54 @@ export default function Dashboard() {
     }
   }
 
-  const searchClients = async () => {
+  const approveUser = async (userId: number, role: string) => {
+    try {
+      const response = await fetch(`${API_URL}/users/${userId}/approve`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ role: role }),
+        });
+
+        if (response.ok) {
+            console.log("Utilisateur approuvé avec succès.");
+            // Rafraîchir la liste des utilisateurs en attente ou faire d'autres actions
+        } else {
+            const data = await response.json();
+            console.log("Erreur : ", data.message);
+        }
+    } catch (error) {
+        console.error("Erreur lors de l'approbation de l'utilisateur :", error);
+    }
+  };
+
+
+  const searchUsers = async () => {
     if (!searchTerm.trim()) {
-      fetchClients()
+      // Si la recherche est vide, on recharge les utilisateurs selon l'onglet actif
+      if (activeTab === "demandes") {
+        fetchPendingUsers()
+      } else if (activeTab === "clients") {
+        fetchApprovedUsers()
+      }
       return
     }
 
     setLoading(true)
     try {
-      const response = await fetch(`${API_URL}/clients/search?q=${encodeURIComponent(searchTerm)}`, { credentials: "include" })
+      const statut = activeTab === "demandes" ? "pending" : "approved"
+      const response = await fetch(
+        `${API_URL}/users/search?q=${encodeURIComponent(searchTerm)}&statut=${statut}`,
+        fetchConfig,
+      )
+
       if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
 
       const data = await response.json()
-      setClients(data)
+      setUsers(data)
     } catch (error) {
-      console.error("Erreur lors de la recherche des clients:", error)
+      console.error("Erreur lors de la recherche des utilisateurs:", error)
     } finally {
       setLoading(false)
     }
@@ -77,10 +135,98 @@ export default function Dashboard() {
 
   const getStatusClass = (status: string) => {
     switch (status) {
-      case 'Accepté': return "bg-green-100 text-green-800"
-      case 'Suspendu': return "bg-yellow-100 text-yellow-800"
-      case 'Refusé': return "bg-red-100 text-red-800"
-      default: return "bg-gray-100 text-gray-800"
+      case "approved":
+        return "bg-green-100 text-green-800"
+      case "pending":
+        return "bg-yellow-100 text-yellow-800"
+      case "rejected":
+        return "bg-red-100 text-red-800"
+      default:
+        return "bg-gray-100 text-gray-800"
+    }
+  }
+
+  const getStatusLabel = (status: string) => {
+    switch (status) {
+      case "approved":
+        return "Accepté"
+      case "pending":
+        return "En attente"
+      case "rejected":
+        return "Refusé"
+      default:
+        return status
+    }
+  }
+
+  const handleTabChange = (value: string) => {
+    setActiveTab(value)
+    setSearchTerm("")
+
+    if (value === "demandes") {
+      fetchPendingUsers()
+    } else if (value === "clients") {
+      fetchApprovedUsers()
+    }
+  }
+
+  const updateUserStatus = async (userId: number, newStatus: string) => {
+    const previousUsers = users; // Sauvegarde de l'état actuel
+
+      try {
+          // Supprime immédiatement l'utilisateur de la liste pour un effet optimiste
+          setUsers((prevUsers) => prevUsers.filter((user) => user.user_id !== userId));
+
+          // Envoi de la requête au backend
+          const response = await fetch(`${API_URL}/users/${userId}`, {
+              method: "PATCH",
+              ...fetchConfig,
+              body: JSON.stringify({ statut: newStatus }),
+          });
+
+          if (!response.ok) {
+              const errorData = await response.json();
+              throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
+          }
+
+          console.log("Statut mis à jour avec succès");
+
+          // Recharger uniquement si nécessaire
+          if (activeTab === "demandes") {
+              fetchPendingUsers(); // Recharge uniquement les utilisateurs en attente
+          }
+      } catch (error) {
+          console.error("Erreur lors de la mise à jour du statut:", error);
+          setUsers(previousUsers); // Rétablir la liste en cas d'échec
+      }
+  };
+
+
+  const deleteUser = async (userId: number, userName: string) => {
+    if (!confirm(`Êtes-vous sûr de vouloir refuser et supprimer l'utilisateur ${userName} ?`)) {
+      return
+    }
+
+    try {
+      // Optimistic UI update - Supprimer immédiatement l'utilisateur de la liste
+      setUsers((prevUsers) => prevUsers.filter((user) => user.user_id !== userId))
+
+      // Envoyer la requête au backend
+      const response = await fetch(`${API_URL}/users/${userId}`, {
+        method: "DELETE",
+        ...fetchConfig,
+      })
+
+      if (!response.ok) {
+        // En cas d'erreur, recharger la liste pour restaurer l'état
+        throw new Error(`HTTP error! Status: ${response.status}`)
+      }
+
+      // Pas besoin de recharger la liste car nous avons déjà mis à jour l'UI
+    } catch (error) {
+      console.error("Erreur lors de la suppression de l'utilisateur:", error)
+      // En cas d'erreur, recharger la liste pour restaurer l'état correct
+      fetchPendingUsers()
     }
   }
 
@@ -91,16 +237,124 @@ export default function Dashboard() {
         <p className="text-sm text-muted-foreground mt-2">Backend Response: {message}</p>
       </h1>
 
-      <Tabs defaultValue="general" className="w-full">
+      <Tabs defaultValue="general" className="w-full" onValueChange={handleTabChange}>
         <TabsList className="mb-6">
           <TabsTrigger value="general">Infos générales</TabsTrigger>
-          <TabsTrigger value="clients" onClick={fetchClients}>Mes Clients</TabsTrigger>
+          <TabsTrigger value="demandes">
+            <UserPlus className="h-4 w-4 mr-2" />
+            Mes Demandes
+          </TabsTrigger>
+          <TabsTrigger value="clients">
+            <Users className="h-4 w-4 mr-2" />
+            Mes Clients
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="general">
           <Card>
             <CardContent className="pt-6">
               <p>Contenu des informations générales</p>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="demandes">
+          <Card>
+            <CardContent className="pt-6">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-xl font-medium">Nouvelles demandes</h2>
+                <div className="flex items-center gap-2">
+                  <div className="relative">
+                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      type="search"
+                      placeholder="Rechercher..."
+                      className="pl-8 w-[200px]"
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      onKeyDown={(e) => e.key === "Enter" && searchUsers()}
+                    />
+                  </div>
+                  <Button size="sm" onClick={searchUsers}>
+                    Rechercher
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={fetchPendingUsers} disabled={loading}>
+                    {loading ? "Chargement..." : "Toutes les demandes"}
+                  </Button>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="flex justify-center py-8">Chargement des demandes...</div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>ID</TableHead>
+                      <TableHead>Nom</TableHead>
+                      <TableHead>Email</TableHead>
+                      <TableHead>Téléphone</TableHead>
+                      <TableHead>Localité</TableHead>
+                      <TableHead>Rôle</TableHead>
+                      <TableHead>Date de création</TableHead>
+                      <TableHead>Statut</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {users.length > 0 ? (
+                      users.map((user) => (
+                        <TableRow key={user.user_id}>
+                          <TableCell>{user.user_id}</TableCell>
+                          <TableCell>{user.nom}</TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>{user.numeroTelephone}</TableCell>
+                          <TableCell>{user.localite}</TableCell>
+                          <TableCell>{user.role}</TableCell>
+                          <TableCell>{new Date(user.dateCreation).toLocaleDateString()}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline" className={`${getStatusClass(user.statut)}`}>
+                              {getStatusLabel(user.statut)}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="text-right space-x-1">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
+                              onClick={() => {
+
+                                // Mettre à jour le statut de l'utilisateur (en passant "approved")
+                                updateUserStatus(user.user_id, "approved")
+
+                                // Puis, associer l'utilisateur à l'entité correspondante (Prive ou Entreprise)
+                                approveUser(user.user_id, user.role);
+                                
+                              }}
+                            >
+                              Accepter
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
+                              onClick={() => deleteUser(user.user_id, user.nom)}
+                            >
+                              Refuser
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))
+                    ) : (
+                      <TableRow>
+                        <TableCell colSpan={9} className="text-center py-4">
+                          Aucune demande en attente
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -119,11 +373,13 @@ export default function Dashboard() {
                       className="pl-8 w-[200px]"
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && searchClients()}
+                      onKeyDown={(e) => e.key === "Enter" && searchUsers()}
                     />
                   </div>
-                  <Button size="sm" onClick={searchClients}>Rechercher</Button>
-                  <Button size="sm" variant="outline" onClick={fetchClients} disabled={loading}>
+                  <Button size="sm" onClick={searchUsers}>
+                    Rechercher
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={fetchApprovedUsers} disabled={loading}>
                     {loading ? "Chargement..." : "Tous les clients"}
                   </Button>
                 </div>
@@ -139,26 +395,28 @@ export default function Dashboard() {
                       <TableHead>Nom</TableHead>
                       <TableHead>Email</TableHead>
                       <TableHead>Téléphone</TableHead>
-                      <TableHead>Type d&apos;entreprise</TableHead>
-                      <TableHead>Numéro fiscal</TableHead>
+                      <TableHead>Localité</TableHead>
+                      <TableHead>Rôle</TableHead>
+                      <TableHead>Date de création</TableHead>
                       <TableHead>Statut</TableHead>
                       <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {clients.length > 0 ? (
-                      clients.map((client) => (
-                        <TableRow key={client.client_id}>
-                          <TableCell>{client.client_id}</TableCell>
-                          <TableCell>{client.user?.name || 'N/A'}</TableCell>
-                          <TableCell>{client.user?.email || 'N/A'}</TableCell>
-                          <TableCell>{client.user?.numero_telephone || 'N/A'}</TableCell>
-                          <TableCell>{client.type_entreprise}</TableCell>
-                          <TableCell>{client.numero_fiscal}</TableCell>
+                    {users.length > 0 ? (
+                      users.map((user) => (
+                        <TableRow key={user.user_id}>
+                          <TableCell>{user.user_id}</TableCell>
+                          <TableCell>{user.nom}</TableCell>
+                          <TableCell>{user.email}</TableCell>
+                          <TableCell>{user.numeroTelephone}</TableCell>
+                          <TableCell>{user.localite}</TableCell>
+                          <TableCell>{user.role}</TableCell>
+                          <TableCell>{new Date(user.dateCreation).toLocaleDateString()}</TableCell>
                           <TableCell>
-                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusClass(client.statut_client)}`}>
-                              {client.statut_client}
-                            </span>
+                            <Badge variant="outline" className={`${getStatusClass(user.statut)}`}>
+                              {getStatusLabel(user.statut)}
+                            </Badge>
                           </TableCell>
                           <TableCell className="text-right">
                             <Button variant="ghost" size="icon">
@@ -169,7 +427,7 @@ export default function Dashboard() {
                       ))
                     ) : (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-4">
+                        <TableCell colSpan={9} className="text-center py-4">
                           Aucun client trouvé
                         </TableCell>
                       </TableRow>
@@ -184,3 +442,4 @@ export default function Dashboard() {
     </div>
   )
 }
+
