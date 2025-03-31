@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
@@ -11,9 +11,6 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Loader2 } from "lucide-react";
 import { toast, Toaster } from "sonner";
-import { DocumentUpload } from "@/components/protected/declaration-client/document-upload";
-import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
 
 interface Document {
   doc_id: number;
@@ -60,16 +57,7 @@ interface Prive {
   fo_autreInformations: boolean;
 }
 
-interface UploadedFileInfo {
-  key: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  url: string;
-  rubriqueId: number;
-}
-
-export default function DeclarationsClientPage() {
+export default function DeclarationTestPage() {
   const userId = 7; // on récupère l'id de l'utilisateur connecté
   const declarationId = 6; // on récupère l'id de la déclaration à afficher
 
@@ -77,8 +65,6 @@ export default function DeclarationsClientPage() {
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [toastShown, setToastShown] = useState<boolean>(false);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFileInfo[]>([]);
-  const [isSaving, setIsSaving] = useState<boolean>(false);
 
   useEffect(() => {
     fetchOrCreateRubrique();
@@ -176,13 +162,11 @@ export default function DeclarationsClientPage() {
         for (const [field, value] of Object.entries(userPrive)) {
           if (
             field.startsWith("fo_") &&
-            value === true &&
+            value === true && 
             foFieldsMap[field as keyof typeof foFieldsMap]
-          ) {
-            const rubriqueName =
-              foFieldsMap[field as keyof typeof foFieldsMap].titre;
-            const rubriqueDescription =
-              foFieldsMap[field as keyof typeof foFieldsMap].description;
+            ) {
+            const rubriqueName = foFieldsMap[field as keyof typeof foFieldsMap].titre;
+            const rubriqueDescription = foFieldsMap[field as keyof typeof foFieldsMap].description;
 
             try {
               // Create the rubrique via POST request to the correct endpoint
@@ -264,6 +248,20 @@ export default function DeclarationsClientPage() {
     }
   }, [loading, toastShown, declaration]);
 
+  // Group documents by sous_rubrique
+  const groupDocumentsBySousRubrique = (documents: Document[]) => {
+    const grouped: Record<string, Document[]> = {};
+
+    documents?.forEach((doc) => {
+      if (!grouped[doc.sous_rubrique]) {
+        grouped[doc.sous_rubrique] = [];
+      }
+      grouped[doc.sous_rubrique].push(doc);
+    });
+
+    return grouped;
+  };
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -274,65 +272,6 @@ export default function DeclarationsClientPage() {
         return <Badge className="bg-red-500">Rejeté</Badge>;
       default:
         return <Badge>Inconnu</Badge>;
-    }
-  };
-
-  const handleFileUploaded = (
-    rubriqueId: number,
-    fileInfo: UploadedFileInfo
-  ) => {
-    setUploadedFiles((prev) => [...prev, { ...fileInfo, rubriqueId }]);
-  };
-
-  // Add a function to handle file removals
-  const handleFileRemoved = (fileKey: string) => {
-    setUploadedFiles((prev) => prev.filter((file) => file.key !== fileKey));
-  };
-
-  // Add a function to save all uploaded files to the database
-  const saveDocumentsToDatabase = async () => {
-    if (uploadedFiles.length === 0) {
-      toast.warning("Aucun document à enregistrer");
-      return;
-    }
-
-    setIsSaving(true);
-
-    try {
-      const response = await fetch("/api/documents", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ documents: uploadedFiles }),
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Erreur lors de l'enregistrement des documents"
-        );
-      }
-
-      const result = await response.json();
-
-      // Clear the uploaded files list after successful save
-      setUploadedFiles([]);
-
-      toast.success(`${result.savedCount} documents enregistrés avec succès`, {
-        duration: 5000,
-      });
-
-      // Refresh the declaration data to show the newly added documents
-      fetchOrCreateRubrique();
-    } catch (error) {
-      console.error("Error saving documents:", error);
-      toast.error("Erreur lors de l'enregistrement des documents", {
-        description:
-          error instanceof Error ? error.message : "Une erreur s'est produite",
-      });
-    } finally {
-      setIsSaving(false);
     }
   };
 
@@ -366,8 +305,13 @@ export default function DeclarationsClientPage() {
         </div>
 
         {declaration?.rubriques && declaration.rubriques.length > 0 ? (
-          <Accordion type="multiple" className="w-full">
+          <Accordion type="single" collapsible className="w-full">
             {declaration.rubriques.map((rubrique) => {
+              // Group documents by sous_rubrique if they exist
+              const groupedDocuments = rubrique.documents
+                ? groupDocumentsBySousRubrique(rubrique.documents)
+                : {};
+
               return (
                 <AccordionItem
                   key={rubrique.rubrique_id}
@@ -377,55 +321,55 @@ export default function DeclarationsClientPage() {
                     {rubrique.titre}
                   </AccordionTrigger>
                   <AccordionContent>
-                    <div className="space-y-6">
-                      {/* <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">{rubrique.description}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          {Object.keys(groupedDocuments).length > 0 ? (
-                            <div className="space-y-4">
-                              {Object.entries(groupedDocuments).map(([sousRubriqueTitle, docs]) => (
-                                <Card key={sousRubriqueTitle} className="border border-gray-200">
+                    <Card>
+                      <CardHeader>
+                        <CardTitle className="text-lg">
+                          {rubrique.description}
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent>
+                        {Object.keys(groupedDocuments).length > 0 ? (
+                          <div className="space-y-4">
+                            {Object.entries(groupedDocuments).map(
+                              ([sousRubriqueTitle, docs]) => (
+                                <Card
+                                  key={sousRubriqueTitle}
+                                  className="border border-gray-200"
+                                >
                                   <CardHeader className="py-3">
-                                    <CardTitle className="text-md">{sousRubriqueTitle}</CardTitle>
+                                    <CardTitle className="text-md">
+                                      {sousRubriqueTitle}
+                                    </CardTitle>
                                   </CardHeader>
                                   <CardContent className="py-2">
                                     <div className="mt-2">
-                                      <h4 className="font-medium mb-1">Documents:</h4>
+                                      <h4 className="font-medium mb-1">
+                                        Documents:
+                                      </h4>
                                       <ul className="list-disc pl-5">
                                         {docs.map((doc: Document) => (
-                                          <li key={doc.doc_id} className="text-sm">
-                                            {doc.nom} ({doc.type}) {getStatusBadge(doc.statut)}
+                                          <li
+                                            key={doc.doc_id}
+                                            className="text-sm"
+                                          >
+                                            {doc.nom} ({doc.type}){" "}
+                                            {getStatusBadge(doc.statut)}
                                           </li>
                                         ))}
                                       </ul>
                                     </div>
                                   </CardContent>
                                 </Card>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-gray-500 italic mb-6">Aucun document disponible</p>
-                          )}
-                        </CardContent>
-                      </Card> */}
-
-                      {/* Document Upload Component with updated props */}
-                      <DocumentUpload
-                        userId={userId}
-                        year={declaration.annee}
-                        rubriqueId={rubrique.rubrique_id}
-                        rubriqueName={rubrique.titre}
-                        onFileUploaded={(fileInfo) =>
-                          handleFileUploaded(rubrique.rubrique_id, {
-                            ...fileInfo,
-                            rubriqueId: rubrique.rubrique_id,
-                          })
-                        }
-                        onFileRemoved={handleFileRemoved}
-                      />
-                    </div>
+                              )
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-gray-500 italic">
+                            Aucun document disponible
+                          </p>
+                        )}
+                      </CardContent>
+                    </Card>
                   </AccordionContent>
                 </AccordionItem>
               );
@@ -435,33 +379,6 @@ export default function DeclarationsClientPage() {
           <p className="text-center text-gray-500 py-8">
             Aucune rubrique trouvée pour cette déclaration
           </p>
-        )}
-
-        {/* Confirm button to save documents to database */}
-        {uploadedFiles.length > 0 && (
-          <div className="fixed bottom-8 right-8 flex items-center gap-2 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
-            <span className="text-sm font-medium">
-              {uploadedFiles.length} document
-              {uploadedFiles.length > 1 ? "s" : ""} à enregistrer
-            </span>
-            <Button
-              onClick={saveDocumentsToDatabase}
-              disabled={isSaving}
-              className="flex items-center gap-2"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  Confirmer
-                </>
-              )}
-            </Button>
-          </div>
         )}
       </div>
     </>

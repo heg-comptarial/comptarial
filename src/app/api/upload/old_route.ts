@@ -1,4 +1,4 @@
-import { type NextRequest, NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import AWS from "aws-sdk";
 import { allowedFileTypes } from "@/utils/allowedFileTypes";
 
@@ -25,20 +25,11 @@ export async function POST(req: NextRequest) {
   try {
     const formData = await req.formData();
     const file = formData.get("file") as File;
-    const year = formData.get("year") as string;
-    const userId = formData.get("userId") as string;
-    const rubriqueId = formData.get("rubriqueId") as string;
-    const rubriqueName = formData.get("rubriqueName") as string;
+    const year =
+      (formData.get("year") as string) || new Date().getFullYear().toString(); // Get year from request or use current year
 
     if (!file) {
       return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
-    }
-
-    if (!userId || !year || !rubriqueId) {
-      return NextResponse.json(
-        { error: "Missing required parameters" },
-        { status: 400 }
-      );
     }
 
     // Validate file type
@@ -46,21 +37,18 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid file type" }, { status: 400 });
     }
 
-    // Validate file size (10MB max)
-    const maxSize = 10 * 1024 * 1024; // 10MB
-    if (file.size > maxSize) {
-      return NextResponse.json(
-        { error: "File too large (max 10MB)" },
-        { status: 400 }
-      );
-    }
+    console.log("File name:", file.name);
+    console.log("Selected year:", year);
 
     const buffer = await file.arrayBuffer();
     const fileName = file.name;
     const fileBuffer = Buffer.from(buffer);
 
-    // Set the file path structure to: {user}/{year}/{rubrique}/{fileName}
-    const fileKey = `${userId}/${year}/${rubriqueName}/${fileName}`;
+    // Hardcoded user (replace later with actual user logic, e.g., session-based user retrieval)
+    const user = "user1";
+
+    // Set the file path structure to: selectedYear/user/fileName
+    const fileKey = `${year}/${user}/${fileName}`;
 
     console.log("Uploading file with key:", fileKey);
 
@@ -73,24 +61,14 @@ export async function POST(req: NextRequest) {
     };
 
     // Upload the file to S3
-    const uploadResult = await s3.upload(params).promise();
+    await s3.upload(params).promise();
 
-    // Return the file URL and details
+    // Return the file URL
     return NextResponse.json({
-      url: uploadResult.Location,
-      key: fileKey,
-      fileName: fileName,
-      fileType: file.type.split("/").pop() || "other",
-      fileSize: file.size,
+      url: `https://${s3Endpoint}/${s3BucketName}/${fileKey}`,
     });
   } catch (error) {
     console.error("Upload failed:", error);
-    return NextResponse.json(
-      {
-        error: "Upload failed",
-        details: error instanceof Error ? error.message : "Unknown error",
-      },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }
