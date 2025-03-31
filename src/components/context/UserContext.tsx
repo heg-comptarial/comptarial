@@ -89,9 +89,10 @@ export const UserProvider = ({ children }: { children: ReactNode }) => {
   // Fonction pour récupérer les données complètes d'un utilisateur
   const fetchUserData = async (userId: number) => {
     try {
-      const response = await fetch(`http://127.0.0.1:8000/api/user/${userId}`);
+      const response = await fetch(`http://localhost:8000/api/users/${userId}`);
       console.log("Response:", response);
       if (!response.ok) {
+        console.log(response.body)
         throw new Error("Erreur lors de la récupération des données utilisateur");
       }
       const userData: User = await response.json();

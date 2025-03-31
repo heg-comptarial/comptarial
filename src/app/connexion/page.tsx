@@ -17,14 +17,14 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const { setUser } = useUser(); // Accéder à la fonction pour mettre à jour le contexte
+  const { fetchUserData } = useUser(); // Accéder à la fonction pour mettre à jour le contexte
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
     // On envoie la requête POST à l'API backend Laravel pour l'authentification
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/login", {
+      const response = await fetch("http://localhost:8000/api/login", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -40,7 +40,7 @@ export default function LoginPage() {
       if (response.ok) {
         // Si la connexion réussit, on stocke le token d'authentification
         localStorage.setItem("auth_token", data.token)
-        setUser(data.user);
+        fetchUserData(data.user.user_id); // Récupérer les données utilisateur
 
         // Redirection vers la page des utilisateurs (ou dashboard)
         if (data.user.role === "admin") {

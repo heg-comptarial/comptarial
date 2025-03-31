@@ -8,20 +8,19 @@ import { useUser } from "@/components/context/UserContext";
 
 export default function Dashboard() {
   const [message, setMessage] = useState("");
-  const { user, fetchUserData } = useUser();
+  const { user } = useUser();
 
-  if (!user) {
-    return <div>Veuillez vous connecter pour accéder au tableau de bord.</div>;
-  } 
-
-  useEffect(() => {
-    fetchUserData(user.user_id);  
+  useEffect(() => {  
     console.log(user)
     fetch("http://localhost:3001/api/test")
       .then((response) => response.json())
       .then((data) => setMessage(data.message))
       .catch((error) => console.error("Error:", error));
   }, []);
+
+  if (!user) {
+    return <div>Veuillez vous connecter pour accéder au tableau de bord.</div>;
+  } 
 
   return (
     <ProtectedRoute>
@@ -35,9 +34,6 @@ export default function Dashboard() {
 
         <div className="flex items-center justify-between mt-16">
           <h2 className="text-xl font-medium">Grand livre (pdf à consulter)</h2>
-          <div>Bienvenue, {user.email}, {user.user_id} !</div>
-
-          
           
           <div className="flex space-x-2">
             <Button variant="outline" size="icon">
