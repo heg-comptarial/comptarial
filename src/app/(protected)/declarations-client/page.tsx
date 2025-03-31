@@ -267,9 +267,9 @@ export default function DeclarationsClientPage() {
       toast.warning("Aucun fichier sélectionné");
       return;
     }
-
+  
     setIsSaving(true);
-
+  
     try {
       // First upload all files to S3
       const uploadPromises = selectedFiles.map(async (fileData) => {
@@ -281,52 +281,49 @@ export default function DeclarationsClientPage() {
         formData.append("rubriqueName", 
           declaration?.rubriques.find(r => r.rubrique_id === fileData.rubriqueId)?.titre || ""
         );
-
+  
         const response = await fetch("/api/upload", {
           method: "POST",
           body: formData,
         });
-
+  
         if (!response.ok) {
           throw new Error(`Failed to upload ${fileData.file.name}`);
         }
-
+  
         const result = await response.json();
         return {
-          ...result,
-          rubriqueId: fileData.rubriqueId
+          rubrique_id: fileData.rubriqueId,
+          nom: result.fileName,
+          type: result.fileType.split('/').pop() || 'other',
+          cheminFichier: result.url,
+          statut: 'pending',
+          sous_rubrique: 'default',
         };
       });
-
-      const uploadResults = await Promise.all(uploadPromises);
-
+  
+      const documentsToSave = await Promise.all(uploadPromises);
+  
       // Then save to database
-      const saveResponse = await fetch("/api/documents", {
+      const saveResponse = await fetch("http://127.0.0.1:8000/api/documents", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ 
-          documents: uploadResults.map(result => ({
-            rubriqueId: result.rubriqueId,
-            fileName: result.fileName,
-            fileType: result.fileType,
-            fileSize: result.fileSize,
-            url: result.url
-          }))
-        }),
+        body: JSON.stringify({ documents: documentsToSave }),
       });
-
+  
       if (!saveResponse.ok) {
-        throw new Error("Failed to save documents to database");
+        const errorText = await saveResponse.text();
+        throw new Error(`Failed to save documents: ${errorText}`);
       }
-
-      const saveResult = await saveResponse.json();
-
+  
+      // const saveResult = await saveResponse.json();
+  
       // Clear selected files
       setSelectedFiles([]);
-
-      toast.success(`${saveResult.savedCount} documents enregistrés avec succès`);
+  
+      toast.success(`${documentsToSave.length} documents enregistrés avec succès`);
       
       // Refresh the declaration data
       fetchOrCreateRubrique();

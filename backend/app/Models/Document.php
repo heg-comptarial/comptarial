@@ -43,6 +43,7 @@ class Document extends Model
 		'type',
 		'cheminFichier',
 		'statut',
+		'sous_rubrique',
 		'dateCreation'
 	];
 

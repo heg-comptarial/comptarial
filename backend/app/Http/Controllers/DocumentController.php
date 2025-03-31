@@ -14,21 +14,55 @@ class DocumentController extends Controller
         return response()->json($documents);
     }
 
+    // public function store(Request $request)
+    // {
+    //     // Valide les données
+    //     $request->validate([
+    //         'rubrique_id' => 'required|exists:rubrique,rubrique_id',
+    //         'nom' => 'required|string|max:255',
+    //         'type' => 'required|in:pdf,doc,xls,ppt,image,other',
+    //         'cheminFichier' => 'required|string|max:255',
+    //         'statut' => 'required|in:pending,approved,rejected',
+    //     ]);
+
+    //     // Crée un nouveau document
+    //     $document = Document::create($request->all());
+    //     return response()->json($document, 201);
+    // }
     public function store(Request $request)
     {
-        // Valide les données
         $request->validate([
-            'rubrique_id' => 'required|exists:rubrique,rubrique_id',
-            'nom' => 'required|string|max:255',
-            'type' => 'required|in:pdf,doc,xls,ppt,image,other',
-            'cheminFichier' => 'required|string|max:255',
-            'statut' => 'required|in:pending,approved,rejected',
+            'documents' => 'required|array',
+            'documents.*.rubrique_id' => 'required|exists:Rubrique,rubrique_id',
+            'documents.*.nom' => 'required|string|max:255',
+            'documents.*.type' => 'required|in:pdf,doc,xls,ppt,jpeg,jpg,png,other',
+            'documents.*.cheminFichier' => 'required|string',
+            'documents.*.statut' => 'sometimes|in:pending,rejected,approved',
+            'documents.*.sous_rubrique' => 'nullable|string',
         ]);
 
-        // Crée un nouveau document
-        $document = Document::create($request->all());
-        return response()->json($document, 201);
+        $savedDocuments = [];
+        
+        foreach ($request->input('documents') as $documentData) {
+            $document = Document::create([
+                'rubrique_id' => $documentData['rubrique_id'],
+                'nom' => $documentData['nom'],
+                'type' => $documentData['type'],
+                'cheminFichier' => $documentData['cheminFichier'],
+                'statut' => $documentData['statut'] ?? 'pending',
+                'sous_rubrique' => $documentData['sous_rubrique'] ?? null,
+            ]);
+            
+            $savedDocuments[] = $document;
+        }
+
+        return response()->json([
+            'success' => true,
+            'savedCount' => count($savedDocuments),
+            'documents' => $savedDocuments,
+        ]);
     }
+
 
     public function show($id)
     {

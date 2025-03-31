@@ -33,8 +33,8 @@ interface DocumentUploadProps {
 }
 
 export function DocumentUpload({
-  userId,
-  year,
+  //userId,
+  //year,
   rubriqueId,
   rubriqueName,
   onFilesSelected,
