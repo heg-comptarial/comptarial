@@ -4,11 +4,19 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Edit } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";  // Importer le composant
+import { useUser } from "@/components/context/UserContext";
 
 export default function Dashboard() {
   const [message, setMessage] = useState("");
+  const { user, fetchUserData } = useUser();
+
+  if (!user) {
+    return <div>Veuillez vous connecter pour accéder au tableau de bord.</div>;
+  } 
 
   useEffect(() => {
+    fetchUserData(user.user_id);  
+    console.log(user)
     fetch("http://localhost:3001/api/test")
       .then((response) => response.json())
       .then((data) => setMessage(data.message))
@@ -27,6 +35,10 @@ export default function Dashboard() {
 
         <div className="flex items-center justify-between mt-16">
           <h2 className="text-xl font-medium">Grand livre (pdf à consulter)</h2>
+          <div>Bienvenue, {user.email}, {user.user_id} !</div>
+
+          
+          
           <div className="flex space-x-2">
             <Button variant="outline" size="icon">
               <FileText className="h-4 w-4" />

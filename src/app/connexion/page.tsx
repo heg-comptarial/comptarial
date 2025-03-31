@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 import { useRouter } from "next/navigation"
+import { useUser } from "@/components/context/UserContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -16,6 +17,7 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
+  const { setUser } = useUser(); // Accéder à la fonction pour mettre à jour le contexte
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -38,9 +40,13 @@ export default function LoginPage() {
       if (response.ok) {
         // Si la connexion réussit, on stocke le token d'authentification
         localStorage.setItem("auth_token", data.token)
+        setUser(data.user);
 
         // Redirection vers la page des utilisateurs (ou dashboard)
-        router.push("/dashboard")
+        if (data.user.role === "admin") {
+          router.push("/admin")
+        } else {router.push("/dashboard")}
+        
       } else {
         // Si la connexion échoue, on affiche une erreur
         setError(data.message || "Une erreur s'est produite.")

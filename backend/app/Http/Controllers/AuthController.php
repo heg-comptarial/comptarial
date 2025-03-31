@@ -27,7 +27,8 @@ class AuthController extends Controller
             $token = $user->createToken('MyApp')->plainTextToken;
             return response()->json([
                 'message' => 'Identifiants corrects',
-                'token' => $token
+                'token' => $token,
+                'user' => $user
             ]);
         }
 

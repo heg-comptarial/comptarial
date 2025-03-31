@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import ProtectedRoute from "@/components/ProtectedRoute"
+import { useUser } from "@/components/context/UserContext";
 
 interface User {
   user_id: number
@@ -43,8 +44,15 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("general")
+  const { user, fetchUserData } = useUser();
+
+  if (!user) {
+    return <div>Veuillez vous connecter pour accéder au tableau de bord.</div>;
+  } 
 
   useEffect(() => {
+    fetchUserData(user.user_id);
+    console.log("Utilisateur récupéré :", user);
     fetch(`${API_URL}/test`, fetchConfig)
       .then((response) => response.json())
       .then((data) => setMessage(data.message))
@@ -237,7 +245,42 @@ export default function Dashboard() {
       <h1 className="text-2xl font-semibold mb-8">
         Tableau de bord administrateur
         <p className="text-sm text-muted-foreground mt-2">Backend Response: {message}</p>
+        <div>Bienvenue, {user.email}, {user.user_id} !</div>
       </h1>
+
+      <div>
+          <h2>Informations utilisateur</h2>
+          <p>ID: {user.user_id}</p>
+          <p>Localité: {user.localite}</p>
+          <p>Adresse: {user.adresse}</p>
+          <p>Code Postal: {user.codePostal}</p>
+          <p>Numéro de téléphone: {user.numeroTelephone}</p>
+          <p>Rôle: {user.role}</p>
+          <p>Statut: {user.statut}</p>
+          <p>Date de création: {user.dateCreation}</p>
+        </div>
+
+        {user.administrateurs?.length > 0 && (
+          <div>
+            <h2>Administrateurs</h2>
+            {user.administrateurs.map((admin) => (
+              <p key={admin.user_id}>
+                {admin.admin_id} ({admin.niveauAcces})
+              </p>
+            ))}
+          </div>
+        )}
+
+        {user.declarations?.length > 0 && (
+          <div>
+            <h2>Déclarations</h2>
+            {user.declarations.map((declaration) => (
+              <p key={declaration.declaration_id}>
+                {declaration.titre} ({declaration.annee}) - {declaration.statut}
+              </p>
+            ))}
+          </div>
+        )}
 
       <Tabs defaultValue="general" className="w-full" onValueChange={handleTabChange}>
         <TabsList className="mb-6">
