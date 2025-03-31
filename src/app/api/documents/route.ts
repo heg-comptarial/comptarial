@@ -1,12 +1,11 @@
 import { type NextRequest, NextResponse } from "next/server";
 
 interface DocumentToSave {
-  key: string;
+  rubriqueId: number;
   fileName: string;
   fileType: string;
   fileSize: number;
   url: string;
-  rubriqueId: number;
 }
 
 export async function POST(req: NextRequest) {
@@ -34,7 +33,6 @@ export async function POST(req: NextRequest) {
         jpeg: "jpeg",
         png: "png",
       };
-
       return typeMap[type.toLowerCase()] || "other";
     };
 
@@ -45,7 +43,7 @@ export async function POST(req: NextRequest) {
       type: mapFileType(doc.fileType),
       cheminFichier: doc.url,
       statut: "pending",
-      sous_rubrique: null, 
+      sous_rubrique: "default",
     }));
 
     // Make a request to your backend API to save the documents

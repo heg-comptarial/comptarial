@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-// import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Accordion,
   AccordionContent,
@@ -9,11 +8,10 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
+import { Loader2, Save } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { DocumentUpload } from "@/components/protected/declaration-client/document-upload";
 import { Button } from "@/components/ui/button";
-import { Save } from "lucide-react";
 
 interface Document {
   doc_id: number;
@@ -60,24 +58,15 @@ interface Prive {
   fo_autreInformations: boolean;
 }
 
-interface UploadedFileInfo {
-  key: string;
-  fileName: string;
-  fileType: string;
-  fileSize: number;
-  url: string;
-  rubriqueId: number;
-}
-
 export default function DeclarationsClientPage() {
-  const userId = 7; // on récupère l'id de l'utilisateur connecté
-  const declarationId = 6; // on récupère l'id de la déclaration à afficher
-
+  const userId = 7;
+  const declarationId = 6;
+  
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [toastShown, setToastShown] = useState<boolean>(false);
-  const [uploadedFiles, setUploadedFiles] = useState<UploadedFileInfo[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<{file: File, rubriqueId: number}[]>([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   useEffect(() => {
@@ -88,7 +77,6 @@ export default function DeclarationsClientPage() {
     try {
       setLoading(true);
 
-      // Try to fetch the declaration
       const declarationResponse = await fetch(
         `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationId}`
       );
@@ -101,17 +89,13 @@ export default function DeclarationsClientPage() {
 
       const declarationData = await declarationResponse.json();
 
-      // Check if the declaration has rubriques
       if (declarationData.rubriques && declarationData.rubriques.length > 0) {
-        // Declaration exists and has rubriques, use them
         setDeclaration(declarationData);
         setLoading(false);
       } else {
-        // Declaration exists but has no rubriques, create them based on prive data
         const priveResponse = await fetch(`http://localhost:8000/api/prives`);
         const privesData: Prive[] = await priveResponse.json();
 
-        // Find the prive data for the user
         const userPrive: Prive | undefined = privesData.find(
           (prive) => prive.user_id === userId
         );
@@ -122,7 +106,6 @@ export default function DeclarationsClientPage() {
           return;
         }
 
-        // Map of fo_ fields to rubrique titles and descriptions
         const foFieldsMap = {
           fo_banques: {
             titre: "Banques",
@@ -170,7 +153,6 @@ export default function DeclarationsClientPage() {
           },
         };
 
-        // Create rubriques in the database for true fo_ fields
         const createdRubriques = [];
 
         for (const [field, value] of Object.entries(userPrive)) {
@@ -185,7 +167,6 @@ export default function DeclarationsClientPage() {
               foFieldsMap[field as keyof typeof foFieldsMap].description;
 
             try {
-              // Create the rubrique via POST request to the correct endpoint
               const createResponse = await fetch(
                 `http://127.0.0.1:8000/api/rubriques`,
                 {
@@ -215,7 +196,6 @@ export default function DeclarationsClientPage() {
           }
         }
 
-        // Fetch the updated declaration with the newly created rubriques
         const updatedDeclarationResponse = await fetch(
           `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationId}`
         );
@@ -224,14 +204,12 @@ export default function DeclarationsClientPage() {
             await updatedDeclarationResponse.json();
           setDeclaration(updatedDeclarationData);
         } else {
-          // If fetching updated declaration fails, use the original with created rubriques
           setDeclaration({
             ...declarationData,
             rubriques: createdRubriques,
           });
         }
 
-        // Show toast notifications after state updates
         setToastShown(true);
       }
     } catch (err) {
@@ -242,7 +220,6 @@ export default function DeclarationsClientPage() {
     }
   }
 
-  // Show toasts after component has rendered and data is loaded
   useEffect(() => {
     if (!loading && toastShown) {
       const createdRubriques = declaration?.rubriques || [];
@@ -277,59 +254,86 @@ export default function DeclarationsClientPage() {
     }
   };
 
-  const handleFileUploaded = (
-    rubriqueId: number,
-    fileInfo: UploadedFileInfo
-  ) => {
-    setUploadedFiles((prev) => [...prev, { ...fileInfo, rubriqueId }]);
+  const handleFilesSelected = (rubriqueId: number, files: File[]) => {
+    setSelectedFiles(prev => [...prev, ...files.map(file => ({file, rubriqueId}))]);
   };
 
-  // Add a function to handle file removals
-  const handleFileRemoved = (fileKey: string) => {
-    setUploadedFiles((prev) => prev.filter((file) => file.key !== fileKey));
+  const handleFileRemoved = (fileId: string) => {
+    // Implement if needed
   };
 
-  // Add a function to save all uploaded files to the database
-  const saveDocumentsToDatabase = async () => {
-    if (uploadedFiles.length === 0) {
-      toast.warning("Aucun document à enregistrer");
+  const uploadAndSaveDocuments = async () => {
+    if (selectedFiles.length === 0) {
+      toast.warning("Aucun fichier sélectionné");
       return;
     }
 
     setIsSaving(true);
 
     try {
-      const response = await fetch("/api/documents", {
+      // First upload all files to S3
+      const uploadPromises = selectedFiles.map(async (fileData) => {
+        const formData = new FormData();
+        formData.append("file", fileData.file);
+        formData.append("year", declaration?.annee || "");
+        formData.append("userId", userId.toString());
+        formData.append("rubriqueId", fileData.rubriqueId.toString());
+        formData.append("rubriqueName", 
+          declaration?.rubriques.find(r => r.rubrique_id === fileData.rubriqueId)?.titre || ""
+        );
+
+        const response = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+
+        if (!response.ok) {
+          throw new Error(`Failed to upload ${fileData.file.name}`);
+        }
+
+        const result = await response.json();
+        return {
+          ...result,
+          rubriqueId: fileData.rubriqueId
+        };
+      });
+
+      const uploadResults = await Promise.all(uploadPromises);
+
+      // Then save to database
+      const saveResponse = await fetch("/api/documents", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ documents: uploadedFiles }),
+        body: JSON.stringify({ 
+          documents: uploadResults.map(result => ({
+            rubriqueId: result.rubriqueId,
+            fileName: result.fileName,
+            fileType: result.fileType,
+            fileSize: result.fileSize,
+            url: result.url
+          }))
+        }),
       });
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(
-          errorData.error || "Erreur lors de l'enregistrement des documents"
-        );
+      if (!saveResponse.ok) {
+        throw new Error("Failed to save documents to database");
       }
 
-      const result = await response.json();
+      const saveResult = await saveResponse.json();
 
-      // Clear the uploaded files list after successful save
-      setUploadedFiles([]);
+      // Clear selected files
+      setSelectedFiles([]);
 
-      toast.success(`${result.savedCount} documents enregistrés avec succès`, {
-        duration: 5000,
-      });
-
-      // Refresh the declaration data to show the newly added documents
+      toast.success(`${saveResult.savedCount} documents enregistrés avec succès`);
+      
+      // Refresh the declaration data
       fetchOrCreateRubrique();
     } catch (error) {
-      console.error("Error saving documents:", error);
+      console.error("Error uploading and saving documents:", error);
       toast.error("Erreur lors de l'enregistrement des documents", {
-        description:
-          error instanceof Error ? error.message : "Une erreur s'est produite",
+        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue",
       });
     } finally {
       setIsSaving(false);
@@ -356,7 +360,6 @@ export default function DeclarationsClientPage() {
 
   return (
     <>
-      {/* Toast notifications for success and error messages */}
       <Toaster position="bottom-right" richColors closeButton />
 
       <div className="p-10">
@@ -367,69 +370,30 @@ export default function DeclarationsClientPage() {
 
         {declaration?.rubriques && declaration.rubriques.length > 0 ? (
           <Accordion type="multiple" className="w-full">
-            {declaration.rubriques.map((rubrique) => {
-              return (
-                <AccordionItem
-                  key={rubrique.rubrique_id}
-                  value={`rubrique-${rubrique.rubrique_id}`}
-                >
-                  <AccordionTrigger className="text-xl font-medium">
-                    {rubrique.titre}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-6">
-                      {/* <Card>
-                        <CardHeader>
-                          <CardTitle className="text-lg">{rubrique.description}</CardTitle>
-                        </CardHeader>
-                        <CardContent>
-                          {Object.keys(groupedDocuments).length > 0 ? (
-                            <div className="space-y-4">
-                              {Object.entries(groupedDocuments).map(([sousRubriqueTitle, docs]) => (
-                                <Card key={sousRubriqueTitle} className="border border-gray-200">
-                                  <CardHeader className="py-3">
-                                    <CardTitle className="text-md">{sousRubriqueTitle}</CardTitle>
-                                  </CardHeader>
-                                  <CardContent className="py-2">
-                                    <div className="mt-2">
-                                      <h4 className="font-medium mb-1">Documents:</h4>
-                                      <ul className="list-disc pl-5">
-                                        {docs.map((doc: Document) => (
-                                          <li key={doc.doc_id} className="text-sm">
-                                            {doc.nom} ({doc.type}) {getStatusBadge(doc.statut)}
-                                          </li>
-                                        ))}
-                                      </ul>
-                                    </div>
-                                  </CardContent>
-                                </Card>
-                              ))}
-                            </div>
-                          ) : (
-                            <p className="text-gray-500 italic mb-6">Aucun document disponible</p>
-                          )}
-                        </CardContent>
-                      </Card> */}
-
-                      {/* Document Upload Component with updated props */}
-                      <DocumentUpload
-                        userId={userId}
-                        year={declaration.annee}
-                        rubriqueId={rubrique.rubrique_id}
-                        rubriqueName={rubrique.titre}
-                        onFileUploaded={(fileInfo) =>
-                          handleFileUploaded(rubrique.rubrique_id, {
-                            ...fileInfo,
-                            rubriqueId: rubrique.rubrique_id,
-                          })
-                        }
-                        onFileRemoved={handleFileRemoved}
-                      />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              );
-            })}
+            {declaration.rubriques.map((rubrique) => (
+              <AccordionItem
+                key={rubrique.rubrique_id}
+                value={`rubrique-${rubrique.rubrique_id}`}
+              >
+                <AccordionTrigger className="text-xl font-medium">
+                  {rubrique.titre}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-6">
+                    <DocumentUpload
+                      userId={userId}
+                      year={declaration.annee}
+                      rubriqueId={rubrique.rubrique_id}
+                      rubriqueName={rubrique.titre}
+                      onFilesSelected={(files) => 
+                        handleFilesSelected(rubrique.rubrique_id, files)
+                      }
+                      onFileRemoved={handleFileRemoved}
+                    />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
           </Accordion>
         ) : (
           <p className="text-center text-gray-500 py-8">
@@ -437,15 +401,14 @@ export default function DeclarationsClientPage() {
           </p>
         )}
 
-        {/* Confirm button to save documents to database */}
-        {uploadedFiles.length > 0 && (
+        {selectedFiles.length > 0 && (
           <div className="fixed bottom-8 right-8 flex items-center gap-2 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
             <span className="text-sm font-medium">
-              {uploadedFiles.length} document
-              {uploadedFiles.length > 1 ? "s" : ""} à enregistrer
+              {selectedFiles.length} document
+              {selectedFiles.length > 1 ? "s" : ""} prêt{selectedFiles.length > 1 ? "s" : ""} à être enregistré{selectedFiles.length > 1 ? "s" : ""}
             </span>
             <Button
-              onClick={saveDocumentsToDatabase}
+              onClick={uploadAndSaveDocuments}
               disabled={isSaving}
               className="flex items-center gap-2"
             >
@@ -457,7 +420,7 @@ export default function DeclarationsClientPage() {
               ) : (
                 <>
                   <Save className="h-4 w-4" />
-                  Confirmer
+                  Enregistrer les documents
                 </>
               )}
             </Button>

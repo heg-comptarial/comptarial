@@ -2,12 +2,21 @@ import { type NextRequest, NextResponse } from "next/server";
 import AWS from "aws-sdk";
 import { allowedFileTypes } from "@/utils/allowedFileTypes";
 
-// Ensure environment variables are set correctly
+// Use the same environment variable names as your working route
 const s3Endpoint = process.env.INFOMANIAK_ENDPOINT!;
 const s3Region = process.env.INFOMANIAK_REGION!;
 const s3AccessKeyId = process.env.INFOMANIAK_ACCESS_KEY!;
 const s3SecretAccessKey = process.env.INFOMANIAK_SECRECT_KEY!;
 const s3BucketName = process.env.INFOMANIAK_PROJECT_NAME!;
+
+// Log the configuration for debugging
+console.log("S3 Configuration:", {
+  endpoint: s3Endpoint ? "Set" : "Missing",
+  region: s3Region ? "Set" : "Missing",
+  accessKey: s3AccessKeyId ? "Set" : "Missing",
+  secretKey: s3SecretAccessKey ? "Set" : "Missing",
+  bucket: s3BucketName ? "Set" : "Missing",
+});
 
 // Configure AWS S3
 AWS.config.update({
