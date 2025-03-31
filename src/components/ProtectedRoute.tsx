@@ -1,3 +1,5 @@
+"use client"; // Ajoute cette ligne au début
+
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 

@@ -8,60 +8,49 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Checkbox } from "@/components/ui/checkbox"
 import { PhoneInput } from "@/components/ui/phone-input"
-import { Eye, EyeOff, Upload } from "lucide-react"
+import { Eye, EyeOff, Loader2 } from "lucide-react"
 import Link from "next/link"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import axios from "axios"
+import { useRouter } from "next/navigation"
 
 export default function SignupPage() {
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   // État pour le type d'utilisateur (madame, monsieur ou entreprise)
   const [userType, setUserType] = useState<"madame" | "monsieur" | "entreprise">("madame")
 
-  // État pour le type d'entreprise (nouvelle ou ancienne)
-  const [entrepriseType, setEntrepriseType] = useState<"nouvelle" | "ancienne">("nouvelle")
-
-  // État pour l'état civil
-  const [etatCivil, setEtatCivil] = useState<"celibataire" | "marie" | "divorce">("celibataire")
-
-  // États pour les prestations d'entreprise
-  const [prestations, setPrestations] = useState({
-    fiscales: false,
-    comptable: false,
-    admin: false,
-    salariales: false,
-  })
-
-  // États pour les champs du formulaire
+  // Initialisation des données du formulaire
   const [formData, setFormData] = useState({
-    // Informations personnelles
-    nomPrenom: "",
-    adresse: "",
-    localite: "",
-    codePostal: "",
+    nom: "",
     email: "",
-    telephone: "",
-    dateNaissance: "",
-    nationalite: "",
-
-    // Informations du conjoint
-    conjointNomPrenom: "",
-    conjointAdresse: "",
-    conjointLocalite: "",
-    conjointCodePostal: "",
-    conjointDateNaissance: "",
-    conjointNationalite: "",
-
-    // Informations d'entreprise
-    grandLivrePdf: null as File | null,
-
-    // Mot de passe
-    password: "",
-    confirmPassword: "",
+    motDePasse: "",
+    localite: "",
+    adresse: "",
+    codePostal: "",
+    numeroTelephone: "",
+    role: "prive", // Valeur par défaut, sera mise à jour selon le type d'utilisateur
+    statut: "pending", // Toujours "pending" pour les nouvelles inscriptions
+    dateCreation: new Date().toISOString(),
   })
+
+  // État pour la confirmation du mot de passe
+  const [confirmPassword, setConfirmPassword] = useState("")
 
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+
+  // Mise à jour du rôle lorsque le type d'utilisateur change
+  const handleUserTypeChange = (value: "madame" | "monsieur" | "entreprise") => {
+    setUserType(value)
+    // Définir le rôle comme "prive" pour madame/monsieur, "entreprise" pour entreprise
+    setFormData((prev) => ({
+      ...prev,
+      role: value === "entreprise" ? "entreprise" : "prive",
+    }))
+  }
 
   // Gestion des changements dans les champs du formulaire
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -71,47 +60,84 @@ export default function SignupPage() {
 
   // Gestion du changement de numéro de téléphone
   const handlePhoneChange = (value: string) => {
-    setFormData((prev) => ({ ...prev, telephone: value }))
+    setFormData((prev) => ({ ...prev, numeroTelephone: value }))
   }
 
-  // Gestion des changements de prestations
-  const handlePrestationChange = (prestation: keyof typeof prestations, checked: boolean) => {
-    setPrestations((prev) => ({ ...prev, [prestation]: checked }))
-  }
+  // Fonction pour connecter l'utilisateur après inscription
+  const loginUser = async (email: string, password: string) => {
+    try {
+      const response = await axios.post("http://127.0.0.1:8000/api/login", {
+        email,
+        password,
+      })
 
-  // Gestion du téléchargement de fichier
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files[0]) {
-      setFormData((prev) => ({ ...prev, grandLivrePdf: e.target.files![0] }))
+      if (response.data && response.data.token) {
+        // Stocker le token d'authentification
+        localStorage.setItem("auth_token", response.data.token)
+        return true
+      }
+      return false
+    } catch (error) {
+      console.error("Erreur lors de la connexion automatique:", error)
+      return false
     }
   }
-
-  // Vérifier si l'utilisateur est un particulier (madame ou monsieur)
-  const isParticulier = userType === "madame" || userType === "monsieur"
-
-  // Vérifier si l'utilisateur est marié
-  const isMarie = etatCivil === "marie"
 
   // Soumission du formulaire
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    console.log("Type d'utilisateur:", userType)
-    console.log("Données du formulaire:", formData)
-    if (userType === "entreprise") {
-      console.log("Type d'entreprise:", entrepriseType)
-      console.log("Prestations:", prestations)
+    setError(null)
+
+    // Vérification que les mots de passe correspondent
+    if (formData.motDePasse !== confirmPassword) {
+      setError("Les mots de passe ne correspondent pas.")
+      return
     }
-    if (isParticulier) {
-      console.log("État civil:", etatCivil)
+
+    // Mettre à jour la date de création au moment de la soumission
+    const dataToSubmit = {
+      ...formData,
+      dateCreation: new Date().toISOString(),
     }
-    // Logique d'inscription à implémenter ici
+
+    setIsLoading(true)
+
+    try {
+      // 1. Envoyer les données d'inscription à l'API
+      const response = await axios.post("http://127.0.0.1:8000/api/users", dataToSubmit)
+
+      console.log("Inscription réussie:", response.data)
+
+      // 2. Connecter automatiquement l'utilisateur
+      const loginSuccess = await loginUser(formData.email, formData.motDePasse)
+
+      if (loginSuccess) {
+        // 3. Rediriger vers le dashboard
+        router.push("/dashboard")
+      } else {
+        // Si la connexion automatique échoue, rediriger vers la page de connexion
+        alert("Inscription réussie! Veuillez vous connecter.")
+        router.push("/connexion")
+      }
+    } catch (error) {
+      console.error("Erreur lors de l'inscription:", error)
+
+      if (axios.isAxiosError(error) && error.response) {
+        // Afficher le message d'erreur du serveur si disponible
+        setError(error.response.data.message || "Une erreur est survenue lors de l'inscription.")
+      } else {
+        setError("Une erreur est survenue lors de l'inscription. Veuillez réessayer.")
+      }
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   return (
     <div className="flex flex-col justify-center items-center min-h-screen bg-background p-4">
       <h1 className="text-3xl font-bold mb-6 text-center">INSCRIPTION</h1>
 
-      <Card className="w-full max-w-2xl mb-8">
+      <Card className="w-full max-w-md mb-8">
         <CardHeader>
           <CardTitle className="text-2xl font-bold">Créer un compte</CardTitle>
         </CardHeader>
@@ -123,7 +149,7 @@ export default function SignupPage() {
               <Label>Type de compte</Label>
               <RadioGroup
                 defaultValue={userType}
-                onValueChange={(value) => setUserType(value as "madame" | "monsieur" | "entreprise")}
+                onValueChange={(value) => handleUserTypeChange(value as "madame" | "monsieur" | "entreprise")}
                 className="flex space-x-4"
               >
                 <div className="flex items-center space-x-2">
@@ -144,8 +170,13 @@ export default function SignupPage() {
             {/* Champs communs */}
             <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="nomPrenom">{isParticulier ? "Nom et prénom" : "Raison sociale"}</Label>
-                <Input id="nomPrenom" name="nomPrenom" value={formData.nomPrenom} onChange={handleChange} required />
+                <Label htmlFor="nom">{userType === "entreprise" ? "Raison sociale" : "Nom et prénom"}</Label>
+                <Input id="nom" name="nom" value={formData.nom} onChange={handleChange} required />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="email">Email</Label>
+                <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
               </div>
 
               <div className="space-y-2">
@@ -170,240 +201,22 @@ export default function SignupPage() {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="email">Email</Label>
-                <Input id="email" name="email" type="email" value={formData.email} onChange={handleChange} required />
-              </div>
-
               <PhoneInput
-                id="telephone"
+                id="numeroTelephone"
                 label="Numéro de téléphone"
-                value={formData.telephone}
+                value={formData.numeroTelephone}
                 onChange={handlePhoneChange}
                 required
               />
-            </div>
 
-            {/* Champs spécifiques pour particuliers */}
-            {isParticulier && (
-              <div className="space-y-4 border p-4 rounded-lg">
-                <h3 className="font-medium text-lg">Informations personnelles</h3>
-
-                <div className="space-y-2">
-                  <Label htmlFor="dateNaissance">Date de naissance</Label>
-                  <Input
-                    id="dateNaissance"
-                    name="dateNaissance"
-                    type="date"
-                    value={formData.dateNaissance}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="nationalite">Nationalité</Label>
-                  <Input
-                    id="nationalite"
-                    name="nationalite"
-                    value={formData.nationalite}
-                    onChange={handleChange}
-                    required
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="etatCivil">État civil</Label>
-                  <Select
-                    defaultValue={etatCivil}
-                    onValueChange={(value) => setEtatCivil(value as "celibataire" | "marie" | "divorce")}
-                  >
-                    <SelectTrigger id="etatCivil">
-                      <SelectValue placeholder="Sélectionnez votre état civil" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="celibataire">Célibataire</SelectItem>
-                      <SelectItem value="marie">Marié(e)/Partenariat</SelectItem>
-                      <SelectItem value="divorce">Divorcé(e)</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Informations du conjoint si marié */}
-                {isMarie && (
-                  <div className="space-y-4 border p-4 rounded-lg mt-4">
-                    <h3 className="font-medium">Informations du conjoint</h3>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="conjointNomPrenom">Nom et prénom</Label>
-                      <Input
-                        id="conjointNomPrenom"
-                        name="conjointNomPrenom"
-                        value={formData.conjointNomPrenom}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="conjointAdresse">Adresse</Label>
-                      <Input
-                        id="conjointAdresse"
-                        name="conjointAdresse"
-                        value={formData.conjointAdresse}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="conjointLocalite">Localité</Label>
-                        <Input
-                          id="conjointLocalite"
-                          name="conjointLocalite"
-                          value={formData.conjointLocalite}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="conjointCodePostal">Code postal</Label>
-                        <Input
-                          id="conjointCodePostal"
-                          name="conjointCodePostal"
-                          value={formData.conjointCodePostal}
-                          onChange={handleChange}
-                          required
-                        />
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="conjointDateNaissance">Date de naissance</Label>
-                      <Input
-                        id="conjointDateNaissance"
-                        name="conjointDateNaissance"
-                        type="date"
-                        value={formData.conjointDateNaissance}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="conjointNationalite">Nationalité</Label>
-                      <Input
-                        id="conjointNationalite"
-                        name="conjointNationalite"
-                        value={formData.conjointNationalite}
-                        onChange={handleChange}
-                        required
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Champs spécifiques pour entreprises */}
-            {userType === "entreprise" && (
-              <div className="space-y-4 border p-4 rounded-lg">
-                <h3 className="font-medium text-lg">Informations de l&apos;entreprise</h3>
-
-                <div className="space-y-2">
-                  <Label>Type d&apos;entreprise</Label>
-                  <RadioGroup
-                    defaultValue={entrepriseType}
-                    onValueChange={(value) => setEntrepriseType(value as "nouvelle" | "ancienne")}
-                    className="flex space-x-4"
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="nouvelle" id="nouvelle" />
-                      <Label htmlFor="nouvelle">Nouvelle (créée cette année)</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="ancienne" id="ancienne" />
-                      <Label htmlFor="ancienne">Ancienne</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-
-                {/* Grand Livre pour nouvelle entreprise */}
-                {entrepriseType === "nouvelle" && (
-                  <div className="space-y-2">
-                    <Label htmlFor="grandLivre">Grand Livre</Label>
-                    <div className="flex items-center gap-2">
-                      <Input
-                        id="grandLivre"
-                        type="file"
-                        accept=".pdf"
-                        onChange={handleFileChange}
-                        className="flex-1"
-                        required
-                      />
-                      <Button type="button" size="icon" variant="outline">
-                        <Upload className="h-4 w-4" />
-                        <span className="sr-only">Télécharger</span>
-                      </Button>
-                    </div>
-                    <p className="text-sm text-muted-foreground">
-                      Veuillez télécharger votre Grand Livre au format PDF
-                    </p>
-                  </div>
-                )}
-
-                {/* Prestations pour toutes les entreprises */}
-                <div className="space-y-2">
-                  <Label>Quelles prestations ?</Label>
-                  <div className="grid grid-cols-2 gap-2 mt-2">
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="fiscales"
-                        checked={prestations.fiscales}
-                        onCheckedChange={(checked) => handlePrestationChange("fiscales", checked as boolean)}
-                      />
-                      <Label htmlFor="fiscales">Fiscales</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="comptable"
-                        checked={prestations.comptable}
-                        onCheckedChange={(checked) => handlePrestationChange("comptable", checked as boolean)}
-                      />
-                      <Label htmlFor="comptable">Comptable</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="admin"
-                        checked={prestations.admin}
-                        onCheckedChange={(checked) => handlePrestationChange("admin", checked as boolean)}
-                      />
-                      <Label htmlFor="admin">Admin</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Checkbox
-                        id="salariales"
-                        checked={prestations.salariales}
-                        onCheckedChange={(checked) => handlePrestationChange("salariales", checked as boolean)}
-                      />
-                      <Label htmlFor="salariales">Salariales</Label>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* Mot de passe */}
-            <div className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="password">Mot de passe</Label>
+                <Label htmlFor="motDePasse">Mot de passe</Label>
                 <div className="relative">
                   <Input
-                    id="password"
-                    name="password"
+                    id="motDePasse"
+                    name="motDePasse"
                     type={showPassword ? "text" : "password"}
-                    value={formData.password}
+                    value={formData.motDePasse}
                     onChange={handleChange}
                     required
                   />
@@ -429,8 +242,8 @@ export default function SignupPage() {
                     id="confirmPassword"
                     name="confirmPassword"
                     type={showConfirmPassword ? "text" : "password"}
-                    value={formData.confirmPassword}
-                    onChange={handleChange}
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
                     required
                   />
                   <Button
@@ -449,8 +262,17 @@ export default function SignupPage() {
               </div>
             </div>
 
-            <Button type="submit" className="w-full">
-              S&apos;inscrire
+            {error && <p className="text-red-500 text-sm">{error}</p>}
+
+            <Button type="submit" className="w-full" disabled={isLoading}>
+              {isLoading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Inscription en cours...
+                </>
+              ) : (
+                "S'inscrire"
+              )}
             </Button>
           </form>
         </CardContent>

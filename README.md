@@ -38,3 +38,12 @@ php artisan migrate:refresh --seed
 - [Tailwind CSS](https://tailwindcss.com/)
 - [shadcn/ui](https://ui.shadcn.com/)
 - [Laravel](https://laravel.com/)
+
+## Vitest
+
+- npm install react-day-picker@latest            
+- npm install -D vite @vitejs/plugin-react 
+- npm install -D vitest happy-dom @testing-library/react
+- npm install --save-dev @testing-library/jest-dom   
+- npx vitest  (lancer les tests)
+- npm list @vitejs/plugin-react (check les plugins)
