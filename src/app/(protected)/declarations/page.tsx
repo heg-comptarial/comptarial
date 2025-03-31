@@ -22,6 +22,7 @@ import { Label } from "@/components/ui/label";
 import { Trash2, Download, Upload } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { toast, Toaster } from "sonner";
+import ProtectedRoute from "@/components/ProtectedRoute"; // Importer le composant ProtectedRoute
 
 const years = Array.from({ length: 20 }, (_, i) => 2020 + i);
 
@@ -34,9 +35,7 @@ interface FileData {
 }
 
 export default function Page() {
-  const [selectedYear, setSelectedYear] = useState<string | undefined>(
-    undefined
-  );
+  const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
   const [isUploading, setIsUploading] = useState(false);
   const [files, setFiles] = useState<FileData[]>([]);
 
@@ -48,9 +47,7 @@ export default function Page() {
 
   const fetchFiles = async (year: string) => {
     try {
-      const response = await fetch(
-        `/api/list?year=${encodeURIComponent(year)}`
-      );
+      const response = await fetch(`/api/list?year=${encodeURIComponent(year)}`);
       const data = await response.json();
       if (response.ok) {
         setFiles(data.files);
@@ -179,97 +176,99 @@ export default function Page() {
   };
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen p-4">
-      <Toaster position="bottom-right" richColors />
+    <ProtectedRoute> {/* Envelopper la page dans le composant ProtectedRoute */}
+      <div className="flex flex-col items-center justify-center min-h-screen p-4">
+        <Toaster position="bottom-right" richColors />
 
-      <Card className="w-full md:w-3/4 lg:w-3/4">
-        <CardHeader>
-          <CardTitle>Déclarations</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="year-select">Select Year</Label>
-            <Select onValueChange={handleYearChange} value={selectedYear}>
-              <SelectTrigger id="year-select" className="w-full">
-                <SelectValue placeholder="Select a year" />
-              </SelectTrigger>
-              <SelectContent>
-                {years.map((year) => (
-                  <SelectItem key={year} value={year.toString()}>
-                    {year}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {selectedYear && (
-            <div className="space-y-4">
-              <div className="border-t pt-4">
-                <h3 className="text-lg font-medium mb-2">
-                  Files for {selectedYear}
-                </h3>
-                {files.length > 0 ? (
-                  files.map((file) => (
-                    <Card key={file.name} className="mb-4">
-                      <CardContent className="p-6">
-                        <p className="font-medium text-lg break-all">
-                          {file.name}
-                        </p>
-                        <p className="text-sm text-gray-500 mt-1">
-                          {(file.size / 1048576).toFixed(1)} MB
-                        </p>
-                        <p className="text-xs text-gray-400 mt-1">
-                          Last modified:{" "}
-                          {new Date(file.lastModified).toLocaleString()}
-                        </p>
-                      </CardContent>
-                      <CardFooter className="flex justify-between bg-gray-50 p-4">
-                        <Button
-                          variant="outline"
-                          size="sm"
-                          onClick={() => handleDownload(file)}
-                        >
-                          <Download className="h-4 w-4 mr-1" /> Download
-                        </Button>
-                        <Button
-                          variant="destructive"
-                          size="sm"
-                          onClick={() => handleDelete(file)}
-                        >
-                          <Trash2 className="h-4 w-4 mr-1" /> Delete
-                        </Button>
-                      </CardFooter>
-                    </Card>
-                  ))
-                ) : (
-                  <div className="space-y-4">
-                    <Label htmlFor="file-upload" className="block">
-                      <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors">
-                        <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                        <p className="mt-2 text-sm font-medium">
-                          Drag and drop a file, or click to select
-                        </p>
-                      </div>
-                    </Label>
-                    <Input
-                      id="file-upload"
-                      type="file"
-                      className="hidden"
-                      onChange={handleUpload}
-                    />
-                  </div>
-                )}
-                {isUploading && (
-                  <Alert className="mt-4">
-                    <AlertDescription>Uploading file...</AlertDescription>
-                  </Alert>
-                )}
-              </div>
+        <Card className="w-full md:w-3/4 lg:w-3/4">
+          <CardHeader>
+            <CardTitle>Déclarations</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="space-y-2">
+              <Label htmlFor="year-select">Select Year</Label>
+              <Select onValueChange={handleYearChange} value={selectedYear}>
+                <SelectTrigger id="year-select" className="w-full">
+                  <SelectValue placeholder="Select a year" />
+                </SelectTrigger>
+                <SelectContent>
+                  {years.map((year) => (
+                    <SelectItem key={year} value={year.toString()}>
+                      {year}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-          )}
-        </CardContent>
-      </Card>
-    </div>
+
+            {selectedYear && (
+              <div className="space-y-4">
+                <div className="border-t pt-4">
+                  <h3 className="text-lg font-medium mb-2">
+                    Files for {selectedYear}
+                  </h3>
+                  {files.length > 0 ? (
+                    files.map((file) => (
+                      <Card key={file.name} className="mb-4">
+                        <CardContent className="p-6">
+                          <p className="font-medium text-lg break-all">
+                            {file.name}
+                          </p>
+                          <p className="text-sm text-gray-500 mt-1">
+                            {(file.size / 1048576).toFixed(1)} MB
+                          </p>
+                          <p className="text-xs text-gray-400 mt-1">
+                            Last modified:{" "}
+                            {new Date(file.lastModified).toLocaleString()}
+                          </p>
+                        </CardContent>
+                        <CardFooter className="flex justify-between bg-gray-50 p-4">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={() => handleDownload(file)}
+                          >
+                            <Download className="h-4 w-4 mr-1" /> Download
+                          </Button>
+                          <Button
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleDelete(file)}
+                          >
+                            <Trash2 className="h-4 w-4 mr-1" /> Delete
+                          </Button>
+                        </CardFooter>
+                      </Card>
+                    ))
+                  ) : (
+                    <div className="space-y-4">
+                      <Label htmlFor="file-upload" className="block">
+                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors">
+                          <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                          <p className="mt-2 text-sm font-medium">
+                            Drag and drop a file, or click to select
+                          </p>
+                        </div>
+                      </Label>
+                      <Input
+                        id="file-upload"
+                        type="file"
+                        className="hidden"
+                        onChange={handleUpload}
+                      />
+                    </div>
+                  )}
+                  {isUploading && (
+                    <Alert className="mt-4">
+                      <AlertDescription>Uploading file...</AlertDescription>
+                    </Alert>
+                  )}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </ProtectedRoute> /* Fermeture du composant ProtectedRoute */
   );
 }

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -14,10 +15,6 @@ use App\Http\Controllers\ConjointController;
 use App\Http\Controllers\EnfantController;
 use App\Http\Controllers\EntrepriseController;
 
-// Route pour l'utilisateur authentifié (si vous utilisez Sanctum)
-Route::get('/user', function (Request $request) {
-    return $request->user();
-})->middleware('auth:sanctum');
 
 // Routes pour les utilisateurs
 Route::apiResource('users', UserController::class);
@@ -70,3 +67,7 @@ Route::get('/users/{userId}/declarations/{declarationId}', [UserController::clas
 
 // Route pour obtenir toutes les déclarations d'un user
 Route::get('/users/{userId}/declarations', [UserController::class, 'getAllDeclarationsByUser']);
+
+// Route pour l'authentification
+Route::post('login', [AuthController::class, 'login']);
+Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');

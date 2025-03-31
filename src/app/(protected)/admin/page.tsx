@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import ProtectedRoute from "@/components/ProtectedRoute"
 
 interface User {
   user_id: number
@@ -231,6 +232,7 @@ export default function Dashboard() {
   }
 
   return (
+    <ProtectedRoute>
     <div className="container mx-auto py-10 px-4 max-w-5xl">
       <h1 className="text-2xl font-semibold mb-8">
         Tableau de bord administrateur
@@ -440,6 +442,7 @@ export default function Dashboard() {
         </TabsContent>
       </Tabs>
     </div>
+    </ProtectedRoute>
   )
 }
 
