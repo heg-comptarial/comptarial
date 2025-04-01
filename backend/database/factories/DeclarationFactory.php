@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Declaration;
+use App\Models\User;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Declaration>
@@ -17,7 +19,11 @@ class DeclarationFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' => User::factory(), // Associe un utilisateur à la déclaration
+            'titre' => $this->faker->sentence, // Génère un titre aléatoire
+            'statut' => $this->faker->randomElement(['en attente', 'approuvé', 'rejeté']), // Statut aléatoire
+            'annee' => $this->faker->year, // Génère une année aléatoire
+            'dateCreation' => $this->faker->dateTimeThisDecade, // Génère une date de création aléatoire dans cette décennie
         ];
     }
 }
