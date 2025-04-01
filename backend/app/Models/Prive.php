@@ -9,6 +9,7 @@ namespace App\Models;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Class Prive
@@ -38,6 +39,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Prive extends Model
 {
+	use HasFactory;
 	protected $table = 'prive';
 	protected $primaryKey = 'prive_id';
 	public $timestamps = false;

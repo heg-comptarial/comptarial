@@ -8,6 +8,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Class Rubrique
@@ -24,6 +25,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Rubrique extends Model
 {
+	use HasFactory;
 	protected $table = 'rubrique';
 	protected $primaryKey = 'rubrique_id';
 	public $timestamps = false;

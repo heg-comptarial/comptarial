@@ -8,6 +8,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Class Notification
@@ -23,6 +24,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Notification extends Model
 {
+	use HasFactory;
 	protected $table = 'notification';
 	protected $primaryKey = 'notification_id';
 	public $timestamps = false;

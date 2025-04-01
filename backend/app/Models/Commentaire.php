@@ -8,6 +8,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
  * Class Commentaire
@@ -25,6 +26,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 class Commentaire extends Model
 {
+	use HasFactory;
 	protected $table = 'commentaire';
 	protected $primaryKey = 'commentaire_id';
 	public $timestamps = false;

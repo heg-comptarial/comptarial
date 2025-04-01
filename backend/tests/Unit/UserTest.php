@@ -36,7 +36,7 @@ class UserTest extends TestCase
             'codePostal' => '75001',
             'numeroTelephone' => '0123456789',
             'role' => 'admin',
-            'statut' => 'actif',
+            'statut' => 'approved',
             'dateCreation' => now(),
         ]);
 
