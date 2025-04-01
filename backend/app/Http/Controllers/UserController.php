@@ -125,7 +125,7 @@ class UserController extends Controller
                 Prive::create([
                     'user_id' => $user->user_id, // Utilisez user_id ici
                     'dateNaissance' => now(), // Par défaut
-                    'nationalite' => 'Non spécifiée',
+                    'nationalite' => 'Non spécifiée', 
                     'etatCivil' => 'Non spécifié',
                     'fo_banques' => false,
                     'fo_dettes' => false,
