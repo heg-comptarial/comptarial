@@ -11,6 +11,8 @@ use App\Models\Prive;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
+// Problème Admin & Prive --> Relation ??!!
+
 class UserTest extends TestCase
 {
     /**
@@ -57,14 +59,21 @@ class UserTest extends TestCase
     }
 
     /**
-     * Teste la relation User -> Declarations.
+     * Teste la relation User -> Administrateur.
      */
-    public function test_user_has_many_declarations(): void
+    public function test_user_has_one_administrateur(): void
     {
+        // Crée un utilisateur
         $user = User::factory()->create();
-        Declaration::factory()->create(['user_id' => $user->user_id]);
 
-        $this->assertInstanceOf(Declaration::class, $user->declarations->first());
+        // Crée un administrateur associé à cet utilisateur
+        $administrateur = Administrateur::factory()->create(['user_id' => $user->user_id]);
+
+        // Vérifie que l'administrateur associé est bien du type Administrateur
+        $this->assertInstanceOf(Administrateur::class, $user->administrateur);
+        
+        // Vérifie que l'ID de l'administrateur correspond à celui de l'utilisateur
+        $this->assertEquals($administrateur->user_id, $user->user_id);
     }
 
     /**
