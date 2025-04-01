@@ -1,23 +1,14 @@
 "use client";
 
-import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Edit } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";  // Importer le composant
 import { useUser } from "@/components/context/UserContext";
 
 export default function Dashboard() {
-  const [message, setMessage] = useState("");
   const { user } = useUser();
 
-  useEffect(() => {  
-    console.log(user)
-    fetch("http://localhost:3001/api/test")
-      .then((response) => response.json())
-      .then((data) => setMessage(data.message))
-      .catch((error) => console.error("Error:", error));
-  }, []);
-
+  console.log("User in dashboard:", user);
   if (!user) {
     return <div>Veuillez vous connecter pour accéder au tableau de bord.</div>;
   } 
@@ -27,7 +18,6 @@ export default function Dashboard() {
       <div className="container mx-auto py-10 px-4 max-w-3xl">
         <h1 className="text-2xl font-semibold mb-8">
           Infos générales (page s&apos;inscrire)
-          <p>Backend Response: {message}</p>
         </h1>
 
         <div className="space-y-6 mb-12"></div>

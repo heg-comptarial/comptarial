@@ -8,10 +8,12 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { DocumentUpload } from "@/components/protected/declaration-client/document-upload";
-import { Button } from "@/components/ui/button";
+import { useUser } from "@/components/context/UserContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
 
 interface Document {
   doc_id: number;
@@ -59,14 +61,18 @@ interface Prive {
 }
 
 export default function DeclarationsClientPage() {
+  const { user } = useUser();
+  console.log("User data", user);
   const userId = 7;
   const declarationId = 6;
-  
+
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [toastShown, setToastShown] = useState<boolean>(false);
-  const [selectedFiles, setSelectedFiles] = useState<{file: File, rubriqueId: number}[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<
+    { file: File; rubriqueId: number }[]
+  >([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
   useEffect(() => {
@@ -255,7 +261,10 @@ export default function DeclarationsClientPage() {
   };
 
   const handleFilesSelected = (rubriqueId: number, files: File[]) => {
-    setSelectedFiles(prev => [...prev, ...files.map(file => ({file, rubriqueId}))]);
+    setSelectedFiles((prev) => [
+      ...prev,
+      ...files.map((file) => ({ file, rubriqueId })),
+    ]);
   };
 
   const handleFileRemoved = (fileId: string) => {
@@ -267,9 +276,9 @@ export default function DeclarationsClientPage() {
       toast.warning("Aucun fichier sélectionné");
       return;
     }
-  
+
     setIsSaving(true);
-  
+
     try {
       // First upload all files to S3
       const uploadPromises = selectedFiles.map(async (fileData) => {
@@ -278,32 +287,35 @@ export default function DeclarationsClientPage() {
         formData.append("year", declaration?.annee || "");
         formData.append("userId", userId.toString());
         formData.append("rubriqueId", fileData.rubriqueId.toString());
-        formData.append("rubriqueName", 
-          declaration?.rubriques.find(r => r.rubrique_id === fileData.rubriqueId)?.titre || ""
+        formData.append(
+          "rubriqueName",
+          declaration?.rubriques.find(
+            (r) => r.rubrique_id === fileData.rubriqueId
+          )?.titre || ""
         );
-  
+
         const response = await fetch("/api/upload", {
           method: "POST",
           body: formData,
         });
-  
+
         if (!response.ok) {
           throw new Error(`Failed to upload ${fileData.file.name}`);
         }
-  
+
         const result = await response.json();
         return {
           rubrique_id: fileData.rubriqueId,
           nom: result.fileName,
-          type: result.fileType.split('/').pop() || 'other',
+          type: result.fileType.split("/").pop() || "other",
           cheminFichier: result.url,
-          statut: 'pending',
-          sous_rubrique: 'default',
+          statut: "pending",
+          sous_rubrique: "default",
         };
       });
-  
+
       const documentsToSave = await Promise.all(uploadPromises);
-  
+
       // Then save to database
       const saveResponse = await fetch("http://127.0.0.1:8000/api/documents", {
         method: "POST",
@@ -312,25 +324,30 @@ export default function DeclarationsClientPage() {
         },
         body: JSON.stringify({ documents: documentsToSave }),
       });
-  
+
       if (!saveResponse.ok) {
         const errorText = await saveResponse.text();
         throw new Error(`Failed to save documents: ${errorText}`);
       }
-  
+
       // const saveResult = await saveResponse.json();
-  
+
       // Clear selected files
       setSelectedFiles([]);
-  
-      toast.success(`${documentsToSave.length} documents enregistrés avec succès`);
-      
+
+      toast.success(
+        `${documentsToSave.length} documents enregistrés avec succès`
+      );
+
       // Refresh the declaration data
       fetchOrCreateRubrique();
     } catch (error) {
       console.error("Error uploading and saving documents:", error);
       toast.error("Erreur lors de l'enregistrement des documents", {
-        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Une erreur inconnue est survenue",
       });
     } finally {
       setIsSaving(false);
@@ -356,74 +373,76 @@ export default function DeclarationsClientPage() {
   }
 
   return (
-    <>
-      <Toaster position="bottom-right" richColors closeButton />
+      <ProtectedRoute>
+        <Toaster position="bottom-right" richColors closeButton />
 
-      <div className="p-10">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
-          {declaration?.statut && getStatusBadge(declaration.statut)}
-        </div>
-
-        {declaration?.rubriques && declaration.rubriques.length > 0 ? (
-          <Accordion type="multiple" className="w-full">
-            {declaration.rubriques.map((rubrique) => (
-              <AccordionItem
-                key={rubrique.rubrique_id}
-                value={`rubrique-${rubrique.rubrique_id}`}
-              >
-                <AccordionTrigger className="text-xl font-medium">
-                  {rubrique.titre}
-                </AccordionTrigger>
-                <AccordionContent>
-                  <div className="space-y-6">
-                    <DocumentUpload
-                      userId={userId}
-                      year={declaration.annee}
-                      rubriqueId={rubrique.rubrique_id}
-                      rubriqueName={rubrique.titre}
-                      onFilesSelected={(files) => 
-                        handleFilesSelected(rubrique.rubrique_id, files)
-                      }
-                      onFileRemoved={handleFileRemoved}
-                    />
-                  </div>
-                </AccordionContent>
-              </AccordionItem>
-            ))}
-          </Accordion>
-        ) : (
-          <p className="text-center text-gray-500 py-8">
-            Aucune rubrique trouvée pour cette déclaration
-          </p>
-        )}
-
-        {selectedFiles.length > 0 && (
-          <div className="fixed bottom-8 right-8 flex items-center gap-2 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
-            <span className="text-sm font-medium">
-              {selectedFiles.length} document
-              {selectedFiles.length > 1 ? "s" : ""} prêt{selectedFiles.length > 1 ? "s" : ""} à être enregistré{selectedFiles.length > 1 ? "s" : ""}
-            </span>
-            <Button
-              onClick={uploadAndSaveDocuments}
-              disabled={isSaving}
-              className="flex items-center gap-2"
-            >
-              {isSaving ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                  Enregistrement...
-                </>
-              ) : (
-                <>
-                  <Save className="h-4 w-4" />
-                  Enregistrer les documents
-                </>
-              )}
-            </Button>
+        <div className="p-10">
+          <div className="flex justify-between items-center mb-6">
+            <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
+            {declaration?.statut && getStatusBadge(declaration.statut)}
           </div>
-        )}
-      </div>
-    </>
+
+          {declaration?.rubriques && declaration.rubriques.length > 0 ? (
+            <Accordion type="multiple" className="w-full">
+              {declaration.rubriques.map((rubrique) => (
+                <AccordionItem
+                  key={rubrique.rubrique_id}
+                  value={`rubrique-${rubrique.rubrique_id}`}
+                >
+                  <AccordionTrigger className="text-xl font-medium">
+                    {rubrique.titre}
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    <div className="space-y-6">
+                      <DocumentUpload
+                        userId={userId}
+                        year={declaration.annee}
+                        rubriqueId={rubrique.rubrique_id}
+                        rubriqueName={rubrique.titre}
+                        onFilesSelected={(files) =>
+                          handleFilesSelected(rubrique.rubrique_id, files)
+                        }
+                        onFileRemoved={handleFileRemoved}
+                      />
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          ) : (
+            <p className="text-center text-gray-500 py-8">
+              Aucune rubrique trouvée pour cette déclaration
+            </p>
+          )}
+
+          {selectedFiles.length > 0 && (
+            <div className="fixed bottom-8 right-8 flex items-center gap-2 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+              <span className="text-sm font-medium">
+                {selectedFiles.length} document
+                {selectedFiles.length > 1 ? "s" : ""} prêt
+                {selectedFiles.length > 1 ? "s" : ""} à être enregistré
+                {selectedFiles.length > 1 ? "s" : ""}
+              </span>
+              <Button
+                onClick={uploadAndSaveDocuments}
+                disabled={isSaving}
+                className="flex items-center gap-2"
+              >
+                {isSaving ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    Enregistrement...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Enregistrer les documents
+                  </>
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
+      </ProtectedRoute>
   );
 }

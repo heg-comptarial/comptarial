@@ -1,26 +1,32 @@
-"use client"
+"use client";
 
-import type React from "react"
-import { useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import Link from "next/link"
-import { Eye, EyeOff } from "lucide-react"
-import { useRouter } from "next/navigation"
+import type React from "react";
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import Link from "next/link";
+import { Eye, EyeOff } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { useUser } from "@/components/context/UserContext";
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("")
-  const [password, setPassword] = useState("")
-  const [showPassword, setShowPassword] = useState(false)
-  const [error, setError] = useState<string | null>(null)
-  const router = useRouter()
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const router = useRouter();
   const { fetchUserData } = useUser(); // Accéder à la fonction pour mettre à jour le contexte
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+    e.preventDefault();
 
     // On envoie la requête POST à l'API backend Laravel pour l'authentification
     try {
@@ -33,36 +39,39 @@ export default function LoginPage() {
           email,
           password,
         }),
-      })
+      });
 
-      const data = await response.json()
+      const data = await response.json();
 
       if (response.ok) {
         // Si la connexion réussit, on stocke le token d'authentification
-        localStorage.setItem("auth_token", data.token)
+        localStorage.setItem("auth_token", data.token);
         fetchUserData(data.user.user_id); // Récupérer les données utilisateur
 
         // Redirection vers la page des utilisateurs (ou dashboard)
         if (data.user.role === "admin") {
-          router.push("/admin")
-        } else {router.push("/dashboard")}
-        
+          router.push("/admin");
+        } else {
+          router.push("/dashboard");
+        }
       } else {
         // Si la connexion échoue, on affiche une erreur
-        setError(data.message || "Une erreur s'est produite.")
+        setError(data.message || "Une erreur s'est produite.");
       }
     } catch (err) {
-      console.error(err)
-      setError("Une erreur s'est produite lors de la connexion.")
+      console.error(err);
+      setError("Une erreur s'est produite lors de la connexion.");
     }
-  }
+  };
 
   return (
     <div className="flex flex-col justify-center items-center min-h-screen bg-background p-4">
       <h1 className="text-3xl font-bold mb-6">LOGIN</h1>
       <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
-          <CardTitle className="text-2xl font-bold text-left">Comptarial</CardTitle>
+          <CardTitle className="text-2xl font-bold text-left">
+            Comptarial
+          </CardTitle>
           <p className="text-muted-foreground">Bienvenue</p>
         </CardHeader>
         <CardContent>
@@ -98,9 +107,15 @@ export default function LoginPage() {
                   className="absolute right-0 top-0 h-full px-3"
                   onClick={() => setShowPassword(!showPassword)}
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" />
+                  ) : (
+                    <Eye className="h-4 w-4" />
+                  )}
                   <span className="sr-only">
-                    {showPassword ? "Cacher le mot de passe" : "Afficher le mot de passe"}
+                    {showPassword
+                      ? "Cacher le mot de passe"
+                      : "Afficher le mot de passe"}
                   </span>
                 </Button>
               </div>
@@ -117,11 +132,14 @@ export default function LoginPage() {
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <Link href="/inscription" className="text-sm text-primary hover:underline">
+          <Link
+            href="/inscription"
+            className="text-sm text-primary hover:underline"
+          >
             S&apos;inscrire
           </Link>
         </CardFooter>
       </Card>
     </div>
-  )
+  );
 }
