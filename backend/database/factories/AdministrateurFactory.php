@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Administrateur;
+use App\Models\User;
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Administrateur>
@@ -17,7 +19,8 @@ class AdministrateurFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'user_id' => User::factory(), // Crée un utilisateur lié à cet administrateur
+            'niveauAcces' => $this->faker->randomElement(['admin', 'superadmin', 'moderator']), // Exemple de valeurs pour niveauAcces
         ];
     }
 }
