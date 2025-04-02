@@ -22,7 +22,9 @@ export default function DeclarationsClientPage() {
   console.log("User data", user);
   const userId = 7;
   const declarationId = 6;
+  const declarationYear = "2030";
 
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
@@ -41,7 +43,7 @@ export default function DeclarationsClientPage() {
       setLoading(true);
 
       const declarationResponse = await fetch(
-        `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationId}`
+        `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${declarationYear}`
       );
 
       if (!declarationResponse.ok) {
