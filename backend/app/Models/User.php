@@ -81,7 +81,7 @@ class User extends Authenticatable
 
 	public function entreprises()
 	{
-		return $this->hasOnex(Entreprise::class, 'user_id');
+		return $this->hasOne(Entreprise::class, 'user_id');
 	}
 
 	public function notifications()
