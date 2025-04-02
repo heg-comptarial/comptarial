@@ -14,6 +14,7 @@ import { Loader2, Save } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { DocumentUpload } from "@/components/protected/declaration-client/document-upload";
 import { foFields } from "@/utils/foFields";
+import YearSelector from "@/components/YearSelector";
 import { useUser } from "@/components/context/UserContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 
@@ -22,7 +23,7 @@ export default function DeclarationsClientPage() {
   console.log("User data", user);
   const userId = 7;
   const declarationId = 6;
-  const declarationYear = "2030";
+  const declarationYear = "2025";
 
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
@@ -34,9 +35,21 @@ export default function DeclarationsClientPage() {
   >([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
 
+  /* Vérification de l'année sélectionnée */
+  useEffect(() => {
+    if (selectedYear) {
+      console.log(`Selected year: ${selectedYear}`);
+    }
+  }, [selectedYear]);
+
   useEffect(() => {
     fetchOrCreateRubrique();
   }, []);
+
+  /* Sélection de l'année */
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year.toString());
+  };
 
   async function fetchOrCreateRubrique() {
     try {
@@ -193,7 +206,7 @@ export default function DeclarationsClientPage() {
     setIsSaving(true);
 
     try {
-      // First upload all files to S3
+      // Upload des fichiers sélectionnés dans le bucket S3 Infomaniak
       const uploadPromises = selectedFiles.map(async (fileData) => {
         const formData = new FormData();
         formData.append("file", fileData.file);
@@ -245,15 +258,9 @@ export default function DeclarationsClientPage() {
 
       // const saveResult = await saveResponse.json();
 
-      // Clear selected files
-      setSelectedFiles([]);
-
       toast.success(
         `${documentsToSave.length} documents enregistrés avec succès`
       );
-
-      // Refresh the declaration data
-      fetchOrCreateRubrique();
     } catch (error) {
       console.error("Error uploading and saving documents:", error);
       toast.error("Erreur lors de l'enregistrement des documents", {
@@ -288,8 +295,12 @@ export default function DeclarationsClientPage() {
   return (
     <ProtectedRoute>
       <Toaster position="bottom-right" richColors closeButton />
+      <div className="px-10">
+        <h2 className="text-lg font-semibold px-2">Année de la déclaration</h2>
+        <YearSelector onYearChange={handleYearChange} className="w-full" />
+      </div>
 
-      <div className="p-10">
+      <div className="p-10 pt-5">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
           {declaration?.statut && getStatusBadge(declaration.statut)}
