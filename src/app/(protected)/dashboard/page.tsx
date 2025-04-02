@@ -4,23 +4,16 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { FileText, Edit } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";  // Importer le composant
-import { useUser } from "@/components/context/UserContext";
 
 export default function Dashboard() {
   const [message, setMessage] = useState("");
-  const { user } = useUser();
 
   useEffect(() => {  
-    console.log(user)
     fetch("http://localhost:3001/api/test")
       .then((response) => response.json())
       .then((data) => setMessage(data.message))
       .catch((error) => console.error("Error:", error));
   }, []);
-
-  if (!user) {
-    return <div>Veuillez vous connecter pour accéder au tableau de bord.</div>;
-  } 
 
   return (
     <ProtectedRoute>

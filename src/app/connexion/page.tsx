@@ -9,7 +9,6 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 import { useRouter } from "next/navigation"
-import { useUser } from "@/components/context/UserContext";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -17,7 +16,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const router = useRouter()
-  const { fetchUserData } = useUser(); // Accéder à la fonction pour mettre à jour le contexte
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,7 +38,7 @@ export default function LoginPage() {
       if (response.ok) {
         // Si la connexion réussit, on stocke le token d'authentification
         localStorage.setItem("auth_token", data.token)
-        fetchUserData(data.user.user_id); // Récupérer les données utilisateur
+        localStorage.setItem("user_id", data.user.user_id)
 
         // Redirection vers la page des utilisateurs (ou dashboard)
         if (data.user.role === "admin") {

@@ -9,7 +9,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
 import ProtectedRoute from "@/components/ProtectedRoute"
-import { useUser } from "@/components/context/UserContext";
 
 interface User {
   user_id: number
@@ -44,19 +43,13 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [activeTab, setActiveTab] = useState("general")
-  const { user } = useUser();
 
   useEffect(() => {
-    console.log("Utilisateur récupéré :", user);
     fetch(`${API_URL}/test`, fetchConfig)
       .then((response) => response.json())
       .then((data) => setMessage(data.message))
       .catch((error) => console.error("Erreur:", error))
   }, [])
-
-  if (!user) {
-    return <div>Veuillez vous connecter pour accéder au tableau de bord.</div>;
-  } 
 
   const fetchPendingUsers = async () => {
     setLoading(true)
@@ -244,7 +237,6 @@ export default function Dashboard() {
       <h1 className="text-2xl font-semibold mb-8">
         Tableau de bord administrateur
         <p className="text-sm text-muted-foreground mt-2">Backend Response: {message}</p>
-        <div>Bienvenue, {user.email}, {user.user_id} !</div>
       </h1>
 
       <Tabs defaultValue="general" className="w-full" onValueChange={handleTabChange}>
