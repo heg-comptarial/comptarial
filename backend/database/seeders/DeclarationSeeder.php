@@ -47,9 +47,9 @@ class DeclarationSeeder extends Seeder
             ],
             [
                 'user_id' => 7,
-                'titre' => 'Déclaration 2030',
+                'titre' => 'Déclaration 2025',
                 'statut' => 'pending',
-                'annee' => '2030',
+                'annee' => '2025',
                 'dateCreation' => now(),
             ]
         ]);

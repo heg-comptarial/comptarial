@@ -71,7 +71,7 @@ class User extends Authenticatable
 
 	public function administrateurs()
 	{
-		return $this->hasMany(Administrateur::class, 'user_id');
+		return $this->hasOne(Administrateur::class, 'user_id');
 	}
 
 	public function declarations()
@@ -81,7 +81,7 @@ class User extends Authenticatable
 
 	public function entreprises()
 	{
-		return $this->hasMany(Entreprise::class, 'user_id');
+		return $this->hasOnex(Entreprise::class, 'user_id');
 	}
 
 	public function notifications()
@@ -91,6 +91,6 @@ class User extends Authenticatable
 
 	public function prives()
 	{
-		return $this->hasMany(Prive::class, 'user_id');
+		return $this->hasOne(Prive::class, 'user_id');
 	}
 }
