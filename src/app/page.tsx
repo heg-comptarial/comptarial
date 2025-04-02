@@ -7,11 +7,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { UserProvider } from "@/components/context/UserContext";
 
 export default function Home() {
   return (
-    <UserProvider>
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="border-b bg-white fixed top-0 left-0 w-full z-50 shadow-md">
@@ -268,6 +266,5 @@ export default function Home() {
         </div>
       </footer>
     </div>
-    </UserProvider>
   );
 }
