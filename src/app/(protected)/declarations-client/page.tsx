@@ -17,6 +17,7 @@ import { foFields } from "@/utils/foFields";
 import YearSelector from "@/components/YearSelector";
 import { useUser } from "@/components/context/UserContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
+import { DocumentList } from "@/components/protected/declaration-client/document-list";
 
 export default function DeclarationsClientPage() {
   const { user } = useUser();
@@ -25,6 +26,7 @@ export default function DeclarationsClientPage() {
   const declarationId = 6;
   const declarationYear = "2025";
 
+  const [documentsSaved, setDocumentsSaved] = useState<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -261,6 +263,7 @@ export default function DeclarationsClientPage() {
       toast.success(
         `${documentsToSave.length} documents enregistrés avec succès`
       );
+      setDocumentsSaved(true);
     } catch (error) {
       console.error("Error uploading and saving documents:", error);
       toast.error("Erreur lors de l'enregistrement des documents", {
@@ -316,7 +319,7 @@ export default function DeclarationsClientPage() {
                 <AccordionTrigger className="text-xl font-medium">
                   {rubrique.titre}
                 </AccordionTrigger>
-                <AccordionContent>
+                {/* <AccordionContent>
                   <div className="space-y-6">
                     <DocumentUpload
                       userId={userId}
@@ -328,6 +331,30 @@ export default function DeclarationsClientPage() {
                       }
                       onFileRemoved={handleFileRemoved}
                     />
+                  </div>
+                </AccordionContent> */}
+                <AccordionContent>
+                  <div className="space-y-6">
+                    {documentsSaved ? (
+                      <DocumentList
+                        rubriqueId={rubrique.rubrique_id}
+                        rubriqueName={rubrique.titre}
+                        documents={rubrique.documents || []}
+                        onAddMore={() => setDocumentsSaved(false)}
+                      />
+                    ) : (
+                      <DocumentUpload
+                        userId={userId}
+                        year={declaration.annee}
+                        rubriqueId={rubrique.rubrique_id}
+                        rubriqueName={rubrique.titre}
+                        existingDocuments={rubrique.documents || []}
+                        onFilesSelected={(files) =>
+                          handleFilesSelected(rubrique.rubrique_id, files)
+                        }
+                        onFileRemoved={handleFileRemoved}
+                      />
+                    )}
                   </div>
                 </AccordionContent>
               </AccordionItem>

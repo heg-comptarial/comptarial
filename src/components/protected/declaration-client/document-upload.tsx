@@ -13,7 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Trash2, FileText, Download } from "lucide-react";
+import { Upload, Trash2, FileText, FileImage, FileSpreadsheet,Download } from "lucide-react";
 import { toast } from "sonner";
 import { formatFileSize } from "@/utils/format-file-size";
 import { allowedFileTypes } from "@/utils/allowedFileTypes";
@@ -102,12 +102,11 @@ export function DocumentUpload({
         return <FileText className="h-4 w-4 text-blue-500" />;
       case "xls":
       case "xlsx":
-        return <FileText className="h-4 w-4 text-green-500" />;
+        return <FileSpreadsheet className="h-4 w-4 text-green-500" />;
       case "jpg":
       case "jpeg":
       case "png":
-      case "gif":
-        return <FileText className="h-4 w-4 text-purple-500" />;
+        return <FileImage className="h-4 w-4 text-purple-500" />;
       default:
         return <FileText className="h-4 w-4 text-gray-500" />;
     }
