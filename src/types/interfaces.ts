@@ -2,7 +2,16 @@ export interface Document {
   doc_id: number;
   rubrique_id: number;
   nom: string;
-  type: "pdf" | "doc" | "xls" | "ppt" | "jpeg" | "jpg" | "png" | "other";
+  type:
+    | "pdf"
+    | "doc"
+    | "xls"
+    | "xlsx"
+    | "ppt"
+    | "jpeg"
+    | "jpg"
+    | "png"
+    | "other";
   cheminFichier: string;
   statut: "pending" | "rejected" | "approved";
   sous_rubrique?: string | null;
