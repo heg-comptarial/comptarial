@@ -2,10 +2,10 @@ export interface Document {
   doc_id: number;
   rubrique_id: number;
   nom: string;
-  type: string;
+  type: "pdf" | "doc" | "xls" | "ppt" | "jpeg" | "jpg" | "png" | "other";
   cheminFichier: string;
-  statut: string;
-  sous_rubrique: string;
+  statut: "pending" | "rejected" | "approved";
+  sous_rubrique?: string | null;
   dateCreation: string;
 }
 
@@ -21,7 +21,7 @@ export interface Declaration {
   declaration_id: number;
   user_id: number;
   titre: string;
-  statut: string;
+  statut: "pending" | "rejected" | "approved";
   annee: string;
   dateCreation: string;
   rubriques: Rubrique[];
