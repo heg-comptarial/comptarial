@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Declaration, Prive } from "@/types/interfaces";
 import {
   Accordion,
   AccordionContent,
@@ -12,53 +13,9 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { DocumentUpload } from "@/components/protected/declaration-client/document-upload";
+import { foFields } from "@/utils/foFields";
 import { useUser } from "@/components/context/UserContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
-
-interface Document {
-  doc_id: number;
-  rubrique_id: number;
-  nom: string;
-  type: string;
-  cheminFichier: string;
-  statut: string;
-  sous_rubrique: string;
-  dateCreation: string;
-}
-
-interface Rubrique {
-  rubrique_id: number;
-  declaration_id: number;
-  titre: string;
-  description: string;
-  documents?: Document[];
-}
-
-interface Declaration {
-  declaration_id: number;
-  user_id: number;
-  titre: string;
-  statut: string;
-  annee: string;
-  dateCreation: string;
-  rubriques: Rubrique[];
-}
-
-interface Prive {
-  prive_id: number;
-  user_id: number;
-  fo_banques: boolean;
-  fo_dettes: boolean;
-  fo_immobiliers: boolean;
-  fo_salarie: boolean;
-  fo_autrePersonneCharge: boolean;
-  fo_independant: boolean;
-  fo_rentier: boolean;
-  fo_autreRevenu: boolean;
-  fo_assurance: boolean;
-  fo_autreDeduction: boolean;
-  fo_autreInformations: boolean;
-}
 
 export default function DeclarationsClientPage() {
   const { user } = useUser();
@@ -112,65 +69,17 @@ export default function DeclarationsClientPage() {
           return;
         }
 
-        const foFieldsMap = {
-          fo_banques: {
-            titre: "Banques",
-            description: "Informations bancaires",
-          },
-          fo_dettes: {
-            titre: "Dettes",
-            description: "Informations sur les dettes",
-          },
-          fo_immobiliers: {
-            titre: "Immobiliers",
-            description: "Informations sur les biens immobiliers",
-          },
-          fo_salarie: {
-            titre: "Salariés",
-            description: "Informations sur les revenus salariés",
-          },
-          fo_autrePersonneCharge: {
-            titre: "Autres personnes à charge",
-            description: "Informations sur les autres personnes à charge",
-          },
-          fo_independant: {
-            titre: "Indépendant",
-            description: "Informations sur les revenus d'indépendant",
-          },
-          fo_rentier: {
-            titre: "Rentier",
-            description: "Informations sur les revenus de rente",
-          },
-          fo_autreRevenu: {
-            titre: "Autres revenus",
-            description: "Informations sur les autres revenus",
-          },
-          fo_assurance: {
-            titre: "Assurances",
-            description: "Informations sur les assurances",
-          },
-          fo_autreDeduction: {
-            titre: "Autres déductions",
-            description: "Informations sur les autres déductions",
-          },
-          fo_autreInformations: {
-            titre: "Autres informations",
-            description: "Autres informations importantes",
-          },
-        };
-
         const createdRubriques = [];
 
         for (const [field, value] of Object.entries(userPrive)) {
           if (
             field.startsWith("fo_") &&
             value === true &&
-            foFieldsMap[field as keyof typeof foFieldsMap]
+            foFields[field as keyof typeof foFields]
           ) {
-            const rubriqueName =
-              foFieldsMap[field as keyof typeof foFieldsMap].titre;
+            const rubriqueName = foFields[field as keyof typeof foFields].titre;
             const rubriqueDescription =
-              foFieldsMap[field as keyof typeof foFieldsMap].description;
+              foFields[field as keyof typeof foFields].description;
 
             try {
               const createResponse = await fetch(
@@ -226,6 +135,7 @@ export default function DeclarationsClientPage() {
     }
   }
 
+  /* Notification de création des rubriques */
   useEffect(() => {
     if (!loading && toastShown) {
       const createdRubriques = declaration?.rubriques || [];
@@ -247,6 +157,7 @@ export default function DeclarationsClientPage() {
     }
   }, [loading, toastShown, declaration]);
 
+  /* Badge du status de la déclaration */
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -373,76 +284,76 @@ export default function DeclarationsClientPage() {
   }
 
   return (
-      <ProtectedRoute>
-        <Toaster position="bottom-right" richColors closeButton />
+    <ProtectedRoute>
+      <Toaster position="bottom-right" richColors closeButton />
 
-        <div className="p-10">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
-            {declaration?.statut && getStatusBadge(declaration.statut)}
-          </div>
-
-          {declaration?.rubriques && declaration.rubriques.length > 0 ? (
-            <Accordion type="multiple" className="w-full">
-              {declaration.rubriques.map((rubrique) => (
-                <AccordionItem
-                  key={rubrique.rubrique_id}
-                  value={`rubrique-${rubrique.rubrique_id}`}
-                >
-                  <AccordionTrigger className="text-xl font-medium">
-                    {rubrique.titre}
-                  </AccordionTrigger>
-                  <AccordionContent>
-                    <div className="space-y-6">
-                      <DocumentUpload
-                        userId={userId}
-                        year={declaration.annee}
-                        rubriqueId={rubrique.rubrique_id}
-                        rubriqueName={rubrique.titre}
-                        onFilesSelected={(files) =>
-                          handleFilesSelected(rubrique.rubrique_id, files)
-                        }
-                        onFileRemoved={handleFileRemoved}
-                      />
-                    </div>
-                  </AccordionContent>
-                </AccordionItem>
-              ))}
-            </Accordion>
-          ) : (
-            <p className="text-center text-gray-500 py-8">
-              Aucune rubrique trouvée pour cette déclaration
-            </p>
-          )}
-
-          {selectedFiles.length > 0 && (
-            <div className="fixed bottom-8 right-8 flex items-center gap-2 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
-              <span className="text-sm font-medium">
-                {selectedFiles.length} document
-                {selectedFiles.length > 1 ? "s" : ""} prêt
-                {selectedFiles.length > 1 ? "s" : ""} à être enregistré
-                {selectedFiles.length > 1 ? "s" : ""}
-              </span>
-              <Button
-                onClick={uploadAndSaveDocuments}
-                disabled={isSaving}
-                className="flex items-center gap-2"
-              >
-                {isSaving ? (
-                  <>
-                    <Loader2 className="h-4 w-4 animate-spin" />
-                    Enregistrement...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4" />
-                    Enregistrer les documents
-                  </>
-                )}
-              </Button>
-            </div>
-          )}
+      <div className="p-10">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
+          {declaration?.statut && getStatusBadge(declaration.statut)}
         </div>
-      </ProtectedRoute>
+
+        {declaration?.rubriques && declaration.rubriques.length > 0 ? (
+          <Accordion type="multiple" className="w-full">
+            {declaration.rubriques.map((rubrique) => (
+              <AccordionItem
+                key={rubrique.rubrique_id}
+                value={`rubrique-${rubrique.rubrique_id}`}
+              >
+                <AccordionTrigger className="text-xl font-medium">
+                  {rubrique.titre}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-6">
+                    <DocumentUpload
+                      userId={userId}
+                      year={declaration.annee}
+                      rubriqueId={rubrique.rubrique_id}
+                      rubriqueName={rubrique.titre}
+                      onFilesSelected={(files) =>
+                        handleFilesSelected(rubrique.rubrique_id, files)
+                      }
+                      onFileRemoved={handleFileRemoved}
+                    />
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+          <p className="text-center text-gray-500 py-8">
+            Aucune rubrique trouvée pour cette déclaration
+          </p>
+        )}
+
+        {selectedFiles.length > 0 && (
+          <div className="fixed bottom-8 right-8 flex items-center gap-2 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+            <span className="text-sm font-medium">
+              {selectedFiles.length} document
+              {selectedFiles.length > 1 ? "s" : ""} prêt
+              {selectedFiles.length > 1 ? "s" : ""} à être enregistré
+              {selectedFiles.length > 1 ? "s" : ""}
+            </span>
+            <Button
+              onClick={uploadAndSaveDocuments}
+              disabled={isSaving}
+              className="flex items-center gap-2"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Enregistrement...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Enregistrer les documents
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+    </ProtectedRoute>
   );
 }

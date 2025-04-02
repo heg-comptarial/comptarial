@@ -10,7 +10,7 @@ class RubriqueController extends Controller
     public function index()
     {
         // Récupère toutes les rubriques avec leurs relations
-        $rubriques = Rubrique::with('declaration', 'sous_rubriques')->get();
+        $rubriques = Rubrique::with('declaration', 'documents')->get();
         return response()->json($rubriques);
     }
 
@@ -31,7 +31,7 @@ class RubriqueController extends Controller
     public function show($id)
     {
         // Récupère une rubrique spécifique avec ses relations
-        $rubrique = Rubrique::with('declaration', 'sous_rubriques')->findOrFail($id);
+        $rubrique = Rubrique::with('declaration', 'documents')->findOrFail($id);
         return response()->json($rubrique);
     }
 
