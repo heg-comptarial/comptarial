@@ -14,11 +14,8 @@ import {
   FileImage,
   FileSpreadsheet,
   Download,
-  Upload,
 } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { formatFileSize } from "@/utils/format-file-size";
-import { useState } from "react";
 
 interface Document {
   doc_id: number;
@@ -40,9 +37,7 @@ interface DocumentListProps {
 export function DocumentList({
   rubriqueName,
   documents = [],
-  onAddMore,
 }: DocumentListProps) {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
 
   const getFileTypeIcon = (fileName: string) => {
     const extension = fileName.split(".").pop()?.toLowerCase();
@@ -85,17 +80,6 @@ export function DocumentList({
           <CardTitle className="text-lg">
             Documents pour {rubriqueName}
           </CardTitle>
-          {onAddMore && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAddMore}
-              disabled={isLoading}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Ajouter des documents
-            </Button>
-          )}
         </div>
       </CardHeader>
       <CardContent>
