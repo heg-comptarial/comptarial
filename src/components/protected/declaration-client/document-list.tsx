@@ -38,7 +38,6 @@ interface DocumentListProps {
 }
 
 export function DocumentList({
-  rubriqueId,
   rubriqueName,
   documents = [],
   onAddMore,
@@ -114,7 +113,7 @@ export function DocumentList({
             </TableHeader>
             <TableBody>
               {documents.map((doc) => (
-                <TableRow key={doc.doc_id}>
+                <TableRow key={doc.doc_id ?? `${doc.nom}-${doc.cheminFichier}`}>
                   <TableCell>{getFileTypeIcon(doc.nom)}</TableCell>
                   <TableCell className="font-medium">{doc.nom}</TableCell>
                   <TableCell>{doc.type}</TableCell>

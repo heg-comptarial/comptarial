@@ -15,18 +15,14 @@ import { toast, Toaster } from "sonner";
 import { DocumentUpload } from "@/components/protected/declaration-client/document-upload";
 import { foFields } from "@/utils/foFields";
 import YearSelector from "@/components/YearSelector";
-import { useUser } from "@/components/context/UserContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { DocumentList } from "@/components/protected/declaration-client/document-list";
 
 export default function DeclarationsClientPage() {
-  const { user } = useUser();
-  console.log("User data", user);
   const userId = 7;
   const declarationId = 6;
   const declarationYear = "2025";
 
-  const [documentsSaved, setDocumentsSaved] = useState<boolean>(false);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
@@ -36,8 +32,8 @@ export default function DeclarationsClientPage() {
     { file: File; rubriqueId: number }[]
   >([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
 
-  /* Vérification de l'année sélectionnée */
   useEffect(() => {
     if (selectedYear) {
       console.log(`Selected year: ${selectedYear}`);
@@ -48,7 +44,6 @@ export default function DeclarationsClientPage() {
     fetchOrCreateRubrique();
   }, []);
 
-  /* Sélection de l'année */
   const handleYearChange = (year: number) => {
     setSelectedYear(year.toString());
   };
@@ -71,6 +66,16 @@ export default function DeclarationsClientPage() {
 
       if (declarationData.rubriques && declarationData.rubriques.length > 0) {
         setDeclaration(declarationData);
+
+        // ✅ Mark rubriques that already have documents as uploaded
+        const alreadyUploaded = declarationData.rubriques
+          .filter(
+            (rubrique) => rubrique.documents && rubrique.documents.length > 0
+          )
+          .map((r) => r.rubrique_id);
+
+        setUploadedRubriques(alreadyUploaded);
+
         setLoading(false);
       } else {
         const priveResponse = await fetch(`http://localhost:8000/api/prives`);
@@ -135,6 +140,14 @@ export default function DeclarationsClientPage() {
           const updatedDeclarationData =
             await updatedDeclarationResponse.json();
           setDeclaration(updatedDeclarationData);
+
+          // ✅ Same logic to populate uploaded rubriques
+          const alreadyUploaded = updatedDeclarationData.rubriques
+            .filter(
+              (rubrique) => rubrique.documents && rubrique.documents.length > 0
+            )
+            .map((r) => r.rubrique_id);
+          setUploadedRubriques(alreadyUploaded);
         } else {
           setDeclaration({
             ...declarationData,
@@ -152,7 +165,6 @@ export default function DeclarationsClientPage() {
     }
   }
 
-  /* Notification de création des rubriques */
   useEffect(() => {
     if (!loading && toastShown) {
       const createdRubriques = declaration?.rubriques || [];
@@ -174,7 +186,6 @@ export default function DeclarationsClientPage() {
     }
   }, [loading, toastShown, declaration]);
 
-  /* Badge du status de la déclaration */
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -196,7 +207,6 @@ export default function DeclarationsClientPage() {
   };
 
   const handleFileRemoved = (fileId: string) => {
-    // Implement if needed
     console.log("File removed:", fileId);
   };
 
@@ -209,7 +219,6 @@ export default function DeclarationsClientPage() {
     setIsSaving(true);
 
     try {
-      // Upload des fichiers sélectionnés dans le bucket S3 Infomaniak
       const uploadPromises = selectedFiles.map(async (fileData) => {
         const formData = new FormData();
         formData.append("file", fileData.file);
@@ -240,12 +249,12 @@ export default function DeclarationsClientPage() {
           cheminFichier: result.url,
           statut: "pending",
           sous_rubrique: "default",
+          fileSize: fileData.file.size,
         };
       });
 
       const documentsToSave = await Promise.all(uploadPromises);
 
-      // Then save to database
       const saveResponse = await fetch("http://127.0.0.1:8000/api/documents", {
         method: "POST",
         headers: {
@@ -259,12 +268,33 @@ export default function DeclarationsClientPage() {
         throw new Error(`Failed to save documents: ${errorText}`);
       }
 
-      // const saveResult = await saveResponse.json();
-
       toast.success(
         `${documentsToSave.length} documents enregistrés avec succès`
       );
-      setDocumentsSaved(true);
+
+      const uploadedIds = documentsToSave.map((doc) => doc.rubrique_id);
+      setUploadedRubriques((prev) => [...new Set([...prev, ...uploadedIds])]);
+      setSelectedFiles([]);
+
+      // ✅ Update local state with newly uploaded docs
+      setDeclaration((prev) => {
+        if (!prev) return prev;
+
+        const updatedRubriques = prev.rubriques.map((rubrique) => {
+          const newDocs = documentsToSave.filter(
+            (doc) => doc.rubrique_id === rubrique.rubrique_id
+          );
+
+          return newDocs.length > 0
+            ? {
+                ...rubrique,
+                documents: [...(rubrique.documents || []), ...newDocs],
+              }
+            : rubrique;
+        });
+
+        return { ...prev, rubriques: updatedRubriques };
+      });
     } catch (error) {
       console.error("Error uploading and saving documents:", error);
       toast.error("Erreur lors de l'enregistrement des documents", {
@@ -322,12 +352,11 @@ export default function DeclarationsClientPage() {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-6">
-                    {documentsSaved ? (
+                    {uploadedRubriques.includes(rubrique.rubrique_id) ? (
                       <DocumentList
                         rubriqueId={rubrique.rubrique_id}
                         rubriqueName={rubrique.titre}
                         documents={rubrique.documents || []}
-                        onAddMore={() => setDocumentsSaved(false)}
                       />
                     ) : (
                       <DocumentUpload
