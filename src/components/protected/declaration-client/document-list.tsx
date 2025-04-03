@@ -9,7 +9,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { FileText, FileImage, FileSpreadsheet, Download } from "lucide-react";
+import { Download } from "lucide-react";
+import { getFileTypeIcon } from "@/utils/getFileTypeIcon";
 
 interface Document {
   doc_id: number;
@@ -32,27 +33,6 @@ export function DocumentList({
   rubriqueName,
   documents = [],
 }: DocumentListProps) {
-  const getFileTypeIcon = (fileName: string) => {
-    const extension = fileName.split(".").pop()?.toLowerCase();
-
-    switch (extension) {
-      case "pdf":
-        return <FileText className="h-4 w-4 text-red-500" />;
-      case "doc":
-      case "docx":
-        return <FileText className="h-4 w-4 text-blue-500" />;
-      case "xls":
-      case "xlsx":
-        return <FileSpreadsheet className="h-4 w-4 text-green-500" />;
-      case "jpg":
-      case "jpeg":
-      case "png":
-        return <FileImage className="h-4 w-4 text-purple-500" />;
-      default:
-        return <FileText className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -80,8 +60,8 @@ export function DocumentList({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[40px]">Fichier</TableHead>
-                <TableHead className="w-1/3">Nom</TableHead>
+                <TableHead className="w-[40px]"></TableHead>
+                <TableHead className="w-1/2">Nom</TableHead>
                 <TableHead className="w-1/6">Type</TableHead>
                 <TableHead className="w-1/6">Statut</TableHead>
                 <TableHead className="w-1/6 text-right">Actions</TableHead>
@@ -93,7 +73,7 @@ export function DocumentList({
                   <TableCell className="w-[40px]">
                     {getFileTypeIcon(doc.nom)}
                   </TableCell>
-                  <TableCell className="w-1/3 font-medium">{doc.nom}</TableCell>
+                  <TableCell className="w-1/2 font-medium">{doc.nom}</TableCell>
                   <TableCell className="w-1/6">{doc.type}</TableCell>
                   <TableCell className="w-1/6">
                     {getStatusBadge(doc.statut)}

@@ -13,10 +13,15 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Upload, Trash2, FileText, FileImage, FileSpreadsheet,Download } from "lucide-react";
+import {
+  Upload,
+  Trash2,
+  Download,
+} from "lucide-react";
 import { toast } from "sonner";
 import { formatFileSize } from "@/utils/format-file-size";
 import { allowedFileTypes } from "@/utils/allowedFileTypes";
+import { getFileTypeIcon } from "@/utils/getFileTypeIcon";
 
 interface SelectedFile {
   file: File;
@@ -91,27 +96,6 @@ export function DocumentUpload({
     onFileRemoved(id);
   };
 
-  const getFileTypeIcon = (fileName: string) => {
-    const extension = fileName.split(".").pop()?.toLowerCase();
-
-    switch (extension) {
-      case "pdf":
-        return <FileText className="h-4 w-4 text-red-500" />;
-      case "doc":
-      case "docx":
-        return <FileText className="h-4 w-4 text-blue-500" />;
-      case "xls":
-      case "xlsx":
-        return <FileSpreadsheet className="h-4 w-4 text-green-500" />;
-      case "jpg":
-      case "jpeg":
-      case "png":
-        return <FileImage className="h-4 w-4 text-purple-500" />;
-      default:
-        return <FileText className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
   const getFileExtension = (fileName: string) => {
     return fileName.split(".").pop()?.toLowerCase() || "";
   };
@@ -130,7 +114,7 @@ export function DocumentUpload({
                 Glissez et déposez des fichiers, ou cliquez pour sélectionner
               </p>
               <p className="text-xs text-gray-500 mt-1">
-                PDF, Word, Excel, et images (max 10MB)
+                PDF, PNG, JPEG ou JPG (max 10MB)
               </p>
             </div>
           </Label>
@@ -152,21 +136,27 @@ export function DocumentUpload({
               <TableHeader>
                 <TableRow>
                   <TableHead className="w-[40px]"></TableHead>
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Taille</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
+                  <TableHead className="w-1/2">Nom</TableHead>
+                  <TableHead className="w-1/6">Type</TableHead>
+                  <TableHead className="w-1/6">Taille</TableHead>
+                  <TableHead className="w-1/6 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {selectedFiles.map((fileData) => (
                   <TableRow key={fileData.id}>
-                    <TableCell>{getFileTypeIcon(fileData.file.name)}</TableCell>
-                    <TableCell className="font-medium">
+                    <TableCell className="w-[40px]">
+                      {getFileTypeIcon(fileData.file.name)}
+                    </TableCell>
+                    <TableCell className="w-1/2 font-medium">
                       {fileData.file.name}
                     </TableCell>
-                    <TableCell>{fileData.file.type.split("/").pop()}</TableCell>
-                    <TableCell>{formatFileSize(fileData.file.size)}</TableCell>
+                    <TableCell className="w-1/6">
+                      {fileData.file.type.split("/").pop()}
+                    </TableCell>
+                    <TableCell className="w-1/6">
+                      {formatFileSize(fileData.file.size)}
+                    </TableCell>
                     <TableCell className="text-right">
                       <button
                         onClick={() => removeFile(fileData.id)}
