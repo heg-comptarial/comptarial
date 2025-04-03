@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Declaration, Prive, Rubrique } from "@/types/interfaces";
 import {
   Accordion,
@@ -20,8 +19,6 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { DocumentList } from "@/components/protected/declaration-client/document-list";
 
 export default function DeclarationsClientPage() {
-  const router = useRouter();
-  const searchParams = useSearchParams();
 
   const userId = 7; // ← your actual userId
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
@@ -36,14 +33,6 @@ export default function DeclarationsClientPage() {
   >([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
-
-  // 📥 Read ?year= from URL on first load
-  useEffect(() => {
-    const yearFromURL = searchParams.get("year");
-    if (yearFromURL) {
-      setSelectedYear(yearFromURL);
-    }
-  }, [searchParams]);
 
   // 🔄 Fetch user's declarations
   useEffect(() => {
@@ -60,10 +49,9 @@ export default function DeclarationsClientPage() {
         const years = declarations.map((d: Declaration) => d.annee);
         setDeclarationYears(years);
 
-        if (!searchParams.get("year") && years.length > 0) {
+        if (years.length > 0) {
           const latestYear = years.sort().reverse()[0];
           setSelectedYear(latestYear);
-          router.replace(`?year=${latestYear}`);
         }
 
         setLoading(false);
@@ -75,9 +63,9 @@ export default function DeclarationsClientPage() {
     };
 
     fetchDeclarations();
-  }, [router, searchParams]);
+  }, []);
 
-  // 🔁 On year selection update declaration + URL
+  // 🔁 On year selection update declaration
   useEffect(() => {
     if (selectedYear && userDeclarations.length > 0) {
       const selected = userDeclarations.find((d) => d.annee === selectedYear);
@@ -89,8 +77,6 @@ export default function DeclarationsClientPage() {
             .map((r) => r.rubrique_id)
         );
 
-        // Update the URL
-        router.replace(`?year=${selectedYear}`);
         fetchOrCreateRubrique();
       }
     }
