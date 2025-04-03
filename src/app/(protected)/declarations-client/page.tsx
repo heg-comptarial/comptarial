@@ -190,7 +190,7 @@ export default function DeclarationsClientPage() {
             .filter(
               (rubrique) => rubrique.documents && rubrique.documents.length > 0
             )
-            .map((r) => r.rubrique_id);
+            .map((r: Rubrique) => r.rubrique_id);
           setUploadedRubriques(alreadyUploaded);
         } else {
           setDeclaration({

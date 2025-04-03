@@ -9,13 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  FileText,
-  FileImage,
-  FileSpreadsheet,
-  Download,
-} from "lucide-react";
-import { formatFileSize } from "@/utils/format-file-size";
+import { FileText, FileImage, FileSpreadsheet, Download } from "lucide-react";
 
 interface Document {
   doc_id: number;
@@ -38,7 +32,6 @@ export function DocumentList({
   rubriqueName,
   documents = [],
 }: DocumentListProps) {
-
   const getFileTypeIcon = (fileName: string) => {
     const extension = fileName.split(".").pop()?.toLowerCase();
 
@@ -87,25 +80,25 @@ export function DocumentList({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-[40px]"></TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Taille</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-[40px]">Fichier</TableHead>
+                <TableHead className="w-1/3">Nom</TableHead>
+                <TableHead className="w-1/6">Type</TableHead>
+                <TableHead className="w-1/6">Statut</TableHead>
+                <TableHead className="w-1/6 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {documents.map((doc) => (
                 <TableRow key={doc.doc_id ?? `${doc.nom}-${doc.cheminFichier}`}>
-                  <TableCell>{getFileTypeIcon(doc.nom)}</TableCell>
-                  <TableCell className="font-medium">{doc.nom}</TableCell>
-                  <TableCell>{doc.type}</TableCell>
-                  <TableCell>
-                    {doc.fileSize ? formatFileSize(doc.fileSize) : "N/A"}
+                  <TableCell className="w-[40px]">
+                    {getFileTypeIcon(doc.nom)}
                   </TableCell>
-                  <TableCell>{getStatusBadge(doc.statut)}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="w-1/3 font-medium">{doc.nom}</TableCell>
+                  <TableCell className="w-1/6">{doc.type}</TableCell>
+                  <TableCell className="w-1/6">
+                    {getStatusBadge(doc.statut)}
+                  </TableCell>
+                  <TableCell className="w-1/6 text-right">
                     <a
                       href={doc.cheminFichier}
                       target="_blank"
