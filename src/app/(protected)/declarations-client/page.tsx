@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import { Declaration, Prive } from "@/types/interfaces";
 import {
   Accordion,
@@ -19,12 +20,14 @@ import ProtectedRoute from "@/components/ProtectedRoute";
 import { DocumentList } from "@/components/protected/declaration-client/document-list";
 
 export default function DeclarationsClientPage() {
-  const userId = 7;
-  const declarationId = 6;
-  const declarationYear = "2025";
+  const router = useRouter();
+  const searchParams = useSearchParams();
 
+  const userId = 7; // ← your actual userId
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
+  const [userDeclarations, setUserDeclarations] = useState<Declaration[]>([]);
+  const [declarationYears, setDeclarationYears] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [toastShown, setToastShown] = useState<boolean>(false);
@@ -34,15 +37,64 @@ export default function DeclarationsClientPage() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
 
+  // 📥 Read ?year= from URL on first load
   useEffect(() => {
-    if (selectedYear) {
-      console.log(`Selected year: ${selectedYear}`);
+    const yearFromURL = searchParams.get("year");
+    if (yearFromURL) {
+      setSelectedYear(yearFromURL);
     }
-  }, [selectedYear]);
+  }, [searchParams]);
 
+  // 🔄 Fetch user's declarations
   useEffect(() => {
-    fetchOrCreateRubrique();
-  }, []);
+    const fetchDeclarations = async () => {
+      try {
+        const userResponse = await fetch(
+          `http://localhost:8000/api/users/${userId}`
+        );
+        const userData = await userResponse.json();
+
+        const declarations = userData.declarations || [];
+        setUserDeclarations(declarations);
+
+        const years = declarations.map((d: Declaration) => d.annee);
+        setDeclarationYears(years);
+
+        if (!searchParams.get("year") && years.length > 0) {
+          const latestYear = years.sort().reverse()[0];
+          setSelectedYear(latestYear);
+          router.replace(`?year=${latestYear}`);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        setError("Impossible de charger les déclarations de l'utilisateur");
+        console.error(err);
+        setLoading(false);
+      }
+    };
+
+    fetchDeclarations();
+  }, [router, searchParams]);
+
+  // 🔁 On year selection update declaration + URL
+  useEffect(() => {
+    if (selectedYear && userDeclarations.length > 0) {
+      const selected = userDeclarations.find((d) => d.annee === selectedYear);
+      if (selected) {
+        setDeclaration(selected);
+        setUploadedRubriques(
+          (selected.rubriques || [])
+            .filter((r) => r.documents && r.documents.length > 0)
+            .map((r) => r.rubrique_id)
+        );
+
+        // Update the URL
+        router.replace(`?year=${selectedYear}`);
+        fetchOrCreateRubrique();
+      }
+    }
+  }, [selectedYear, userDeclarations]);
 
   const handleYearChange = (year: number) => {
     setSelectedYear(year.toString());
@@ -50,10 +102,11 @@ export default function DeclarationsClientPage() {
 
   async function fetchOrCreateRubrique() {
     try {
+      if (!selectedYear) return;
       setLoading(true);
 
       const declarationResponse = await fetch(
-        `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${declarationYear}`
+        `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${selectedYear}`
       );
 
       if (!declarationResponse.ok) {
@@ -67,7 +120,6 @@ export default function DeclarationsClientPage() {
       if (declarationData.rubriques && declarationData.rubriques.length > 0) {
         setDeclaration(declarationData);
 
-        // ✅ Mark rubriques that already have documents as uploaded
         const alreadyUploaded = declarationData.rubriques
           .filter(
             (rubrique) => rubrique.documents && rubrique.documents.length > 0
@@ -75,7 +127,6 @@ export default function DeclarationsClientPage() {
           .map((r) => r.rubrique_id);
 
         setUploadedRubriques(alreadyUploaded);
-
         setLoading(false);
       } else {
         const priveResponse = await fetch(`http://localhost:8000/api/prives`);
@@ -108,11 +159,9 @@ export default function DeclarationsClientPage() {
                 `http://127.0.0.1:8000/api/rubriques`,
                 {
                   method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
+                  headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
-                    declaration_id: declarationId,
+                    declaration_id: declarationData.declaration_id,
                     titre: rubriqueName,
                     description: rubriqueDescription,
                   }),
@@ -122,10 +171,6 @@ export default function DeclarationsClientPage() {
               if (createResponse.ok) {
                 const createdRubrique = await createResponse.json();
                 createdRubriques.push(createdRubrique);
-              } else {
-                console.error(
-                  `Failed to create rubrique for ${field}: ${await createResponse.text()}`
-                );
               }
             } catch (err) {
               console.error(`Error creating rubrique for ${field}:`, err);
@@ -134,14 +179,13 @@ export default function DeclarationsClientPage() {
         }
 
         const updatedDeclarationResponse = await fetch(
-          `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationId}`
+          `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationData.declaration_id}`
         );
         if (updatedDeclarationResponse.ok) {
           const updatedDeclarationData =
             await updatedDeclarationResponse.json();
           setDeclaration(updatedDeclarationData);
 
-          // ✅ Same logic to populate uploaded rubriques
           const alreadyUploaded = updatedDeclarationData.rubriques
             .filter(
               (rubrique) => rubrique.documents && rubrique.documents.length > 0
@@ -172,14 +216,10 @@ export default function DeclarationsClientPage() {
       if (createdRubriques.length > 0) {
         toast.success(
           `${createdRubriques.length} rubriques chargées avec succès.`,
-          {
-            duration: 5000,
-          }
+          { duration: 5000 }
         );
       } else {
-        toast.error("Aucune rubrique trouvée.", {
-          duration: 5000,
-        });
+        toast.error("Aucune rubrique trouvée.", { duration: 5000 });
       }
 
       setToastShown(false);
@@ -257,9 +297,7 @@ export default function DeclarationsClientPage() {
 
       const saveResponse = await fetch("http://127.0.0.1:8000/api/documents", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ documents: documentsToSave }),
       });
 
@@ -276,7 +314,6 @@ export default function DeclarationsClientPage() {
       setUploadedRubriques((prev) => [...new Set([...prev, ...uploadedIds])]);
       setSelectedFiles([]);
 
-      // ✅ Update local state with newly uploaded docs
       setDeclaration((prev) => {
         if (!prev) return prev;
 
@@ -331,7 +368,11 @@ export default function DeclarationsClientPage() {
       <Toaster position="bottom-right" richColors closeButton />
       <div className="px-10">
         <h2 className="text-lg font-semibold px-2">Année de la déclaration</h2>
-        <YearSelector onYearChange={handleYearChange} className="w-full" />
+        <YearSelector
+          years={declarationYears}
+          onYearChange={handleYearChange}
+          className="w-full"
+        />
       </div>
 
       <div className="p-10 pt-5">
