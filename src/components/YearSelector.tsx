@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -11,19 +10,18 @@ import {
 
 interface YearSelectorProps {
   years: string[];
+  selectedYear: string;
   onYearChange?: (year: number) => void;
   className?: string;
 }
 
 export default function YearSelector({
   years,
+  selectedYear,
   onYearChange,
   className,
 }: YearSelectorProps) {
-  const [selectedYear, setSelectedYear] = useState<string>(years[0] ?? "");
-
   const handleYearChange = (value: string) => {
-    setSelectedYear(value);
     onYearChange?.(parseInt(value, 10));
   };
 

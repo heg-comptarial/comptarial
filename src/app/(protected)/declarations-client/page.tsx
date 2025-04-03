@@ -370,6 +370,7 @@ export default function DeclarationsClientPage() {
         <h2 className="text-lg font-semibold px-2">Année de la déclaration</h2>
         <YearSelector
           years={declarationYears}
+          selectedYear={selectedYear ?? ""}
           onYearChange={handleYearChange}
           className="w-full"
         />
