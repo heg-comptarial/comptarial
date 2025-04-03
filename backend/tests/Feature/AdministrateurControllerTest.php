@@ -39,24 +39,24 @@ class AdministrateurControllerTest extends TestCase
         $user = User::factory()->create();
 
         $data = [
-            'user_id' => $user->id,
+            'user_id' => $user->user_id,
             'niveauAcces' => 'admin',
         ];
 
         $response = $this->postJson('/api/administrateurs', $data);
 
         $response->assertStatus(201)
-                 ->assertJsonFragment($data);
+                 ->assertJsonFragment(['user_id' => $user->user_id]);
     }
 
     public function test_show_returns_administrateur()
     {
         $administrateur = Administrateur::factory()->create();
 
-        $response = $this->getJson("/api/administrateurs/{$administrateur->id}");
+        $response = $this->getJson("/api/administrateurs/{$administrateur->admin_id}");
 
         $response->assertStatus(200)
-                 ->assertJsonFragment(['id' => $administrateur->id]);
+                 ->assertJsonFragment(['admin_id' => $administrateur->admin_id]);
     }
 
     public function test_update_modifies_administrateur()
@@ -65,7 +65,7 @@ class AdministrateurControllerTest extends TestCase
 
         $data = ['niveauAcces' => 'super_admin'];
 
-        $response = $this->putJson("/api/administrateurs/{$administrateur->id}", $data);
+        $response = $this->putJson("/api/administrateurs/{$administrateur->admin_id}", $data);
 
         $response->assertStatus(200)
                  ->assertJsonFragment($data);
@@ -75,10 +75,10 @@ class AdministrateurControllerTest extends TestCase
     {
         $administrateur = Administrateur::factory()->create();
 
-        $response = $this->deleteJson("/api/administrateurs/{$administrateur->id}");
+        $response = $this->deleteJson("/api/administrateurs/{$administrateur->admin_id}");
 
         $response->assertStatus(204);
-        $this->assertDatabaseMissing('administrateurs', ['id' => $administrateur->id]);
+        $this->assertDatabaseMissing('administrateur', ['admin_id' => $administrateur->admin_id]);
     }
 
 }
