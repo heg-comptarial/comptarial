@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Declaration, Prive } from "@/types/interfaces";
+import { Declaration, Prive, Rubrique } from "@/types/interfaces";
 import {
   Accordion,
   AccordionContent,
@@ -122,9 +122,10 @@ export default function DeclarationsClientPage() {
 
         const alreadyUploaded = declarationData.rubriques
           .filter(
-            (rubrique) => rubrique.documents && rubrique.documents.length > 0
+            (rubrique: Rubrique) =>
+              rubrique.documents && rubrique.documents.length > 0
           )
-          .map((r) => r.rubrique_id);
+          .map((r: Rubrique) => r.rubrique_id);
 
         setUploadedRubriques(alreadyUploaded);
         setLoading(false);
@@ -188,9 +189,10 @@ export default function DeclarationsClientPage() {
 
           const alreadyUploaded = updatedDeclarationData.rubriques
             .filter(
-              (rubrique) => rubrique.documents && rubrique.documents.length > 0
+              (rubrique: Rubrique) =>
+                rubrique.documents && rubrique.documents.length > 0
             )
-            .map((r) => r.rubrique_id);
+            .map((r: Rubrique) => r.rubrique_id);
           setUploadedRubriques(alreadyUploaded);
         } else {
           setDeclaration({
@@ -323,10 +325,10 @@ export default function DeclarationsClientPage() {
           );
 
           return newDocs.length > 0
-            ? {
+            ? ({
                 ...rubrique,
                 documents: [...(rubrique.documents || []), ...newDocs],
-              }
+              } as Rubrique)
             : rubrique;
         });
 
