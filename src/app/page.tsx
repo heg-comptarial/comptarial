@@ -48,10 +48,10 @@ export default function Home() {
             {/* Auth Buttons */}
             <div className="hidden md:flex items-center gap-4">
               <Link href="/connexion">
-                <Button variant="outline">Se connecter</Button>
+                <Button data-testid="signin-button" variant="outline">Se connecter</Button>
               </Link>
               <Link href="/inscription">
-                <Button>S&apos;inscrire</Button>
+                <Button data-testid="signup-button">S&apos;inscrire</Button>
               </Link>
             </div>
           </div>
