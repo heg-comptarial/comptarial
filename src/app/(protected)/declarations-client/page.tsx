@@ -197,6 +197,7 @@ export default function DeclarationsClientPage() {
 
   const handleFileRemoved = (fileId: string) => {
     // Implement if needed
+    console.log("File removed:", fileId);
   };
 
   const uploadAndSaveDocuments = async () => {
@@ -319,20 +320,6 @@ export default function DeclarationsClientPage() {
                 <AccordionTrigger className="text-xl font-medium">
                   {rubrique.titre}
                 </AccordionTrigger>
-                {/* <AccordionContent>
-                  <div className="space-y-6">
-                    <DocumentUpload
-                      userId={userId}
-                      year={declaration.annee}
-                      rubriqueId={rubrique.rubrique_id}
-                      rubriqueName={rubrique.titre}
-                      onFilesSelected={(files) =>
-                        handleFilesSelected(rubrique.rubrique_id, files)
-                      }
-                      onFileRemoved={handleFileRemoved}
-                    />
-                  </div>
-                </AccordionContent> */}
                 <AccordionContent>
                   <div className="space-y-6">
                     {documentsSaved ? (
