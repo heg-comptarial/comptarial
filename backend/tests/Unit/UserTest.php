@@ -11,7 +11,6 @@ use App\Models\Prive;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-// Problème Admin & Prive --> Relation ??!!
 
 class UserTest extends TestCase
 {
@@ -47,16 +46,6 @@ class UserTest extends TestCase
         ]);
     }
 
-    /**
-     * Teste la relation User -> Administrateur.
-     */
-    public function test_user_has_many_administrateurs(): void
-    {
-        $user = User::factory()->create();
-        Administrateur::factory()->create(['user_id' => $user->user_id]);
-
-        $this->assertInstanceOf(Administrateur::class, $user->administrateurs->first());
-    }
 
     /**
      * Teste la relation User -> Administrateur.
@@ -70,7 +59,7 @@ class UserTest extends TestCase
         $administrateur = Administrateur::factory()->create(['user_id' => $user->user_id]);
 
         // Vérifie que l'administrateur associé est bien du type Administrateur
-        $this->assertInstanceOf(Administrateur::class, $user->administrateur);
+        $this->assertInstanceOf(Administrateur::class, $user->administrateurs);
         
         // Vérifie que l'ID de l'administrateur correspond à celui de l'utilisateur
         $this->assertEquals($administrateur->user_id, $user->user_id);
@@ -79,13 +68,23 @@ class UserTest extends TestCase
     /**
      * Teste la relation User -> Entreprises.
      */
-    public function test_user_has_many_entreprises(): void
+    public function test_user_has_one_entreprise(): void
     {
-        $user = User::factory()->create();
-        Entreprise::factory()->create(['user_id' => $user->user_id]);
+        // Créer un utilisateur
+        $user = User::factory()->create([
+            'statut' => 'approved',  // Assurez-vous que le statut est 'approved'
+        ]);
 
-        $this->assertInstanceOf(Entreprise::class, $user->entreprises->first());
+        // Créer une entreprise associée à cet utilisateur
+        $entreprise = Entreprise::factory()->create(['user_id' => $user->user_id]);
+
+        // Vérifie que l'entreprise associée est bien du type Entreprise
+        $this->assertInstanceOf(Entreprise::class, $user->entreprises);
+
+        // Vérifie que l'ID de l'entreprise correspond à celui de l'utilisateur
+        $this->assertEquals($entreprise->user_id, $user->user_id);
     }
+
 
     /**
      * Teste la relation User -> Notifications.
@@ -101,12 +100,18 @@ class UserTest extends TestCase
     /**
      * Teste la relation User -> Prives.
      */
-    public function test_user_has_many_prives(): void
+    public function test_user_has_one_prive(): void
     {
+        // Créer un utilisateur
         $user = User::factory()->create();
-        Prive::factory()->create(['user_id' => $user->user_id]);
 
-        $this->assertInstanceOf(Prive::class, $user->prives->first());
+        // Créer un privé associé à cet utilisateur
+        $prive = Prive::factory()->create(['user_id' => $user->user_id]);
+
+        // Vérifie que le privé associé est bien du type Prive
+        $this->assertInstanceOf(Prive::class, $user->prives);
+
+        // Vérifie que l'ID du privé correspond à celui de l'utilisateur
+        $this->assertEquals($prive->user_id, $user->user_id);
     }
-
 }

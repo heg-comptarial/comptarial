@@ -17,7 +17,13 @@ class DocumentFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+           'rubrique_id' => $this->faker->numberBetween(1, 10),
+            'nom' => $this->faker->word,
+            'type' => $this->faker->randomElement(['pdf', 'doc', 'jpg']),
+            'cheminFichier' => $this->faker->filePath(),
+            'statut' => $this->faker->randomElement(['approved', 'pending', 'rejected']),
+            'sous_rubrique' => $this->faker->word,
+            'dateCreation' => now(),
         ];
     }
 }
