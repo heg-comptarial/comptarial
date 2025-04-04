@@ -30,22 +30,16 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         $encryptedTestValue = Crypt::encrypt($user->user_id);
-
-            // Authentifier l'utilisateur avec Laravel Sanctum
-            Auth::login($user);
     
     
         // Retourner la réponse avec les deux cookies
         return response()->json([
             'message' => "Connexion réussie, {$user->user_id}",
+            'user' => $user,
             'token' => $token, // Tu peux aussi inclure le token dans la réponse JSON si nécessaire
-            'id'=> auth()->id()
-        ])
-             // Définir le cookie pour auth_token, valable pour 1 heure
-            ->cookie('auth_token', $token, 60)  // Expire dans 1 heure
-            // Définir le cookie pour user_id, valable pour 1 heure
-            ->cookie('user_id', $encryptedTestValue, 60) // Expire dans 1 heure  '/', null, false, false, false,"None"
-            ->cookie('test', $encryptedTestValue, 60);
+        ])->cookie('auth_token', $token, 60)
+        ->cookie('user_id', $encryptedTestValue, 60) // Expire dans 1 heure  '/', null, false, false, false,"None"
+        ->cookie('test', $encryptedTestValue, 60);
 
 }
 

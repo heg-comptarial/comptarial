@@ -40,6 +40,7 @@ export default function LoginPage() {
       // Si la connexion réussit, on stocke le token d'authentification
       if (response.status === 200) {
         // Le token peut être dans la réponse de la requête sous data.token
+        console.log(response.data)
         localStorage.setItem("auth_token", response.data.token)
         localStorage.setItem("user_id", response.data.user.user_id)
 
