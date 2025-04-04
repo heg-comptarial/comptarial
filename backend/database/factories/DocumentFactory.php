@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use Illuminate\Database\Eloquent\Factories\Factory;
+use App\Models\Rubrique;
+
 
 /**
  * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Document>
@@ -16,8 +18,11 @@ class DocumentFactory extends Factory
      */
     public function definition(): array
     {
+        // Créer une rubrique pour s'assurer que la clé étrangère existe
+        $rubrique = Rubrique::factory()->create();
+
         return [
-           'rubrique_id' => $this->faker->numberBetween(1, 10),
+           'rubrique_id' => $rubrique->rubrique_id, // Utilise la rubrique créée
             'nom' => $this->faker->word,
             'type' => $this->faker->randomElement(['pdf', 'doc', 'jpg']),
             'cheminFichier' => $this->faker->filePath(),
