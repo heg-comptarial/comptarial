@@ -52,7 +52,7 @@ export default function Dashboard() {
       .then((response) => response.json())
       .then((data) => setMessage(data.message))
       .catch((error) => console.error("Erreur:", error))
-  }, [])
+  }, [user])
 
   if (!user) {
     return <div>Veuillez vous connecter pour accéder au tableau de bord.</div>;

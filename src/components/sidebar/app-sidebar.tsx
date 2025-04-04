@@ -54,7 +54,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
       {
         title: "Mes déclarations",
-        url: "/declarations-client",
+        url: "/declarations",
         icon: FolderOpen,
         items: [],
       },

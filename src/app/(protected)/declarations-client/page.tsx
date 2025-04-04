@@ -138,8 +138,7 @@ export default function DeclarationsClientPage() {
             foFields[field as keyof typeof foFields]
           ) {
             const rubriqueName = foFields[field as keyof typeof foFields].titre;
-            const rubriqueDescription =
-              foFields[field as keyof typeof foFields].description;
+            const rubriqueDescription = foFields[field as keyof typeof foFields].description;
 
             try {
               const createResponse = await fetch(
