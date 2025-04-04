@@ -25,15 +25,12 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-import { useUser } from "@/components/context/UserContext"; // Import du UserContext
-
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const { user } = useUser(); // Récupération des informations utilisateur depuis le contexte
 
   const data = {
     user: {
-      name: user?.nom || "Username",
-      email: user?.email || "Email",
+      name: "Username",
+      email: "Email",
       avatar: "/avatars/default.jpg",
     },
     navMain: [

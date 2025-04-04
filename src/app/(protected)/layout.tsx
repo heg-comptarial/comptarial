@@ -47,6 +47,7 @@ export default function DashboardLayout({
       if (response.ok) {
         console.log('Déconnexion réussie');
         localStorage.removeItem('auth_token'); // Supprime le token d'authentification
+        localStorage.removeItem('user_id'); // Supprime l'ID utilisateur
         router.push('/connexion'); // Redirection vers la page de connexion
       } else {
         const errorData = await response.json();
