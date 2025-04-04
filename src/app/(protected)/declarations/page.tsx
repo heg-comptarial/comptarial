@@ -19,7 +19,7 @@ import { useDeclarations } from "@/hooks/useDeclarations";
 import { useFileUpload } from "@/hooks/useFileUpload";
 
 export default function DeclarationsClientPage() {
-  const userId = 7;
+  const userId = Number(localStorage.getItem("user_id"));
   const {
     selectedYear,
     setSelectedYear,
