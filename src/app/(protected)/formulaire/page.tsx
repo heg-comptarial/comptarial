@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -10,6 +10,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Loader2 } from "lucide-react"
 import axios from "axios"
@@ -19,6 +20,55 @@ export default function FormulaireDeclaration() {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState(1)
+  const [userId, setUserId] = useState<number | null>(null)
+  const [priveId, setPriveId] = useState<number | null>(null)
+
+  // Récupérer l'ID de l'utilisateur au chargement
+  useEffect(() => {
+    const fetchUserData = async () => {
+      try {
+        const token = localStorage.getItem("auth_token")
+        if (!token) {
+          router.push("/connexion")
+          return
+        }
+
+        // Récupérer l'ID utilisateur depuis un endpoint Laravel
+        const userIdResponse = await axios.get("http://127.0.0.1:8000/api/auth/user", {
+          withCredentials: true, // Indispensable pour que Laravel envoie le cookie !
+        });
+
+        if (userIdResponse.data && userIdResponse.data.user_id) {
+          setUserId(userIdResponse.data.user_id);
+          console.log("User ID from API:", userIdResponse.data.user_id);
+        } else {
+          console.log("PAS TROUVE");
+          return;
+        }
+
+        // Récupérer les informations privées de l'utilisateur
+        const priveResponse = await axios.get(`http://127.0.0.1:8000/api/prives/users/${userIdResponse.data.user_id}`, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+          withCredentials: true,
+        });
+
+        if (priveResponse.data && priveResponse.data.prive_id) {
+          setPriveId(priveResponse.data.prive_id);
+        } else {
+          console.log("Pas de privé trouvé pour cet utilisateur");
+        }
+        
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données utilisateur:", error);
+        router.push("/connexion");
+      }
+    };
+
+    fetchUserData();
+  }, [router]);
+
 
   // Informations de base
   const [infoBase, setInfoBase] = useState({
@@ -29,7 +79,20 @@ export default function FormulaireDeclaration() {
 
   // État pour les enfants
   const [hasEnfants, setHasEnfants] = useState(false)
-  const [enfants, setEnfants] = useState<Array<{ nom: string; prenom: string; dateNaissance: string }>>([])
+  const [enfants, setEnfants] = useState<
+    Array<{
+      nom: string
+      prenom: string
+      dateNaissance: string
+      adresse: string
+      codePostal: string
+      localite: string
+      noAVS: string
+      noContribuable: string
+      revenuBrut: string
+      fortuneNet: string
+    }>
+  >([])
 
   // État pour le conjoint
   const [conjointInfo, setConjointInfo] = useState({
@@ -40,6 +103,7 @@ export default function FormulaireDeclaration() {
     adresse: "",
     localite: "",
     codePostal: "",
+    situationProfessionnelle: "",
   })
 
   // État pour les rubriques du formulaire
@@ -69,7 +133,21 @@ export default function FormulaireDeclaration() {
 
   // Ajouter un enfant
   const addEnfant = () => {
-    setEnfants([...enfants, { nom: "", prenom: "", dateNaissance: "" }])
+    setEnfants([
+      ...enfants,
+      {
+        nom: "",
+        prenom: "",
+        dateNaissance: "",
+        adresse: "",
+        codePostal: "",
+        localite: "",
+        noAVS: "",
+        noContribuable: "",
+        revenuBrut: "",
+        fortuneNet: "",
+      },
+    ])
   }
 
   // Mettre à jour les informations d'un enfant
@@ -135,26 +213,73 @@ export default function FormulaireDeclaration() {
     setIsLoading(true)
 
     try {
-      // Préparer les données à envoyer
-      const formData = {
-        infoBase,
-        hasEnfants,
-        enfants: hasEnfants ? enfants : [],
-        conjointInfo: infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse" ? conjointInfo : null,
-        formSections,
+      const token = localStorage.getItem("auth_token")
+      if (!token) {
+        router.push("/connexion")
+        return
       }
+      console.log("TTT"+userId)
 
-      // Envoyer les données à l'API
-      const response = await axios.post("http://127.0.0.1:8000/api/formulaire", formData, {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
-        },
-      })
+      // 1. Mettre à jour le privé avec les nouvelles informations
+      if (priveId) {
+        // Données à mettre à jour dans le privé
+        const priveData = {
+          dateNaissance: infoBase.dateNaissance,
+          nationalite: infoBase.nationalite,
+          etatCivil: infoBase.etatCivil,
+          genre: infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse" ? "couple" : "individuel",
+          ...formSections,
+        }
 
-      console.log("Formulaire soumis avec succès:", response.data)
+        // Mise à jour du privé
+        await axios.put(`http://127.0.0.1:8000/api/prives/${priveId}`, priveData, {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        })
 
-      // Rediriger vers une page de confirmation ou le dashboard
-      router.push("/dashboard")
+        // 2. Gérer le conjoint si marié ou pacsé
+        if (infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse") {
+          const conjointData = {
+            prive_id: priveId,
+            ...conjointInfo,
+          }
+
+          // Création du conjoint
+          await axios.post("http://127.0.0.1:8000/api/conjoints", conjointData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          })
+        }
+
+        // 3. Gérer les enfants si l'utilisateur a des enfants
+        if (hasEnfants && enfants.length > 0) {
+          // Créer tous les enfants
+          for (const enfant of enfants) {
+            const enfantData = {
+              prive_id: priveId,
+              ...enfant,
+            }
+
+            await axios.post("http://127.0.0.1:8000/api/enfants", enfantData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          }
+        }
+
+        console.log("Formulaire soumis avec succès")
+
+        // Rediriger vers le dashboard
+        router.push("/dashboard")
+      } else {
+        setError("Impossible de trouver votre profil. Veuillez contacter l'administrateur.")
+      }
     } catch (error) {
       console.error("Erreur lors de la soumission du formulaire:", error)
 
@@ -327,6 +452,26 @@ export default function FormulaireDeclaration() {
           </div>
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="conjointSituationProfessionnelle">Situation professionnelle</Label>
+          <Select
+            value={conjointInfo.situationProfessionnelle}
+            onValueChange={(value) => setConjointInfo({ ...conjointInfo, situationProfessionnelle: value })}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Sélectionnez une situation" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="salarie">Salarié(e)</SelectItem>
+              <SelectItem value="independant">Indépendant(e)</SelectItem>
+              <SelectItem value="retraite">Retraité(e)</SelectItem>
+              <SelectItem value="chomage">En recherche d'emploi</SelectItem>
+              <SelectItem value="etudiant">Étudiant(e)</SelectItem>
+              <SelectItem value="autre">Autre</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="flex justify-between">
           <Button variant="outline" onClick={prevStep}>
             Retour
@@ -384,7 +529,7 @@ export default function FormulaireDeclaration() {
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 mb-4">
               <Label htmlFor={`enfantDateNaissance-${index}`}>Date de naissance</Label>
               <Input
                 id={`enfantDateNaissance-${index}`}
@@ -393,6 +538,73 @@ export default function FormulaireDeclaration() {
                 onChange={(e) => updateEnfant(index, "dateNaissance", e.target.value)}
                 required
               />
+            </div>
+
+            <div className="space-y-2 mb-4">
+              <Label htmlFor={`enfantAdresse-${index}`}>Adresse (si différente)</Label>
+              <Input
+                id={`enfantAdresse-${index}`}
+                value={enfant.adresse}
+                onChange={(e) => updateEnfant(index, "adresse", e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 mb-4">
+              <div className="space-y-2">
+                <Label htmlFor={`enfantLocalite-${index}`}>Localité</Label>
+                <Input
+                  id={`enfantLocalite-${index}`}
+                  value={enfant.localite}
+                  onChange={(e) => updateEnfant(index, "localite", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor={`enfantCodePostal-${index}`}>Code postal</Label>
+                <Input
+                  id={`enfantCodePostal-${index}`}
+                  value={enfant.codePostal}
+                  onChange={(e) => updateEnfant(index, "codePostal", e.target.value)}
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2 mb-4">
+              <Label htmlFor={`enfantNoAVS-${index}`}>Numéro AVS</Label>
+              <Input
+                id={`enfantNoAVS-${index}`}
+                value={enfant.noAVS}
+                onChange={(e) => updateEnfant(index, "noAVS", e.target.value)}
+              />
+            </div>
+
+            <div className="space-y-2 mb-4">
+              <Label htmlFor={`enfantNoContribuable-${index}`}>Numéro de contribuable</Label>
+              <Input
+                id={`enfantNoContribuable-${index}`}
+                value={enfant.noContribuable}
+                onChange={(e) => updateEnfant(index, "noContribuable", e.target.value)}
+              />
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor={`enfantRevenuBrut-${index}`}>Revenu brut</Label>
+                <Input
+                  id={`enfantRevenuBrut-${index}`}
+                  value={enfant.revenuBrut}
+                  onChange={(e) => updateEnfant(index, "revenuBrut", e.target.value)}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor={`enfantFortuneNet-${index}`}>Fortune nette</Label>
+                <Input
+                  id={`enfantFortuneNet-${index}`}
+                  value={enfant.fortuneNet}
+                  onChange={(e) => updateEnfant(index, "fortuneNet", e.target.value)}
+                />
+              </div>
             </div>
           </Card>
         ))}
@@ -597,6 +809,20 @@ export default function FormulaireDeclaration() {
                 <p>
                   <strong>Nationalité:</strong> {conjointInfo.nationalite}
                 </p>
+                <p>
+                  <strong>Situation professionnelle:</strong>{" "}
+                  {conjointInfo.situationProfessionnelle === "salarie"
+                    ? "Salarié(e)"
+                    : conjointInfo.situationProfessionnelle === "independant"
+                      ? "Indépendant(e)"
+                      : conjointInfo.situationProfessionnelle === "retraite"
+                        ? "Retraité(e)"
+                        : conjointInfo.situationProfessionnelle === "chomage"
+                          ? "En recherche d'emploi"
+                          : conjointInfo.situationProfessionnelle === "etudiant"
+                            ? "Étudiant(e)"
+                            : "Autre"}
+                </p>
                 {conjointInfo.adresse && (
                   <>
                     <p>
@@ -633,6 +859,39 @@ export default function FormulaireDeclaration() {
                   <p>
                     <strong>Date de naissance:</strong> {enfant.dateNaissance}
                   </p>
+                  {enfant.noAVS && (
+                    <p>
+                      <strong>Numéro AVS:</strong> {enfant.noAVS}
+                    </p>
+                  )}
+                  {enfant.noContribuable && (
+                    <p>
+                      <strong>Numéro de contribuable:</strong> {enfant.noContribuable}
+                    </p>
+                  )}
+                  {enfant.revenuBrut && (
+                    <p>
+                      <strong>Revenu brut:</strong> {enfant.revenuBrut}
+                    </p>
+                  )}
+                  {enfant.fortuneNet && (
+                    <p>
+                      <strong>Fortune nette:</strong> {enfant.fortuneNet}
+                    </p>
+                  )}
+                  {enfant.adresse && (
+                    <>
+                      <p>
+                        <strong>Adresse:</strong> {enfant.adresse}
+                      </p>
+                      <p>
+                        <strong>Localité:</strong> {enfant.localite}
+                      </p>
+                      <p>
+                        <strong>Code postal:</strong> {enfant.codePostal}
+                      </p>
+                    </>
+                  )}
                 </div>
               ))}
             </AccordionContent>
