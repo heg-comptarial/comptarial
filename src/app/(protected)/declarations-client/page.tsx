@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Declaration, Prive, Rubrique } from "@/types/interfaces";
 import {
   Accordion,
@@ -13,14 +13,13 @@ import { Button } from "@/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { DocumentUpload } from "@/components/protected/declaration-client/document-upload";
+import { DocumentList } from "@/components/protected/declaration-client/document-list";
 import { foFields } from "@/utils/foFields";
 import YearSelector from "@/components/YearSelector";
 import ProtectedRoute from "@/components/ProtectedRoute";
-import { DocumentList } from "@/components/protected/declaration-client/document-list";
 
 export default function DeclarationsClientPage() {
-
-  const userId = 7; // ← your actual userId
+  const [userId, setUserId] = useState<number | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
   const [userDeclarations, setUserDeclarations] = useState<Declaration[]>([]);
@@ -34,8 +33,21 @@ export default function DeclarationsClientPage() {
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
 
+  // ✅ Safely read userId from localStorage
+  useEffect(() => {
+    const storedId = localStorage.getItem("user_id");
+    if (storedId) {
+      setUserId(Number(storedId));
+    } else {
+      setError("Utilisateur non identifié");
+      setLoading(false);
+    }
+  }, []);
+
   // 🔄 Fetch user's declarations
   useEffect(() => {
+    if (!userId) return;
+
     const fetchDeclarations = async () => {
       try {
         const userResponse = await fetch(
@@ -63,7 +75,7 @@ export default function DeclarationsClientPage() {
     };
 
     fetchDeclarations();
-  }, []);
+  }, [userId]);
 
   // 🔁 On year selection update declaration
   useEffect(() => {
@@ -87,10 +99,10 @@ export default function DeclarationsClientPage() {
   };
 
   async function fetchOrCreateRubrique() {
-    try {
-      if (!selectedYear) return;
-      setLoading(true);
+    if (!selectedYear || !userId) return;
+    setLoading(true);
 
+    try {
       const declarationResponse = await fetch(
         `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${selectedYear}`
       );
@@ -137,8 +149,7 @@ export default function DeclarationsClientPage() {
             value === true &&
             foFields[field as keyof typeof foFields]
           ) {
-            const rubriqueName = foFields[field as keyof typeof foFields].titre;
-            const rubriqueDescription = foFields[field as keyof typeof foFields].description;
+            const rubriqueInfo = foFields[field as keyof typeof foFields];
 
             try {
               const createResponse = await fetch(
@@ -148,8 +159,8 @@ export default function DeclarationsClientPage() {
                   headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
                     declaration_id: declarationData.declaration_id,
-                    titre: rubriqueName,
-                    description: rubriqueDescription,
+                    titre: rubriqueInfo.titre,
+                    description: rubriqueInfo.description,
                   }),
                 }
               );
@@ -213,19 +224,6 @@ export default function DeclarationsClientPage() {
     }
   }, [loading, toastShown, declaration]);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "approved":
-        return <Badge className="bg-green-500">Approuvé</Badge>;
-      case "pending":
-        return <Badge className="bg-yellow-500">En attente</Badge>;
-      case "rejected":
-        return <Badge className="bg-red-500">Rejeté</Badge>;
-      default:
-        return <Badge>Inconnu</Badge>;
-    }
-  };
-
   const handleFilesSelected = (rubriqueId: number, files: File[]) => {
     setSelectedFiles((prev) => [
       ...prev,
@@ -250,7 +248,7 @@ export default function DeclarationsClientPage() {
         const formData = new FormData();
         formData.append("file", fileData.file);
         formData.append("year", declaration?.annee || "");
-        formData.append("userId", userId.toString());
+        formData.append("userId", userId!.toString());
         formData.append("rubriqueId", fileData.rubriqueId.toString());
         formData.append(
           "rubriqueName",
@@ -332,11 +330,11 @@ export default function DeclarationsClientPage() {
     }
   };
 
-  if (loading) {
+  if (loading || !userId) {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Chargement des rubriques...</span>
+        <span className="ml-2">Chargement de l'utilisateur...</span>
       </div>
     );
   }
@@ -349,6 +347,19 @@ export default function DeclarationsClientPage() {
       </div>
     );
   }
+
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "approved":
+        return <Badge className="bg-green-500">Approuvé</Badge>;
+      case "pending":
+        return <Badge className="bg-yellow-500">En attente</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-500">Rejeté</Badge>;
+      default:
+        return <Badge>Inconnu</Badge>;
+    }
+  };
 
   return (
     <ProtectedRoute>
@@ -369,7 +380,7 @@ export default function DeclarationsClientPage() {
           {declaration?.statut && getStatusBadge(declaration.statut)}
         </div>
 
-        {declaration?.rubriques && declaration.rubriques.length > 0 ? (
+        {declaration?.rubriques?.length ? (
           <Accordion type="multiple" className="w-full">
             {declaration.rubriques.map((rubrique) => (
               <AccordionItem
@@ -417,7 +428,6 @@ export default function DeclarationsClientPage() {
               {selectedFiles.length} document
               {selectedFiles.length > 1 ? "s" : ""} prêt
               {selectedFiles.length > 1 ? "s" : ""} à être enregistré
-              {selectedFiles.length > 1 ? "s" : ""}
             </span>
             <Button
               onClick={uploadAndSaveDocuments}

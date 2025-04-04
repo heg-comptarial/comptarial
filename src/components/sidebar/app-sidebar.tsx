@@ -10,6 +10,7 @@ import {
   Shield,
   FolderOpen,
   SquareUserRound,
+  FilePlus
 } from "lucide-react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
@@ -51,9 +52,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       },
       {
         title: "Mes déclarations",
-        url: "/declarations",
+        url: "/declarations-client",
         icon: FolderOpen,
-        items: [],
+      },
+      {
+        title: "Nouvelles déclarations",
+        url: "/new-declaration",
+        icon: FilePlus,
       },
     ],
     navSecondary: [

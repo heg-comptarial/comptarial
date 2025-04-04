@@ -51,14 +51,6 @@ Route::prefix('commentaires')->group(function () {
     Route::delete('/{id}', [CommentaireController::class, 'destroy']);
 });
 
-Route::prefix('sousrubriques')->group(function () {
-    Route::get('/', [SousRubriqueController::class, 'index']);
-    Route::post('/', [SousRubriqueController::class, 'store']);
-    Route::get('/{id}', [SousRubriqueController::class, 'show']);
-    Route::put('/{id}', [SousRubriqueController::class, 'update']);
-    Route::delete('/{id}', [SousRubriqueController::class, 'destroy']);
-});
-
 Route::prefix('rubriques')->group(function () {
     Route::get('/', [RubriqueController::class, 'index']);
     Route::post('/', [RubriqueController::class, 'store']);
