@@ -9,16 +9,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  FileText,
-  FileImage,
-  FileSpreadsheet,
-  Download,
-  Upload,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { formatFileSize } from "@/utils/format-file-size";
-import { useState } from "react";
+import { Download } from "lucide-react";
+import { getFileTypeIcon } from "@/utils/getFileTypeIcon";
 
 interface Document {
   doc_id: number;
@@ -38,34 +30,9 @@ interface DocumentListProps {
 }
 
 export function DocumentList({
-  rubriqueId,
   rubriqueName,
   documents = [],
-  onAddMore,
 }: DocumentListProps) {
-  const [isLoading, setIsLoading] = useState<boolean>(false);
-
-  const getFileTypeIcon = (fileName: string) => {
-    const extension = fileName.split(".").pop()?.toLowerCase();
-
-    switch (extension) {
-      case "pdf":
-        return <FileText className="h-4 w-4 text-red-500" />;
-      case "doc":
-      case "docx":
-        return <FileText className="h-4 w-4 text-blue-500" />;
-      case "xls":
-      case "xlsx":
-        return <FileSpreadsheet className="h-4 w-4 text-green-500" />;
-      case "jpg":
-      case "jpeg":
-      case "png":
-        return <FileImage className="h-4 w-4 text-purple-500" />;
-      default:
-        return <FileText className="h-4 w-4 text-gray-500" />;
-    }
-  };
-
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -86,17 +53,6 @@ export function DocumentList({
           <CardTitle className="text-lg">
             Documents pour {rubriqueName}
           </CardTitle>
-          {onAddMore && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={onAddMore}
-              disabled={isLoading}
-            >
-              <Upload className="h-4 w-4 mr-2" />
-              Ajouter des documents
-            </Button>
-          )}
         </div>
       </CardHeader>
       <CardContent>
@@ -105,24 +61,24 @@ export function DocumentList({
             <TableHeader>
               <TableRow>
                 <TableHead className="w-[40px]"></TableHead>
-                <TableHead>Nom</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Taille</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead className="text-right">Actions</TableHead>
+                <TableHead className="w-1/2">Nom</TableHead>
+                <TableHead className="w-1/6">Type</TableHead>
+                <TableHead className="w-1/6">Statut</TableHead>
+                <TableHead className="w-1/6 text-right">Actions</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {documents.map((doc) => (
-                <TableRow key={doc.doc_id}>
-                  <TableCell>{getFileTypeIcon(doc.nom)}</TableCell>
-                  <TableCell className="font-medium">{doc.nom}</TableCell>
-                  <TableCell>{doc.type}</TableCell>
-                  <TableCell>
-                    {doc.fileSize ? formatFileSize(doc.fileSize) : "N/A"}
+                <TableRow key={doc.doc_id ?? `${doc.nom}-${doc.cheminFichier}`}>
+                  <TableCell className="w-[40px]">
+                    {getFileTypeIcon(doc.nom)}
                   </TableCell>
-                  <TableCell>{getStatusBadge(doc.statut)}</TableCell>
-                  <TableCell className="text-right">
+                  <TableCell className="w-1/2 font-medium">{doc.nom}</TableCell>
+                  <TableCell className="w-1/6">{doc.type}</TableCell>
+                  <TableCell className="w-1/6">
+                    {getStatusBadge(doc.statut)}
+                  </TableCell>
+                  <TableCell className="w-1/6 text-right">
                     <a
                       href={doc.cheminFichier}
                       target="_blank"

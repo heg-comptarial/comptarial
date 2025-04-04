@@ -1,274 +1,165 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { allowedFileTypes } from "../../../utils/allowedFileTypes";
+import { Save, Loader2 } from "lucide-react";
+import { Toaster } from "sonner";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import YearSelector from "@/components/YearSelector";
+import { Rubrique } from "@/types/interfaces";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Trash2, Download, Upload } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { toast, Toaster } from "sonner";
-import ProtectedRoute from "@/components/ProtectedRoute"; // Importer le composant ProtectedRoute
+import { DocumentUpload } from "@/components/protected/declaration-client/document-upload";
+import { DocumentList } from "@/components/protected/declaration-client/document-list";
+import { useDeclarations } from "@/hooks/useDeclarations";
+import { useFileUpload } from "@/hooks/useFileUpload";
 
-const years = Array.from({ length: 20 }, (_, i) => 2020 + i);
+export default function DeclarationsClientPage() {
+  const userId = 7;
+  const {
+    selectedYear,
+    setSelectedYear,
+    declaration,
+    declarationYears,
+    uploadedRubriques,
+    setUploadedRubriques,
+    loading,
+    error,
+    setDeclaration,
+  } = useDeclarations(userId);
 
-interface FileData {
-  name: string;
-  type: string;
-  size: number;
-  url: string;
-  lastModified: number;
-}
+  const {
+    selectedFiles,
+    handleFilesSelected,
+    uploadAndSaveDocuments,
+    isSaving,
+  } = useFileUpload(declaration, userId, setUploadedRubriques, setDeclaration);
 
-export default function Page() {
-  const [selectedYear, setSelectedYear] = useState<string | undefined>(undefined);
-  const [isUploading, setIsUploading] = useState(false);
-  const [files, setFiles] = useState<FileData[]>([]);
-
-  useEffect(() => {
-    if (selectedYear) {
-      fetchFiles(selectedYear);
-    }
-  }, [selectedYear]);
-
-  const fetchFiles = async (year: string) => {
-    try {
-      const response = await fetch(`/api/list?year=${encodeURIComponent(year)}`);
-      const data = await response.json();
-      if (response.ok) {
-        setFiles(data.files);
-      } else {
-        toast.error("Failed to fetch files", {
-          description: data.error || "An error occurred while fetching files.",
-        });
-      }
-    } catch (error) {
-      console.error("Error fetching files:", error);
-      toast.error("Fetch error", {
-        description: "An unexpected error occurred while fetching files.",
-      });
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "approved":
+        return <Badge className="bg-green-500">Approuvé</Badge>;
+      case "pending":
+        return <Badge className="bg-yellow-500">En attente</Badge>;
+      case "rejected":
+        return <Badge className="bg-red-500">Rejeté</Badge>;
+      default:
+        return <Badge>Inconnu</Badge>;
     }
   };
 
-  const handleYearChange = (year: string) => {
-    setSelectedYear(year);
-  };
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <span className="ml-2">Chargement des rubriques...</span>
+      </div>
+    );
+  }
 
-  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0 || !selectedYear) return;
-
-    const selectedFile = e.target.files[0];
-
-    if (!allowedFileTypes.includes(selectedFile.type)) {
-      toast.error("Invalid file type", {
-        description: "Only documents and images are allowed.",
-      });
-      return;
-    }
-
-    setIsUploading(true);
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    formData.append("year", selectedYear);
-
-    try {
-      const response = await fetch("/api/upload", {
-        method: "POST",
-        body: formData,
-      });
-
-      const data = await response.json();
-      if (response.ok) {
-        fetchFiles(selectedYear); // Refresh the file list
-        toast.success("Upload successful", {
-          description: `${selectedFile.name} has been uploaded.`,
-        });
-      } else {
-        toast.error("Upload failed", {
-          description: data.error || "An error occurred during upload.",
-        });
-      }
-    } catch {
-      toast.error("Upload error", {
-        description: "An unexpected error occurred during upload.",
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const handleDownload = async (file: FileData) => {
-    if (!selectedYear) return;
-
-    const fileName = file.name;
-    const downloadUrl = `/api/download?fileName=${encodeURIComponent(
-      fileName
-    )}&year=${encodeURIComponent(selectedYear)}`;
-
-    try {
-      const response = await fetch(downloadUrl);
-      if (!response.ok) {
-        throw new Error("File download failed");
-      }
-
-      const blob = await response.blob();
-      const downloadLink = document.createElement("a");
-      downloadLink.href = URL.createObjectURL(blob);
-      downloadLink.download = fileName;
-      downloadLink.click();
-
-      toast.success("Download successful", {
-        description: `${fileName} has been downloaded.`,
-      });
-    } catch (error) {
-      console.error("Error downloading file:", error);
-      toast.error("Download failed", {
-        description: "An error occurred while downloading the file.",
-      });
-    }
-  };
-
-  const handleDelete = async (file: FileData) => {
-    if (!selectedYear) return;
-
-    try {
-      const response = await fetch(
-        `/api/delete?fileName=${encodeURIComponent(
-          file.name
-        )}&year=${encodeURIComponent(selectedYear)}`,
-        {
-          method: "DELETE",
-        }
-      );
-
-      const data = await response.json();
-      if (response.ok) {
-        setFiles(files.filter((f) => f.name !== file.name));
-        toast.success("File deleted", {
-          description: "File has been deleted successfully.",
-        });
-      } else {
-        toast.error("Delete failed", {
-          description: data.error || "Error deleting file.",
-        });
-      }
-    } catch (error) {
-      console.error("Error deleting file:", error);
-      toast.error("Delete error", {
-        description: "An unexpected error occurred while deleting the file.",
-      });
-    }
-  };
+  if (error) {
+    return (
+      <div className="p-10">
+        <h1 className="text-2xl font-bold mb-4">Erreur</h1>
+        <p className="text-red-500">{error}</p>
+      </div>
+    );
+  }
 
   return (
-    <ProtectedRoute> {/* Envelopper la page dans le composant ProtectedRoute */}
-      <div className="flex flex-col items-center justify-center min-h-screen p-4">
-        <Toaster position="bottom-right" richColors />
-
-        <Card className="w-full md:w-3/4 lg:w-3/4">
-          <CardHeader>
-            <CardTitle>Déclarations</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-6">
-            <div className="space-y-2">
-              <Label htmlFor="year-select">Select Year</Label>
-              <Select onValueChange={handleYearChange} value={selectedYear}>
-                <SelectTrigger id="year-select" className="w-full">
-                  <SelectValue placeholder="Select a year" />
-                </SelectTrigger>
-                <SelectContent>
-                  {years.map((year) => (
-                    <SelectItem key={year} value={year.toString()}>
-                      {year}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {selectedYear && (
-              <div className="space-y-4">
-                <div className="border-t pt-4">
-                  <h3 className="text-lg font-medium mb-2">
-                    Files for {selectedYear}
-                  </h3>
-                  {files.length > 0 ? (
-                    files.map((file) => (
-                      <Card key={file.name} className="mb-4">
-                        <CardContent className="p-6">
-                          <p className="font-medium text-lg break-all">
-                            {file.name}
-                          </p>
-                          <p className="text-sm text-gray-500 mt-1">
-                            {(file.size / 1048576).toFixed(1)} MB
-                          </p>
-                          <p className="text-xs text-gray-400 mt-1">
-                            Last modified:{" "}
-                            {new Date(file.lastModified).toLocaleString()}
-                          </p>
-                        </CardContent>
-                        <CardFooter className="flex justify-between bg-gray-50 p-4">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => handleDownload(file)}
-                          >
-                            <Download className="h-4 w-4 mr-1" /> Download
-                          </Button>
-                          <Button
-                            variant="destructive"
-                            size="sm"
-                            onClick={() => handleDelete(file)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" /> Delete
-                          </Button>
-                        </CardFooter>
-                      </Card>
-                    ))
-                  ) : (
-                    <div className="space-y-4">
-                      <Label htmlFor="file-upload" className="block">
-                        <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-gray-400 transition-colors">
-                          <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                          <p className="mt-2 text-sm font-medium">
-                            Drag and drop a file, or click to select
-                          </p>
-                        </div>
-                      </Label>
-                      <Input
-                        id="file-upload"
-                        type="file"
-                        className="hidden"
-                        onChange={handleUpload}
-                      />
-                    </div>
-                  )}
-                  {isUploading && (
-                    <Alert className="mt-4">
-                      <AlertDescription>Uploading file...</AlertDescription>
-                    </Alert>
-                  )}
-                </div>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+    <ProtectedRoute>
+      <Toaster position="bottom-right" richColors closeButton />
+      <div className="px-10">
+        <h2 className="text-lg font-semibold px-2">Année de la déclaration</h2>
+        <YearSelector
+          years={declarationYears}
+          selectedYear={selectedYear ?? ""}
+          onYearChange={(year) => setSelectedYear(year.toString())}
+          className="w-full"
+        />
       </div>
-    </ProtectedRoute> /* Fermeture du composant ProtectedRoute */
+
+      <div className="p-10 pt-5">
+        <div className="flex justify-between items-center mb-6">
+          <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
+          {declaration?.statut && getStatusBadge(declaration.statut)}
+        </div>
+
+        {declaration?.rubriques?.length ? (
+          <Accordion type="multiple" className="w-full">
+            {declaration.rubriques.map((rubrique: Rubrique) => (
+              <AccordionItem
+                key={rubrique.rubrique_id}
+                value={`rubrique-${rubrique.rubrique_id}`}
+              >
+                <AccordionTrigger className="text-xl font-medium">
+                  {rubrique.titre}
+                </AccordionTrigger>
+                <AccordionContent>
+                  <div className="space-y-6">
+                    {uploadedRubriques.includes(rubrique.rubrique_id) ? (
+                      <DocumentList
+                        rubriqueId={rubrique.rubrique_id}
+                        rubriqueName={rubrique.titre}
+                        documents={rubrique.documents || []}
+                      />
+                    ) : (
+                      <DocumentUpload
+                        userId={userId}
+                        year={declaration.annee}
+                        rubriqueId={rubrique.rubrique_id}
+                        rubriqueName={rubrique.titre}
+                        existingDocuments={rubrique.documents || []}
+                        onFilesSelected={(files) =>
+                          handleFilesSelected(rubrique.rubrique_id, files)
+                        }
+                        onFileRemoved={(fileId) =>
+                          console.log("File removed", fileId)
+                        }
+                      />
+                    )}
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            ))}
+          </Accordion>
+        ) : (
+          <p className="text-center text-gray-500 py-8">
+            Aucune rubrique trouvée pour cette déclaration
+          </p>
+        )}
+
+        {selectedFiles.length > 0 && (
+          <div className="fixed bottom-8 right-8 flex items-center gap-2 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+            <span className="text-sm font-medium">
+              {selectedFiles.length} document
+              {selectedFiles.length > 1 ? "s" : ""} prêt
+              {selectedFiles.length > 1 ? "s" : ""} à être enregistré
+            </span>
+            <Button
+              onClick={uploadAndSaveDocuments}
+              disabled={isSaving}
+              className="flex items-center gap-2"
+            >
+              {isSaving ? (
+                <>
+                  <Loader2 className="h-4 w-4 animate-spin" />
+                  Enregistrement...
+                </>
+              ) : (
+                <>
+                  <Save className="h-4 w-4" />
+                  Enregistrer les documents
+                </>
+              )}
+            </Button>
+          </div>
+        )}
+      </div>
+    </ProtectedRoute>
   );
 }

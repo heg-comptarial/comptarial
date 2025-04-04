@@ -49,7 +49,7 @@ export default function Dashboard() {
       .then((response) => response.json())
       .then((data) => setMessage(data.message))
       .catch((error) => console.error("Erreur:", error))
-  }, [])
+  }, [user])
 
   const fetchPendingUsers = async () => {
     setLoading(true)

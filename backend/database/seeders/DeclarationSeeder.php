@@ -47,6 +47,13 @@ class DeclarationSeeder extends Seeder
             ],
             [
                 'user_id' => 7,
+                'titre' => 'Déclaration 2024',
+                'statut' => 'approved',
+                'annee' => '2024',
+                'dateCreation' => now(),
+            ],
+            [
+                'user_id' => 7,
                 'titre' => 'Déclaration 2025',
                 'statut' => 'pending',
                 'annee' => '2025',

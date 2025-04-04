@@ -1,6 +1,5 @@
 "use client";
 
-import { useState } from "react";
 import {
   Select,
   SelectContent,
@@ -10,36 +9,26 @@ import {
 } from "@/components/ui/select";
 
 interface YearSelectorProps {
-  startYear?: number;
-  endYear?: number;
+  years: string[];
+  selectedYear: string;
   onYearChange?: (year: number) => void;
   className?: string;
 }
 
 export default function YearSelector({
-  startYear = 2015,
-  endYear = new Date().getFullYear() + 10,
+  years,
+  selectedYear,
   onYearChange,
   className,
 }: YearSelectorProps) {
-  const currentYear = new Date().getFullYear();
-  const [selectedYear, setSelectedYear] = useState<string>(
-    currentYear.toString()
-  );
-
-  const years = Array.from({ length: endYear - startYear + 1 }, (_, i) =>
-    (startYear + i).toString()
-  );
-
   const handleYearChange = (value: string) => {
-    setSelectedYear(value);
-    onYearChange?.(Number.parseInt(value, 10));
+    onYearChange?.(parseInt(value, 10));
   };
 
   return (
     <Select value={selectedYear} onValueChange={handleYearChange}>
       <SelectTrigger className={className}>
-        <SelectValue placeholder="Select year" />
+        <SelectValue placeholder="Sélectionnez une année" />
       </SelectTrigger>
       <SelectContent>
         {years.map((year) => (

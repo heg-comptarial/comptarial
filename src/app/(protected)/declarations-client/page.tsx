@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { Declaration, Prive } from "@/types/interfaces";
+import { Declaration, Prive, Rubrique } from "@/types/interfaces";
 import {
   Accordion,
   AccordionContent,
@@ -15,20 +15,16 @@ import { toast, Toaster } from "sonner";
 import { DocumentUpload } from "@/components/protected/declaration-client/document-upload";
 import { foFields } from "@/utils/foFields";
 import YearSelector from "@/components/YearSelector";
-import { useUser } from "@/components/context/UserContext";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { DocumentList } from "@/components/protected/declaration-client/document-list";
 
 export default function DeclarationsClientPage() {
-  const { user } = useUser();
-  console.log("User data", user);
-  const userId = 7;
-  const declarationId = 6;
-  const declarationYear = "2025";
 
-  const [documentsSaved, setDocumentsSaved] = useState<boolean>(false);
+  const userId = 7; // ← your actual userId
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
+  const [userDeclarations, setUserDeclarations] = useState<Declaration[]>([]);
+  const [declarationYears, setDeclarationYears] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [toastShown, setToastShown] = useState<boolean>(false);
@@ -36,29 +32,67 @@ export default function DeclarationsClientPage() {
     { file: File; rubriqueId: number }[]
   >([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+  const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
 
-  /* Vérification de l'année sélectionnée */
+  // 🔄 Fetch user's declarations
   useEffect(() => {
-    if (selectedYear) {
-      console.log(`Selected year: ${selectedYear}`);
-    }
-  }, [selectedYear]);
+    const fetchDeclarations = async () => {
+      try {
+        const userResponse = await fetch(
+          `http://localhost:8000/api/users/${userId}`
+        );
+        const userData = await userResponse.json();
 
-  useEffect(() => {
-    fetchOrCreateRubrique();
+        const declarations = userData.declarations || [];
+        setUserDeclarations(declarations);
+
+        const years = declarations.map((d: Declaration) => d.annee);
+        setDeclarationYears(years);
+
+        if (years.length > 0) {
+          const latestYear = years.sort().reverse()[0];
+          setSelectedYear(latestYear);
+        }
+
+        setLoading(false);
+      } catch (err) {
+        setError("Impossible de charger les déclarations de l'utilisateur");
+        console.error(err);
+        setLoading(false);
+      }
+    };
+
+    fetchDeclarations();
   }, []);
 
-  /* Sélection de l'année */
+  // 🔁 On year selection update declaration
+  useEffect(() => {
+    if (selectedYear && userDeclarations.length > 0) {
+      const selected = userDeclarations.find((d) => d.annee === selectedYear);
+      if (selected) {
+        setDeclaration(selected);
+        setUploadedRubriques(
+          (selected.rubriques || [])
+            .filter((r) => r.documents && r.documents.length > 0)
+            .map((r) => r.rubrique_id)
+        );
+
+        fetchOrCreateRubrique();
+      }
+    }
+  }, [selectedYear, userDeclarations]);
+
   const handleYearChange = (year: number) => {
     setSelectedYear(year.toString());
   };
 
   async function fetchOrCreateRubrique() {
     try {
+      if (!selectedYear) return;
       setLoading(true);
 
       const declarationResponse = await fetch(
-        `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${declarationYear}`
+        `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${selectedYear}`
       );
 
       if (!declarationResponse.ok) {
@@ -71,6 +105,15 @@ export default function DeclarationsClientPage() {
 
       if (declarationData.rubriques && declarationData.rubriques.length > 0) {
         setDeclaration(declarationData);
+
+        const alreadyUploaded = declarationData.rubriques
+          .filter(
+            (rubrique: Rubrique) =>
+              rubrique.documents && rubrique.documents.length > 0
+          )
+          .map((r: Rubrique) => r.rubrique_id);
+
+        setUploadedRubriques(alreadyUploaded);
         setLoading(false);
       } else {
         const priveResponse = await fetch(`http://localhost:8000/api/prives`);
@@ -95,19 +138,16 @@ export default function DeclarationsClientPage() {
             foFields[field as keyof typeof foFields]
           ) {
             const rubriqueName = foFields[field as keyof typeof foFields].titre;
-            const rubriqueDescription =
-              foFields[field as keyof typeof foFields].description;
+            const rubriqueDescription = foFields[field as keyof typeof foFields].description;
 
             try {
               const createResponse = await fetch(
                 `http://127.0.0.1:8000/api/rubriques`,
                 {
                   method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
+                  headers: { "Content-Type": "application/json" },
                   body: JSON.stringify({
-                    declaration_id: declarationId,
+                    declaration_id: declarationData.declaration_id,
                     titre: rubriqueName,
                     description: rubriqueDescription,
                   }),
@@ -117,10 +157,6 @@ export default function DeclarationsClientPage() {
               if (createResponse.ok) {
                 const createdRubrique = await createResponse.json();
                 createdRubriques.push(createdRubrique);
-              } else {
-                console.error(
-                  `Failed to create rubrique for ${field}: ${await createResponse.text()}`
-                );
               }
             } catch (err) {
               console.error(`Error creating rubrique for ${field}:`, err);
@@ -129,12 +165,20 @@ export default function DeclarationsClientPage() {
         }
 
         const updatedDeclarationResponse = await fetch(
-          `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationId}`
+          `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationData.declaration_id}`
         );
         if (updatedDeclarationResponse.ok) {
           const updatedDeclarationData =
             await updatedDeclarationResponse.json();
           setDeclaration(updatedDeclarationData);
+
+          const alreadyUploaded = updatedDeclarationData.rubriques
+            .filter(
+              (rubrique: Rubrique) =>
+                rubrique.documents && rubrique.documents.length > 0
+            )
+            .map((r: Rubrique) => r.rubrique_id);
+          setUploadedRubriques(alreadyUploaded);
         } else {
           setDeclaration({
             ...declarationData,
@@ -152,7 +196,6 @@ export default function DeclarationsClientPage() {
     }
   }
 
-  /* Notification de création des rubriques */
   useEffect(() => {
     if (!loading && toastShown) {
       const createdRubriques = declaration?.rubriques || [];
@@ -160,21 +203,16 @@ export default function DeclarationsClientPage() {
       if (createdRubriques.length > 0) {
         toast.success(
           `${createdRubriques.length} rubriques chargées avec succès.`,
-          {
-            duration: 5000,
-          }
+          { duration: 5000 }
         );
       } else {
-        toast.error("Aucune rubrique trouvée.", {
-          duration: 5000,
-        });
+        toast.error("Aucune rubrique trouvée.", { duration: 5000 });
       }
 
       setToastShown(false);
     }
   }, [loading, toastShown, declaration]);
 
-  /* Badge du status de la déclaration */
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -196,7 +234,6 @@ export default function DeclarationsClientPage() {
   };
 
   const handleFileRemoved = (fileId: string) => {
-    // Implement if needed
     console.log("File removed:", fileId);
   };
 
@@ -209,7 +246,6 @@ export default function DeclarationsClientPage() {
     setIsSaving(true);
 
     try {
-      // Upload des fichiers sélectionnés dans le bucket S3 Infomaniak
       const uploadPromises = selectedFiles.map(async (fileData) => {
         const formData = new FormData();
         formData.append("file", fileData.file);
@@ -240,17 +276,15 @@ export default function DeclarationsClientPage() {
           cheminFichier: result.url,
           statut: "pending",
           sous_rubrique: "default",
+          fileSize: fileData.file.size,
         };
       });
 
       const documentsToSave = await Promise.all(uploadPromises);
 
-      // Then save to database
       const saveResponse = await fetch("http://127.0.0.1:8000/api/documents", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ documents: documentsToSave }),
       });
 
@@ -259,12 +293,32 @@ export default function DeclarationsClientPage() {
         throw new Error(`Failed to save documents: ${errorText}`);
       }
 
-      // const saveResult = await saveResponse.json();
-
       toast.success(
         `${documentsToSave.length} documents enregistrés avec succès`
       );
-      setDocumentsSaved(true);
+
+      const uploadedIds = documentsToSave.map((doc) => doc.rubrique_id);
+      setUploadedRubriques((prev) => [...new Set([...prev, ...uploadedIds])]);
+      setSelectedFiles([]);
+
+      setDeclaration((prev) => {
+        if (!prev) return prev;
+
+        const updatedRubriques = prev.rubriques.map((rubrique) => {
+          const newDocs = documentsToSave.filter(
+            (doc) => doc.rubrique_id === rubrique.rubrique_id
+          );
+
+          return newDocs.length > 0
+            ? ({
+                ...rubrique,
+                documents: [...(rubrique.documents || []), ...newDocs],
+              } as Rubrique)
+            : rubrique;
+        });
+
+        return { ...prev, rubriques: updatedRubriques };
+      });
     } catch (error) {
       console.error("Error uploading and saving documents:", error);
       toast.error("Erreur lors de l'enregistrement des documents", {
@@ -301,7 +355,12 @@ export default function DeclarationsClientPage() {
       <Toaster position="bottom-right" richColors closeButton />
       <div className="px-10">
         <h2 className="text-lg font-semibold px-2">Année de la déclaration</h2>
-        <YearSelector onYearChange={handleYearChange} className="w-full" />
+        <YearSelector
+          years={declarationYears}
+          selectedYear={selectedYear ?? ""}
+          onYearChange={handleYearChange}
+          className="w-full"
+        />
       </div>
 
       <div className="p-10 pt-5">
@@ -322,12 +381,11 @@ export default function DeclarationsClientPage() {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-6">
-                    {documentsSaved ? (
+                    {uploadedRubriques.includes(rubrique.rubrique_id) ? (
                       <DocumentList
                         rubriqueId={rubrique.rubrique_id}
                         rubriqueName={rubrique.titre}
                         documents={rubrique.documents || []}
-                        onAddMore={() => setDocumentsSaved(false)}
                       />
                     ) : (
                       <DocumentUpload
