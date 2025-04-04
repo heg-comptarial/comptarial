@@ -14,28 +14,13 @@ class DocumentController extends Controller
         return response()->json($documents);
     }
 
-    // public function store(Request $request)
-    // {
-    //     // Valide les données
-    //     $request->validate([
-    //         'rubrique_id' => 'required|exists:rubrique,rubrique_id',
-    //         'nom' => 'required|string|max:255',
-    //         'type' => 'required|in:pdf,doc,xls,ppt,image,other',
-    //         'cheminFichier' => 'required|string|max:255',
-    //         'statut' => 'required|in:pending,approved,rejected',
-    //     ]);
-
-    //     // Crée un nouveau document
-    //     $document = Document::create($request->all());
-    //     return response()->json($document, 201);
-    // }
     public function store(Request $request)
     {
         $request->validate([
             'documents' => 'required|array',
             'documents.*.rubrique_id' => 'required|exists:Rubrique,rubrique_id',
             'documents.*.nom' => 'required|string|max:255',
-            'documents.*.type' => 'required|in:pdf,doc,xls,ppt,jpeg,jpg,png,other',
+            'documents.*.type' => 'required|in:pdf,doc,docx,xls,xlsx,ppt,pptx,jpeg,jpg,png,other',
             'documents.*.cheminFichier' => 'required|string',
             'documents.*.statut' => 'sometimes|in:pending,rejected,approved',
             'documents.*.sous_rubrique' => 'nullable|string',
@@ -76,7 +61,7 @@ class DocumentController extends Controller
         // Valide les données
         $request->validate([
             'nom' => 'string|max:255',
-            'type' => 'in:pdf,doc,xls,ppt,jpeg,jpg,png,other',
+            'type' => 'in:pdf,doc,docx,xls,xlsx,ppt,pptx,jpeg,jpg,png,other',
             'cheminFichier' => 'string|max:255',
             'statut' => 'in:pending,approved,rejected',
         ]);

@@ -85,7 +85,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'nom' => 'Prive User 4',
-                'email' => 'prive3@example.com',
+                'email' => 'prive4@example.com',
                 'motDePasse' => Hash::make('password'),
                 'localite' => 'Bordeaux',
                 'adresse' => '456 Rue Prive 3',

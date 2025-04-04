@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { Declaration, Prive } from "@/types/interfaces";
 import {
   Accordion,
   AccordionContent,
@@ -8,77 +9,56 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { DocumentUpload } from "@/components/protected/declaration-client/document-upload";
-import { Button } from "@/components/ui/button";
-
-interface Document {
-  doc_id: number;
-  rubrique_id: number;
-  nom: string;
-  type: string;
-  cheminFichier: string;
-  statut: string;
-  sous_rubrique: string;
-  dateCreation: string;
-}
-
-interface Rubrique {
-  rubrique_id: number;
-  declaration_id: number;
-  titre: string;
-  description: string;
-  documents?: Document[];
-}
-
-interface Declaration {
-  declaration_id: number;
-  user_id: number;
-  titre: string;
-  statut: string;
-  annee: string;
-  dateCreation: string;
-  rubriques: Rubrique[];
-}
-
-interface Prive {
-  prive_id: number;
-  user_id: number;
-  fo_banques: boolean;
-  fo_dettes: boolean;
-  fo_immobiliers: boolean;
-  fo_salarie: boolean;
-  fo_autrePersonneCharge: boolean;
-  fo_independant: boolean;
-  fo_rentier: boolean;
-  fo_autreRevenu: boolean;
-  fo_assurance: boolean;
-  fo_autreDeduction: boolean;
-  fo_autreInformations: boolean;
-}
+import { foFields } from "@/utils/foFields";
+import YearSelector from "@/components/YearSelector";
+import { useUser } from "@/components/context/UserContext";
+import ProtectedRoute from "@/components/ProtectedRoute";
+import { DocumentList } from "@/components/protected/declaration-client/document-list";
 
 export default function DeclarationsClientPage() {
+  const { user } = useUser();
+  console.log("User data", user);
   const userId = 7;
   const declarationId = 6;
-  
+  const declarationYear = "2025";
+
+  const [documentsSaved, setDocumentsSaved] = useState<boolean>(false);
+  const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const [toastShown, setToastShown] = useState<boolean>(false);
-  const [selectedFiles, setSelectedFiles] = useState<{file: File, rubriqueId: number}[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<
+    { file: File; rubriqueId: number }[]
+  >([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
+
+  /* Vérification de l'année sélectionnée */
+  useEffect(() => {
+    if (selectedYear) {
+      console.log(`Selected year: ${selectedYear}`);
+    }
+  }, [selectedYear]);
 
   useEffect(() => {
     fetchOrCreateRubrique();
   }, []);
+
+  /* Sélection de l'année */
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year.toString());
+  };
 
   async function fetchOrCreateRubrique() {
     try {
       setLoading(true);
 
       const declarationResponse = await fetch(
-        `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationId}`
+        `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${declarationYear}`
       );
 
       if (!declarationResponse.ok) {
@@ -106,65 +86,17 @@ export default function DeclarationsClientPage() {
           return;
         }
 
-        const foFieldsMap = {
-          fo_banques: {
-            titre: "Banques",
-            description: "Informations bancaires",
-          },
-          fo_dettes: {
-            titre: "Dettes",
-            description: "Informations sur les dettes",
-          },
-          fo_immobiliers: {
-            titre: "Immobiliers",
-            description: "Informations sur les biens immobiliers",
-          },
-          fo_salarie: {
-            titre: "Salariés",
-            description: "Informations sur les revenus salariés",
-          },
-          fo_autrePersonneCharge: {
-            titre: "Autres personnes à charge",
-            description: "Informations sur les autres personnes à charge",
-          },
-          fo_independant: {
-            titre: "Indépendant",
-            description: "Informations sur les revenus d'indépendant",
-          },
-          fo_rentier: {
-            titre: "Rentier",
-            description: "Informations sur les revenus de rente",
-          },
-          fo_autreRevenu: {
-            titre: "Autres revenus",
-            description: "Informations sur les autres revenus",
-          },
-          fo_assurance: {
-            titre: "Assurances",
-            description: "Informations sur les assurances",
-          },
-          fo_autreDeduction: {
-            titre: "Autres déductions",
-            description: "Informations sur les autres déductions",
-          },
-          fo_autreInformations: {
-            titre: "Autres informations",
-            description: "Autres informations importantes",
-          },
-        };
-
         const createdRubriques = [];
 
         for (const [field, value] of Object.entries(userPrive)) {
           if (
             field.startsWith("fo_") &&
             value === true &&
-            foFieldsMap[field as keyof typeof foFieldsMap]
+            foFields[field as keyof typeof foFields]
           ) {
-            const rubriqueName =
-              foFieldsMap[field as keyof typeof foFieldsMap].titre;
+            const rubriqueName = foFields[field as keyof typeof foFields].titre;
             const rubriqueDescription =
-              foFieldsMap[field as keyof typeof foFieldsMap].description;
+              foFields[field as keyof typeof foFields].description;
 
             try {
               const createResponse = await fetch(
@@ -220,6 +152,7 @@ export default function DeclarationsClientPage() {
     }
   }
 
+  /* Notification de création des rubriques */
   useEffect(() => {
     if (!loading && toastShown) {
       const createdRubriques = declaration?.rubriques || [];
@@ -241,6 +174,7 @@ export default function DeclarationsClientPage() {
     }
   }, [loading, toastShown, declaration]);
 
+  /* Badge du status de la déclaration */
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -255,11 +189,15 @@ export default function DeclarationsClientPage() {
   };
 
   const handleFilesSelected = (rubriqueId: number, files: File[]) => {
-    setSelectedFiles(prev => [...prev, ...files.map(file => ({file, rubriqueId}))]);
+    setSelectedFiles((prev) => [
+      ...prev,
+      ...files.map((file) => ({ file, rubriqueId })),
+    ]);
   };
 
   const handleFileRemoved = (fileId: string) => {
     // Implement if needed
+    console.log("File removed:", fileId);
   };
 
   const uploadAndSaveDocuments = async () => {
@@ -267,43 +205,46 @@ export default function DeclarationsClientPage() {
       toast.warning("Aucun fichier sélectionné");
       return;
     }
-  
+
     setIsSaving(true);
-  
+
     try {
-      // First upload all files to S3
+      // Upload des fichiers sélectionnés dans le bucket S3 Infomaniak
       const uploadPromises = selectedFiles.map(async (fileData) => {
         const formData = new FormData();
         formData.append("file", fileData.file);
         formData.append("year", declaration?.annee || "");
         formData.append("userId", userId.toString());
         formData.append("rubriqueId", fileData.rubriqueId.toString());
-        formData.append("rubriqueName", 
-          declaration?.rubriques.find(r => r.rubrique_id === fileData.rubriqueId)?.titre || ""
+        formData.append(
+          "rubriqueName",
+          declaration?.rubriques.find(
+            (r) => r.rubrique_id === fileData.rubriqueId
+          )?.titre || ""
         );
-  
+
         const response = await fetch("/api/upload", {
           method: "POST",
           body: formData,
         });
-  
+
         if (!response.ok) {
           throw new Error(`Failed to upload ${fileData.file.name}`);
         }
-  
+
         const result = await response.json();
         return {
           rubrique_id: fileData.rubriqueId,
           nom: result.fileName,
-          type: result.fileType.split('/').pop() || 'other',
+          type: result.fileType.split("/").pop() || "other",
           cheminFichier: result.url,
-          statut: 'pending',
-          sous_rubrique: 'default',
+          statut: "pending",
+          sous_rubrique: "default",
         };
       });
-  
+
       const documentsToSave = await Promise.all(uploadPromises);
-  
+
       // Then save to database
       const saveResponse = await fetch("http://127.0.0.1:8000/api/documents", {
         method: "POST",
@@ -312,25 +253,25 @@ export default function DeclarationsClientPage() {
         },
         body: JSON.stringify({ documents: documentsToSave }),
       });
-  
+
       if (!saveResponse.ok) {
         const errorText = await saveResponse.text();
         throw new Error(`Failed to save documents: ${errorText}`);
       }
-  
+
       // const saveResult = await saveResponse.json();
-  
-      // Clear selected files
-      setSelectedFiles([]);
-  
-      toast.success(`${documentsToSave.length} documents enregistrés avec succès`);
-      
-      // Refresh the declaration data
-      fetchOrCreateRubrique();
+
+      toast.success(
+        `${documentsToSave.length} documents enregistrés avec succès`
+      );
+      setDocumentsSaved(true);
     } catch (error) {
       console.error("Error uploading and saving documents:", error);
       toast.error("Erreur lors de l'enregistrement des documents", {
-        description: error instanceof Error ? error.message : "Une erreur inconnue est survenue",
+        description:
+          error instanceof Error
+            ? error.message
+            : "Une erreur inconnue est survenue",
       });
     } finally {
       setIsSaving(false);
@@ -356,10 +297,14 @@ export default function DeclarationsClientPage() {
   }
 
   return (
-    <>
+    <ProtectedRoute>
       <Toaster position="bottom-right" richColors closeButton />
+      <div className="px-10">
+        <h2 className="text-lg font-semibold px-2">Année de la déclaration</h2>
+        <YearSelector onYearChange={handleYearChange} className="w-full" />
+      </div>
 
-      <div className="p-10">
+      <div className="p-10 pt-5">
         <div className="flex justify-between items-center mb-6">
           <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
           {declaration?.statut && getStatusBadge(declaration.statut)}
@@ -377,16 +322,26 @@ export default function DeclarationsClientPage() {
                 </AccordionTrigger>
                 <AccordionContent>
                   <div className="space-y-6">
-                    <DocumentUpload
-                      userId={userId}
-                      year={declaration.annee}
-                      rubriqueId={rubrique.rubrique_id}
-                      rubriqueName={rubrique.titre}
-                      onFilesSelected={(files) => 
-                        handleFilesSelected(rubrique.rubrique_id, files)
-                      }
-                      onFileRemoved={handleFileRemoved}
-                    />
+                    {documentsSaved ? (
+                      <DocumentList
+                        rubriqueId={rubrique.rubrique_id}
+                        rubriqueName={rubrique.titre}
+                        documents={rubrique.documents || []}
+                        onAddMore={() => setDocumentsSaved(false)}
+                      />
+                    ) : (
+                      <DocumentUpload
+                        userId={userId}
+                        year={declaration.annee}
+                        rubriqueId={rubrique.rubrique_id}
+                        rubriqueName={rubrique.titre}
+                        existingDocuments={rubrique.documents || []}
+                        onFilesSelected={(files) =>
+                          handleFilesSelected(rubrique.rubrique_id, files)
+                        }
+                        onFileRemoved={handleFileRemoved}
+                      />
+                    )}
                   </div>
                 </AccordionContent>
               </AccordionItem>
@@ -402,7 +357,9 @@ export default function DeclarationsClientPage() {
           <div className="fixed bottom-8 right-8 flex items-center gap-2 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
             <span className="text-sm font-medium">
               {selectedFiles.length} document
-              {selectedFiles.length > 1 ? "s" : ""} prêt{selectedFiles.length > 1 ? "s" : ""} à être enregistré{selectedFiles.length > 1 ? "s" : ""}
+              {selectedFiles.length > 1 ? "s" : ""} prêt
+              {selectedFiles.length > 1 ? "s" : ""} à être enregistré
+              {selectedFiles.length > 1 ? "s" : ""}
             </span>
             <Button
               onClick={uploadAndSaveDocuments}
@@ -424,6 +381,6 @@ export default function DeclarationsClientPage() {
           </div>
         )}
       </div>
-    </>
+    </ProtectedRoute>
   );
 }

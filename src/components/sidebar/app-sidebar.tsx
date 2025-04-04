@@ -7,14 +7,12 @@ import {
   LifeBuoy,
   Map,
   PieChart,
-  // Upload,
   Shield,
   FolderOpen,
   SquareUserRound,
 } from "lucide-react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
-// import { NavProjects } from "@/components/sidebar/nav-projects";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
 import { NavUser } from "@/components/sidebar/nav-user";
 import {
@@ -27,94 +25,71 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-const data = {
-  user: {
-    name: "shadcn",
-    email: "m@example.com",
-    avatar: "/avatars/shadcn.jpg",
-  },
-  navMain: [
-    // {
-      // title: "Mes documents",
-      // url: "/browse",
-      // icon: FolderOpen,
-      // items: [
-        // {
-          // title: "Comptabilité",
-          // url: "#",
-        // },
-        // {
-          // title: "Fiscalité",
-          // url: "#",
-        // },
-        // {
-          // title: "Ressources Humaines",
-          // url: "#",
-        // },
-        // {
-          // title: "Administratif",
-          // url: "#",
-        // },
-        // {
-          // title: "Autres",
-          // url: "#",
-        // },
-      // ],
-    // },
-    {
-      title: "Mon compte",
-      url: "/account",
-      icon: SquareUserRound,
-      items: [
-        {
-          title: "Paramètres",
-          url: "/settings",
-        },
-        {
-          title: "Déconnexion",
-          url: "/logout",
-        },
-      ],
-    },
-    {
-      title: "Mes déclarations",
-      url: "/declarations",
-      icon: FolderOpen,
-      items: [],
-    },
-  ],
-  navSecondary: [
-    {
-      title: "Support",
-      url: "mailto:contact@comptarial.ch",
-      icon: LifeBuoy,
-    },
-    {
-      title: "Politique de confidentialité",
-      url: "/privacy-policy",
-      icon: Shield,
-    },
-  ],
-  projects: [
-    {
-      name: "bla",
-      url: "#",
-      icon: Frame,
-    },
-    {
-      name: "bllalala",
-      url: "#",
-      icon: PieChart,
-    },
-    {
-      name: "blalalalass",
-      url: "#",
-      icon: Map,
-    },
-  ],
-};
+import { useUser } from "@/components/context/UserContext"; // Import du UserContext
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { user } = useUser(); // Récupération des informations utilisateur depuis le contexte
+
+  const data = {
+    user: {
+      name: user?.nom || "Username",
+      email: user?.email || "Email",
+      avatar: "/avatars/default.jpg",
+    },
+    navMain: [
+      {
+        title: "Mon compte",
+        url: "/account",
+        icon: SquareUserRound,
+        items: [
+          {
+            title: "Paramètres",
+            url: "/settings",
+          },
+          {
+            title: "Déconnexion",
+            url: "/logout",
+          },
+        ],
+      },
+      {
+        title: "Mes déclarations",
+        url: "/declarations-client",
+        icon: FolderOpen,
+        items: [],
+      },
+    ],
+    navSecondary: [
+      {
+        title: "Support",
+        url: "mailto:contact@comptarial.ch",
+        icon: LifeBuoy,
+      },
+      {
+        title: "Politique de confidentialité",
+        url: "/privacy-policy",
+        icon: Shield,
+      },
+    ],
+    projects: [
+      {
+        name: "bla",
+        url: "#",
+        icon: Frame,
+      },
+      {
+        name: "bllalala",
+        url: "#",
+        icon: PieChart,
+      },
+      {
+        name: "blalalalass",
+        url: "#",
+        icon: Map,
+      },
+    ],
+  };
+
   return (
     <Sidebar variant="inset" {...props} collapsible="icon">
       <SidebarHeader>
@@ -136,7 +111,6 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />
-        {/* <NavProjects projects={data.projects} /> */}
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>

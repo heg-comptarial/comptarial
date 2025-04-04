@@ -177,4 +177,19 @@ class UserController extends Controller
             return response()->json(['message' => 'Erreur : ' . $e->getMessage()], 500);
         }
     }
+
+    public function getDeclarationByYear($userId, $year)
+{
+    // Récupère la déclaration d'un utilisateur spécifique pour une année donnée
+    $declaration = Declaration::where('user_id', $userId)
+        ->where('annee', $year)
+        ->with(['rubriques.documents']) // Inclut les rubriques et documents associés
+        ->first();
+
+    if (!$declaration) {
+        return response()->json(['message' => 'Déclaration non trouvée pour cette année.'], 404);
+    }
+
+    return response()->json($declaration);
+}
 }

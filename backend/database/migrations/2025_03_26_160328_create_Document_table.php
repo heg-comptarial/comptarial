@@ -15,7 +15,7 @@ return new class extends Migration
             $table->bigIncrements('doc_id');
             $table->unsignedBigInteger('rubrique_id')->index('document_rubrique_id_foreign');
             $table->string('nom');
-            $table->enum('type', ['pdf', 'doc', 'xls', 'ppt', 'jpeg', 'jpg', 'png', 'other']);
+            $table->enum('type', ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpeg', 'jpg', 'png', 'other']);
             $table->string('cheminFichier');
             $table->enum('statut', ['pending', 'rejected', 'approved'])->default('pending');
             $table->string('sous_rubrique')->nullable();

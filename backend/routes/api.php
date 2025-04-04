@@ -68,6 +68,9 @@ Route::get('/users/{userId}/declarations/{declarationId}', [UserController::clas
 // Route pour obtenir toutes les déclarations d'un user
 Route::get('/users/{userId}/declarations', [UserController::class, 'getAllDeclarationsByUser']);
 
+// Route pour obtenir la declaration d'un user d'une année spécifique
+Route::get('/users/{userId}/declarations/year/{year}', [UserController::class, 'getDeclarationByYear']);
+
 // Route pour l'authentification
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
