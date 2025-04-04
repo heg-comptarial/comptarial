@@ -1,29 +1,21 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useUser } from "@/components/context/UserContext";
+import type React from "react"
+import { useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Input } from "@/components/ui/input"
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Label } from "@/components/ui/label"
+import Link from "next/link"
+import { Eye, EyeOff } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export default function LoginPage() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [showPassword, setShowPassword] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const router = useRouter();
-  const { fetchUserData } = useUser(); // Accéder à la fonction pour mettre à jour le contexte
+  const [email, setEmail] = useState("")
+  const [password, setPassword] = useState("")
+  const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,8 +37,8 @@ export default function LoginPage() {
 
       if (response.ok) {
         // Si la connexion réussit, on stocke le token d'authentification
-        localStorage.setItem("auth_token", data.token);
-        fetchUserData(data.user.user_id); // Récupérer les données utilisateur
+        localStorage.setItem("auth_token", data.token)
+        localStorage.setItem("user_id", data.user.user_id)
 
         // Redirection vers la page des utilisateurs (ou dashboard)
         if (data.user.role === "admin") {

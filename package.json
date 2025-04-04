@@ -48,16 +48,34 @@
   "devDependencies": {
     "@eslint/eslintrc": "^3",
     "@tailwindcss/postcss": "^4",
+<<<<<<< HEAD
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.2.0",
+=======
+<<<<<<< Updated upstream
+=======
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.3.0",
+    "@testing-library/user-event": "^14.6.1",
+>>>>>>> Stashed changes
+>>>>>>> origin/sprint2.1-christopher
     "@types/node": "^20.17.24",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "@vitejs/plugin-react": "^4.3.4",
     "eslint": "^9",
     "eslint-config-next": "15.2.1",
+<<<<<<< HEAD
     "happy-dom": "^17.4.4",
     "jsdom": "^26.0.0",
+=======
+<<<<<<< Updated upstream
+=======
+    "happy-dom": "^17.4.4",
+    "jest": "^29.7.0",
+    "jsdom": "^26.0.0",
+>>>>>>> Stashed changes
+>>>>>>> origin/sprint2.1-christopher
     "tailwindcss": "^4",
     "typescript": "^5",
     "vite": "^6.2.4",

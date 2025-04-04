@@ -7,11 +7,9 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { UserProvider } from "@/components/context/UserContext";
 
 export default function Home() {
   return (
-    <UserProvider>
     <div className="min-h-screen flex flex-col">
       {/* Header */}
       <header className="border-b bg-white fixed top-0 left-0 w-full z-50 shadow-md">
@@ -50,10 +48,10 @@ export default function Home() {
             {/* Auth Buttons */}
             <div className="hidden md:flex items-center gap-4">
               <Link href="/connexion">
-                <Button variant="outline">Se connecter</Button>
+                <Button data-testid="signin-button" variant="outline">Se connecter</Button>
               </Link>
               <Link href="/inscription">
-                <Button>S&apos;inscrire</Button>
+                <Button data-testid="signup-button">S&apos;inscrire</Button>
               </Link>
             </div>
           </div>
@@ -268,6 +266,5 @@ export default function Home() {
         </div>
       </footer>
     </div>
-    </UserProvider>
   );
 }

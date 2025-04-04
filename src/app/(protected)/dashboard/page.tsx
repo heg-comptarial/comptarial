@@ -3,16 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { FileText, Edit } from "lucide-react";
 import ProtectedRoute from "@/components/ProtectedRoute";  // Importer le composant
-import { useUser } from "@/components/context/UserContext";
 
 export default function Dashboard() {
-  const { user } = useUser();
-
-  console.log("User in dashboard:", user);
-  if (!user) {
-    return <div>Veuillez vous connecter pour accéder au tableau de bord.</div>;
-  } 
-
   return (
     <ProtectedRoute>
       <div className="container mx-auto py-10 px-4 max-w-3xl">
