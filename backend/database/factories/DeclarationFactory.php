@@ -21,7 +21,7 @@ class DeclarationFactory extends Factory
         return [
             'user_id' => User::factory(), // Associe un utilisateur à la déclaration
             'titre' => $this->faker->sentence, // Génère un titre aléatoire
-            'statut' => $this->faker->randomElement(['en attente', 'approuvé', 'rejeté']), // Statut aléatoire
+            'statut' => $this->faker->randomElement(['pending', 'approved', 'rejected']), // Statut aléatoire
             'annee' => $this->faker->year, // Génère une année aléatoire
             'dateCreation' => $this->faker->dateTimeThisDecade, // Génère une date de création aléatoire dans cette décennie
         ];

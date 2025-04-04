@@ -20,7 +20,7 @@ class AdministrateurFactory extends Factory
     {
         return [
             'user_id' => User::factory(), // Crée un utilisateur lié à cet administrateur
-            'niveauAcces' => $this->faker->randomElement(['admin', 'superadmin']), // Exemple de valeurs pour niveauAcces
+            'niveauAcces' => $this->faker->randomElement(['admin', 'super_admin']), // Exemple de valeurs pour niveauAcces
         ];
     }
 }

@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('Administrateur', function (Blueprint $table) {
             $table->bigIncrements('admin_id');
-            $table->unsignedBigInteger('user_id')->index('administrateur_user_id_foreign');
+            $table->unsignedBigInteger('user_id')->index('administrateur_user_id_foreign')->constrained()->unique();
             $table->enum('niveauAcces', ['admin', 'super_admin'])->default('admin');
         });
     }

@@ -21,7 +21,7 @@ class UserFactory extends Factory
             'codePostal' => $this->faker->postcode,
             'numeroTelephone' => $this->faker->phoneNumber,
             'role' => $this->faker->randomElement(['admin', 'prive', 'entreprise']),
-            'statut' => $this->faker->randomElement(['approved', 'rejected', 'pending']),
+            'statut' => $this->faker->randomElement(['approved']),
             'dateCreation' => now(),
         ];
     }

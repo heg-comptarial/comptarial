@@ -20,7 +20,7 @@ class PriveFactory extends Factory
     {
         return [
             'user_id' => User::factory(), // Associe un utilisateur à la table "prive"
-            'dateNaissance' => $this->faker->dateOfBirth, // Génère une date de naissance aléatoire
+            'dateNaissance' => $this->faker->date, // Génère une date de naissance aléatoire
             'nationalite' => $this->faker->country, // Génère une nationalité aléatoire
             'etatCivil' => $this->faker->randomElement(['Célibataire', 'Marié', 'Divorcé', 'Veuf']), // Génère un état civil aléatoire
             'fo_banques' => $this->faker->boolean, // Génère une valeur booléenne aléatoire
