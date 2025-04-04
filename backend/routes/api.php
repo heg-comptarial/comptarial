@@ -14,6 +14,7 @@ use App\Http\Controllers\PriveController;
 use App\Http\Controllers\ConjointController;
 use App\Http\Controllers\EnfantController;
 use App\Http\Controllers\EntrepriseController;
+use Illuminate\Support\Facades\Crypt;
 
 
 // Routes pour les utilisateurs
@@ -70,4 +71,26 @@ Route::get('/users/{userId}/declarations', [UserController::class, 'getAllDeclar
 
 // Route pour l'authentification
 Route::post('login', [AuthController::class, 'login']);
-Route::post('logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
+Route::post('logout', [AuthController::class, 'logout'])->middleware("auth:sanctum");
+
+// Route pour trouver un user prive avec l'id user
+Route::get('/prives/users/{userId}', [PriveController::class, 'getPriveByUserId']);
+
+
+Route::get('/auth/user', function (Request $request){
+    // Lire le cookie 'user_id' crypté
+    $encryptedUserId = $request->cookie('user_id');
+
+    // Décrypter le cookie
+    try {
+        $userId = Crypt::decrypt($encryptedUserId);  // Décryptage du user_id
+    } catch (\Exception $e) {
+        // Si le cookie est corrompu ou invalide
+        return response()->json(['error' => 'Cookie invalide ou corrompu'], 400);
+    }
+
+    // Retourner l'ID utilisateur décrypté
+    return response()->json([
+        'user_id' => $userId
+    ]);
+})->middleware("auth:sanctum");

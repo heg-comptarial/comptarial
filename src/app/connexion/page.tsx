@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label"
 import Link from "next/link"
 import { Eye, EyeOff } from "lucide-react"
 import { useRouter } from "next/navigation"
+import axios from "axios"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -19,31 +20,33 @@ export default function LoginPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-
+  
     // On envoie la requête POST à l'API backend Laravel pour l'authentification
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/login",
+        {
           email,
           password,
-        }),
-      })
-
-      const data = await response.json()
-
-      if (response.ok) {
-        // Si la connexion réussit, on stocke le token d'authentification
-        localStorage.setItem("auth_token", data.token)
-
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+          },
+          withCredentials: true,
+        }
+      )
+  
+      // Si la connexion réussit, on stocke le token d'authentification
+      if (response.status === 200) {
+        // Le token peut être dans la réponse de la requête sous data.token
+        localStorage.setItem("auth_token", response.data.token)
+  
         // Redirection vers la page des utilisateurs (ou dashboard)
         router.push("/dashboard")
       } else {
         // Si la connexion échoue, on affiche une erreur
-        setError(data.message || "Une erreur s'est produite.")
+        setError(response.data.message || "Une erreur s'est produite.")
       }
     } catch (err) {
       console.error(err)

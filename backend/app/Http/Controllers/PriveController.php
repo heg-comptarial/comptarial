@@ -80,4 +80,15 @@ class PriveController extends Controller
         $prive->delete();
         return response()->json(null, 204);
     }
+
+    public function getPriveByUserId($userId)
+    {
+        $prive = Prive::where('user_id', $userId)->first();
+
+        if (!$prive) {
+            return response()->json(['message' => 'Aucun enregistrement trouvé'], 404);
+        }
+
+        return response()->json($prive);
+    }
 }

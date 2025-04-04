@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
+import axios from "axios";
 
 export default function DashboardLayout({
   children,
@@ -35,27 +36,30 @@ export default function DashboardLayout({
   // Fonction de déconnexion
   const handleLogout = async () => {
     try {
-      const response = await fetch('http://localhost:8000/api/logout', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${localStorage.getItem('auth_token')}`, // Utilise le token stocké
-        },
-        credentials: 'include', // Pour inclure les cookies si nécessaires
-      });
+      const response = await axios.post(
+        "http://localhost:8000/api/logout",
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`, // Utilisation du token stocké
+          },
+          withCredentials: true, // Assure l'envoi des cookies de session si nécessaires
+        }
+      );
   
-      if (response.ok) {
-        console.log('Déconnexion réussie');
-        localStorage.removeItem('auth_token'); // Supprime le token d'authentification
-        router.push('/connexion'); // Redirection vers la page de connexion
+      if (response.status === 200) {
+        console.log("Déconnexion réussie");
+        localStorage.removeItem("auth_token"); // Supprime le token d'authentification
+        router.push("/connexion"); // Redirection vers la page de connexion
       } else {
-        const errorData = await response.json();
-        console.error('Erreur lors de la déconnexion', errorData);
+        console.error("Erreur lors de la déconnexion", response.data);
       }
     } catch (error) {
-      console.error('Erreur réseau lors de la déconnexion', error);
+      console.error("Erreur réseau lors de la déconnexion", error);
     }
   };
+  
   
 
   return (
