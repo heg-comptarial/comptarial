@@ -15,60 +15,18 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/
 import { Loader2 } from "lucide-react"
 import axios from "axios"
 
-export default function FormulaireDeclaration() {
+interface FormulaireDeclarationProps {
+  onSubmitSuccess?: (formData: any) => Promise<boolean>
+  priveId?: number | null
+}
+
+export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null }: FormulaireDeclarationProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
+  const [isDataLoading, setIsDataLoading] = useState(!!priveId)
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState(1)
   const [userId, setUserId] = useState<number | null>(null)
-  const [priveId, setPriveId] = useState<number | null>(null)
-
-  // Récupérer l'ID de l'utilisateur au chargement
-  useEffect(() => {
-    const fetchUserData = async () => {
-      try {
-        const token = localStorage.getItem("auth_token")
-        if (!token) {
-          router.push("/connexion")
-          return
-        }
-
-        // Récupérer l'ID utilisateur depuis un endpoint Laravel
-        const userIdResponse = await axios.get("http://127.0.0.1:8000/api/auth/user", {
-          withCredentials: true, // Indispensable pour que Laravel envoie le cookie !
-        });
-
-        if (userIdResponse.data && userIdResponse.data.user_id) {
-          setUserId(userIdResponse.data.user_id);
-          console.log("User ID from API:", userIdResponse.data.user_id);
-        } else {
-          console.log("PAS TROUVE");
-          return;
-        }
-
-        // Récupérer les informations privées de l'utilisateur
-        const priveResponse = await axios.get(`http://127.0.0.1:8000/api/prives/users/${userIdResponse.data.user_id}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-          withCredentials: true,
-        });
-
-        if (priveResponse.data && priveResponse.data.prive_id) {
-          setPriveId(priveResponse.data.prive_id);
-        } else {
-          console.log("Pas de privé trouvé pour cet utilisateur");
-        }
-        
-      } catch (error) {
-        console.error("Erreur lors de la récupération des données utilisateur:", error);
-        router.push("/connexion");
-      }
-    };
-
-    fetchUserData();
-  }, [router]);
-
 
   // Informations de base
   const [infoBase, setInfoBase] = useState({
@@ -107,7 +65,9 @@ export default function FormulaireDeclaration() {
   })
 
   // État pour les rubriques du formulaire
-  const [formSections, setFormSections] = useState({
+  const [formSections, setFormSections] = useState<{
+    [key: string]: boolean
+  }>({
     fo_banques: false,
     fo_dettes: false,
     fo_immobiliers: false,
@@ -120,6 +80,124 @@ export default function FormulaireDeclaration() {
     fo_autreDeduction: false,
     fo_autreInformations: false,
   })
+
+  // Fonction pour formater une date au format YYYY-MM-DD
+  const formatDate = (dateString: string): string => {
+    if (!dateString) return ""
+
+    try {
+      // Si la date est déjà au format YYYY-MM-DD, la retourner telle quelle
+      if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
+        return dateString
+      }
+
+      // Sinon, essayer de la convertir
+      const date = new Date(dateString)
+      if (!isNaN(date.getTime())) {
+        return date.toISOString().split("T")[0]
+      }
+    } catch (e) {
+      console.error("Erreur lors de la conversion de la date:", e)
+    }
+
+    return ""
+  }
+
+  // Récupérer les données de l'utilisateur et les données du privé si disponibles
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const token = localStorage.getItem("auth_token")
+        if (!token) {
+          router.push("/connexion")
+          return
+        }
+
+        // Récupérer l'ID utilisateur depuis localStorage
+        const userIdResponse = Number(localStorage.getItem("user_id"))
+        if (!userIdResponse) {
+          router.push("/connexion")
+          return
+        }
+
+        setUserId(userIdResponse)
+
+        // Si nous avons un priveId, récupérer les données du privé
+        if (priveId) {
+          try {
+            const priveResponse = await axios.get(`http://127.0.0.1:8000/api/prives/${priveId}`, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
+            })
+
+            if (priveResponse.data) {
+              console.log("Données du privé récupérées:", priveResponse.data)
+
+              // Pré-remplir les informations de base
+              setInfoBase({
+                dateNaissance: formatDate(priveResponse.data.dateNaissance || ""),
+                nationalite: priveResponse.data.nationalite || "",
+                etatCivil: priveResponse.data.etatCivil || "celibataire",
+              })
+
+              // Pré-remplir les sections du formulaire (fo_*)
+              const sections = { ...formSections }
+              Object.keys(formSections).forEach((key) => {
+                if (priveResponse.data[key] !== undefined) {
+                  sections[key] = Boolean(priveResponse.data[key])
+                }
+              })
+              setFormSections(sections)
+
+              // Vérifier et pré-remplir les informations du conjoint
+              if (priveResponse.data.conjoints && priveResponse.data.conjoints.length > 0) {
+                const conjoint = priveResponse.data.conjoints[0]
+                setConjointInfo({
+                  nom: conjoint.nom || "",
+                  prenom: conjoint.prenom || "",
+                  dateNaissance: formatDate(conjoint.dateNaissance || ""),
+                  nationalite: conjoint.nationalite || "",
+                  adresse: conjoint.adresse || "",
+                  localite: conjoint.localite || "",
+                  codePostal: conjoint.codePostal || "",
+                  situationProfessionnelle: conjoint.situationProfessionnelle || "",
+                })
+              }
+
+              // Vérifier et pré-remplir les informations des enfants
+              if (priveResponse.data.enfants && priveResponse.data.enfants.length > 0) {
+                setHasEnfants(true)
+                const formattedEnfants = priveResponse.data.enfants.map((enfant: any) => ({
+                  nom: enfant.nom || "",
+                  prenom: enfant.prenom || "",
+                  dateNaissance: formatDate(enfant.dateNaissance || ""),
+                  adresse: enfant.adresse || "",
+                  codePostal: enfant.codePostal || "",
+                  localite: enfant.localite || "",
+                  noAVS: enfant.noAVS || "",
+                  noContribuable: enfant.noContribuable || "",
+                  revenuBrut: enfant.revenuBrut?.toString() || "",
+                  fortuneNet: enfant.fortuneNet?.toString() || "",
+                }))
+                setEnfants(formattedEnfants)
+              }
+            }
+          } catch (error) {
+            console.error("Erreur lors de la récupération des données du privé:", error)
+            setError("Une erreur est survenue lors de la récupération de vos données.")
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données:", error)
+        setError("Une erreur est survenue lors de la récupération de vos données.")
+      } finally {
+        setIsDataLoading(false)
+      }
+    }
+
+    fetchData()
+  }, [router, priveId])
 
   // Gestion des changements dans les informations de base
   const handleInfoBaseChange = (name: string, value: string) => {
@@ -214,11 +292,12 @@ export default function FormulaireDeclaration() {
 
     try {
       const token = localStorage.getItem("auth_token")
-      if (!token) {
+      const userId = Number(localStorage.getItem("user_id"))
+
+      if (!token || !userId) {
         router.push("/connexion")
         return
       }
-      console.log("TTT"+userId)
 
       // 1. Mettre à jour le privé avec les nouvelles informations
       if (priveId) {
@@ -240,6 +319,7 @@ export default function FormulaireDeclaration() {
         })
 
         // 2. Gérer le conjoint si marié ou pacsé
+        let conjointId = null
         if (infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse") {
           const conjointData = {
             prive_id: priveId,
@@ -247,15 +327,20 @@ export default function FormulaireDeclaration() {
           }
 
           // Création du conjoint
-          await axios.post("http://127.0.0.1:8000/api/conjoints", conjointData, {
+          const conjointResponse = await axios.post("http://127.0.0.1:8000/api/conjoints", conjointData, {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
           })
+
+          if (conjointResponse.data && conjointResponse.data.id) {
+            conjointId = conjointResponse.data.id
+          }
         }
 
         // 3. Gérer les enfants si l'utilisateur a des enfants
+        const enfantIds: number[] = []
         if (hasEnfants && enfants.length > 0) {
           // Créer tous les enfants
           for (const enfant of enfants) {
@@ -264,19 +349,49 @@ export default function FormulaireDeclaration() {
               ...enfant,
             }
 
-            await axios.post("http://127.0.0.1:8000/api/enfants", enfantData, {
+            const enfantResponse = await axios.post("http://127.0.0.1:8000/api/enfants", enfantData, {
               headers: {
                 Authorization: `Bearer ${token}`,
                 "Content-Type": "application/json",
               },
             })
+
+            if (enfantResponse.data && enfantResponse.data.id) {
+              enfantIds.push(enfantResponse.data.id)
+            }
           }
         }
 
-        console.log("Formulaire soumis avec succès")
+        // 4. Préparer les données complètes pour la déclaration
+        const formData = {
+          user_id: userId,
+          titre: `Déclaration ${new Date().getFullYear()}`,
+          statut: "pending",
+          annee: new Date().getFullYear().toString(),
+          dateCreation: new Date().toISOString(),
+          priveData: priveData,
+          conjoint: conjointId ? { id: conjointId, ...conjointInfo } : null,
+          enfants: enfantIds.length > 0 ? enfants.map((enfant, index) => ({ id: enfantIds[index], ...enfant })) : [],
+        }
 
-        // Rediriger vers le dashboard
-        router.push("/dashboard")
+        // 5. Si un callback onSubmitSuccess est fourni, l'appeler
+        if (onSubmitSuccess) {
+          const success = await onSubmitSuccess(formData)
+          if (success) {
+            return // Le callback gère la redirection
+          }
+        } else {
+          // Sinon, créer directement la déclaration
+          await axios.post("http://127.0.0.1:8000/api/declarations", formData, {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          })
+
+          // Rediriger vers le dashboard
+          router.push("/dashboard")
+        }
       } else {
         setError("Impossible de trouver votre profil. Veuillez contacter l'administrateur.")
       }
@@ -291,6 +406,23 @@ export default function FormulaireDeclaration() {
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Afficher un écran de chargement pendant la récupération des données
+  if (isDataLoading) {
+    return (
+      <div className="container max-w-3xl py-8">
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-2xl font-bold">Chargement de vos données</CardTitle>
+          </CardHeader>
+          <CardContent className="flex flex-col items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin mb-4" />
+            <p>Récupération de vos informations en cours...</p>
+          </CardContent>
+        </Card>
+      </div>
+    )
   }
 
   // Rendu de l'étape 1: Informations de base
