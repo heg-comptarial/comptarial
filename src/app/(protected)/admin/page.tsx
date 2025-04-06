@@ -1,29 +1,36 @@
-"use client"
+"use client";
 
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Edit, Search, UserPlus, Users } from "lucide-react"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import ProtectedRouteAdmin from "@/components/ProtectedRouteAdmin"
+import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Edit, Search, UserPlus, Users } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
+import ProtectedRouteAdmin from "@/components/ProtectedRouteAdmin";
 
 interface User {
-  user_id: number
-  nom: string
-  email: string
-  numeroTelephone: string
-  localite: string
-  adresse: string
-  codePostal: string
-  role: string
-  statut: string
-  dateCreation: string
+  user_id: number;
+  nom: string;
+  email: string;
+  numeroTelephone: string;
+  localite: string;
+  adresse: string;
+  codePostal: string;
+  role: string;
+  statut: string;
+  dateCreation: string;
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
 // Configuration par défaut pour les requêtes fetch
 const fetchConfig = {
@@ -35,414 +42,451 @@ const fetchConfig = {
   },
   // Ne pas inclure credentials pour éviter les problèmes CORS
   // credentials: "include"
-}
+};
 
 export default function Dashboard() {
-  const [message, setMessage] = useState("")
-  const [users, setUsers] = useState<User[]>([])
-  const [loading, setLoading] = useState(false)
-  const [searchTerm, setSearchTerm] = useState("")
-  const [activeTab, setActiveTab] = useState("general")
-
-  useEffect(() => {
-    fetch(`${API_URL}/test`, fetchConfig)
-      .then((response) => response.json())
-      .then((data) => setMessage(data.message))
-      .catch((error) => console.error("Erreur:", error))
-  })
+  const [users, setUsers] = useState<User[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("general");
 
   const fetchPendingUsers = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/users/status/pending`, fetchConfig)
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+      const response = await fetch(
+        `${API_URL}/users/status/pending`,
+        fetchConfig
+      );
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
 
-      const data = await response.json()
-      setUsers(data)
+      const data = await response.json();
+      setUsers(data);
     } catch (error) {
-      console.error("Erreur lors du chargement des demandes:", error)
+      console.error("Erreur lors du chargement des demandes:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const fetchApprovedUsers = async () => {
-    setLoading(true)
+    setLoading(true);
     try {
-      const response = await fetch(`${API_URL}/users/status/approved`, fetchConfig)
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+      const response = await fetch(
+        `${API_URL}/users/status/approved`,
+        fetchConfig
+      );
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
 
-      const data = await response.json()
-      setUsers(data)
+      const data = await response.json();
+      setUsers(data);
     } catch (error) {
-      console.error("Erreur lors du chargement des clients:", error)
+      console.error("Erreur lors du chargement des clients:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const approveUser = async (userId: number, role: string) => {
     try {
       const response = await fetch(`${API_URL}/users/${userId}/approve`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ role: role }),
-        });
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ role: role }),
+      });
 
-        if (response.ok) {
-            console.log("Utilisateur approuvé avec succès.");
-            // Rafraîchir la liste des utilisateurs en attente ou faire d'autres actions
-        } else {
-            const data = await response.json();
-            console.log("Erreur : ", data.message);
-        }
+      if (response.ok) {
+        console.log("Utilisateur approuvé avec succès.");
+        // Rafraîchir la liste des utilisateurs en attente ou faire d'autres actions
+      } else {
+        const data = await response.json();
+        console.log("Erreur : ", data.message);
+      }
     } catch (error) {
-        console.error("Erreur lors de l'approbation de l'utilisateur :", error);
+      console.error("Erreur lors de l'approbation de l'utilisateur :", error);
     }
   };
-
 
   const searchUsers = async () => {
     if (!searchTerm.trim()) {
       // Si la recherche est vide, on recharge les utilisateurs selon l'onglet actif
       if (activeTab === "demandes") {
-        fetchPendingUsers()
+        fetchPendingUsers();
       } else if (activeTab === "clients") {
-        fetchApprovedUsers()
+        fetchApprovedUsers();
       }
-      return
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const statut = activeTab === "demandes" ? "pending" : "approved"
+      const statut = activeTab === "demandes" ? "pending" : "approved";
       const response = await fetch(
-        `${API_URL}/users/search?q=${encodeURIComponent(searchTerm)}&statut=${statut}`,
-        fetchConfig,
-      )
+        `${API_URL}/users/search?q=${encodeURIComponent(
+          searchTerm
+        )}&statut=${statut}`,
+        fetchConfig
+      );
 
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
 
-      const data = await response.json()
-      setUsers(data)
+      const data = await response.json();
+      setUsers(data);
     } catch (error) {
-      console.error("Erreur lors de la recherche des utilisateurs:", error)
+      console.error("Erreur lors de la recherche des utilisateurs:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const getStatusClass = (status: string) => {
     switch (status) {
       case "approved":
-        return "bg-green-100 text-green-800"
+        return "bg-green-100 text-green-800";
       case "pending":
-        return "bg-yellow-100 text-yellow-800"
+        return "bg-yellow-100 text-yellow-800";
       case "rejected":
-        return "bg-red-100 text-red-800"
+        return "bg-red-100 text-red-800";
       default:
-        return "bg-gray-100 text-gray-800"
+        return "bg-gray-100 text-gray-800";
     }
-  }
+  };
 
   const getStatusLabel = (status: string) => {
     switch (status) {
       case "approved":
-        return "Accepté"
+        return "Accepté";
       case "pending":
-        return "En attente"
+        return "En attente";
       case "rejected":
-        return "Refusé"
+        return "Refusé";
       default:
-        return status
+        return status;
     }
-  }
+  };
 
   const handleTabChange = (value: string) => {
-    setActiveTab(value)
-    setSearchTerm("")
+    setActiveTab(value);
+    setSearchTerm("");
 
     if (value === "demandes") {
-      fetchPendingUsers()
+      fetchPendingUsers();
     } else if (value === "clients") {
-      fetchApprovedUsers()
+      fetchApprovedUsers();
     }
-  }
+  };
 
   const updateUserStatus = async (userId: number, newStatus: string) => {
     const previousUsers = users; // Sauvegarde de l'état actuel
 
-      try {
-          // Supprime immédiatement l'utilisateur de la liste pour un effet optimiste
-          setUsers((prevUsers) => prevUsers.filter((user) => user.user_id !== userId));
+    try {
+      // Supprime immédiatement l'utilisateur de la liste pour un effet optimiste
+      setUsers((prevUsers) =>
+        prevUsers.filter((user) => user.user_id !== userId)
+      );
 
-          // Envoi de la requête au backend
-          const response = await fetch(`${API_URL}/users/${userId}`, {
-              method: "PATCH",
-              ...fetchConfig,
-              body: JSON.stringify({ statut: newStatus }),
-          });
+      // Envoi de la requête au backend
+      const response = await fetch(`${API_URL}/users/${userId}`, {
+        method: "PATCH",
+        ...fetchConfig,
+        body: JSON.stringify({ statut: newStatus }),
+      });
 
-          if (!response.ok) {
-              const errorData = await response.json();
-              throw new Error(errorData.message || `HTTP error! Status: ${response.status}`);
-          }
-
-          console.log("Statut mis à jour avec succès");
-
-          // Recharger uniquement si nécessaire
-          if (activeTab === "demandes") {
-              fetchPendingUsers(); // Recharge uniquement les utilisateurs en attente
-          }
-      } catch (error) {
-          console.error("Erreur lors de la mise à jour du statut:", error);
-          setUsers(previousUsers); // Rétablir la liste en cas d'échec
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(
+          errorData.message || `HTTP error! Status: ${response.status}`
+        );
       }
+
+      console.log("Statut mis à jour avec succès");
+
+      // Recharger uniquement si nécessaire
+      if (activeTab === "demandes") {
+        fetchPendingUsers(); // Recharge uniquement les utilisateurs en attente
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du statut:", error);
+      setUsers(previousUsers); // Rétablir la liste en cas d'échec
+    }
   };
 
-
   const deleteUser = async (userId: number, userName: string) => {
-    if (!confirm(`Êtes-vous sûr de vouloir refuser et supprimer l'utilisateur ${userName} ?`)) {
-      return
+    if (
+      !confirm(
+        `Êtes-vous sûr de vouloir refuser et supprimer l'utilisateur ${userName} ?`
+      )
+    ) {
+      return;
     }
 
     try {
       // Optimistic UI update - Supprimer immédiatement l'utilisateur de la liste
-      setUsers((prevUsers) => prevUsers.filter((user) => user.user_id !== userId))
+      setUsers((prevUsers) =>
+        prevUsers.filter((user) => user.user_id !== userId)
+      );
 
       // Envoyer la requête au backend
       const response = await fetch(`${API_URL}/users/${userId}`, {
         method: "DELETE",
         ...fetchConfig,
-      })
+      });
 
       if (!response.ok) {
         // En cas d'erreur, recharger la liste pour restaurer l'état
-        throw new Error(`HTTP error! Status: ${response.status}`)
+        throw new Error(`HTTP error! Status: ${response.status}`);
       }
 
       // Pas besoin de recharger la liste car nous avons déjà mis à jour l'UI
     } catch (error) {
-      console.error("Erreur lors de la suppression de l'utilisateur:", error)
+      console.error("Erreur lors de la suppression de l'utilisateur:", error);
       // En cas d'erreur, recharger la liste pour restaurer l'état correct
-      fetchPendingUsers()
+      fetchPendingUsers();
     }
-  }
+  };
 
   return (
     <ProtectedRouteAdmin>
-    <div className="container mx-auto py-10 px-4 max-w-5xl">
-      <h1 className="text-2xl font-semibold mb-8">
-        Tableau de bord administrateur
-        <p className="text-sm text-muted-foreground mt-2">Backend Response: {message}</p>
-      </h1>
+      <div className="container mx-auto py-10 px-4 max-w-full">
+        <h1 className="text-2xl font-semibold mb-8">
+          Tableau de bord administrateur
+        </h1>
 
-      <Tabs defaultValue="general" className="w-full" onValueChange={handleTabChange}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="general">Infos générales</TabsTrigger>
-          <TabsTrigger value="demandes">
-            <UserPlus className="h-4 w-4 mr-2" />
-            Mes Demandes
-          </TabsTrigger>
-          <TabsTrigger value="clients">
-            <Users className="h-4 w-4 mr-2" />
-            Mes Clients
-          </TabsTrigger>
-        </TabsList>
+        <Tabs
+          defaultValue="general"
+          className="w-full"
+          onValueChange={handleTabChange}
+        >
+          <TabsList className="mb-6">
+            <TabsTrigger value="general">Infos générales</TabsTrigger>
+            <TabsTrigger value="demandes">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Mes Demandes
+            </TabsTrigger>
+            <TabsTrigger value="clients">
+              <Users className="h-4 w-4 mr-2" />
+              Mes Clients
+            </TabsTrigger>
+          </TabsList>
 
-        <TabsContent value="general">
-          <Card>
-            <CardContent className="pt-6">
-              <p>Contenu des informations générales</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
+          <TabsContent value="general">
+            <Card>
+              <CardContent className="pt-6">
+                <p>Contenu des informations générales</p>
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="demandes">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-medium">Nouvelles demandes</h2>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="search"
-                      placeholder="Rechercher..."
-                      className="pl-8 w-[200px]"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && searchUsers()}
-                    />
+          <TabsContent value="demandes">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-medium">Nouvelles demandes</h2>
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="search"
+                        placeholder="Rechercher..."
+                        className="pl-8 w-[200px]"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && searchUsers()}
+                      />
+                    </div>
+                    <Button size="sm" onClick={searchUsers}>
+                      Rechercher
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={fetchPendingUsers}
+                      disabled={loading}
+                    >
+                      {loading ? "Chargement..." : "Toutes les demandes"}
+                    </Button>
                   </div>
-                  <Button size="sm" onClick={searchUsers}>
-                    Rechercher
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={fetchPendingUsers} disabled={loading}>
-                    {loading ? "Chargement..." : "Toutes les demandes"}
-                  </Button>
                 </div>
-              </div>
 
-              {loading ? (
-                <div className="flex justify-center py-8">Chargement des demandes...</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Téléphone</TableHead>
-                      <TableHead>Localité</TableHead>
-                      <TableHead>Rôle</TableHead>
-                      <TableHead>Date de création</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.length > 0 ? (
-                      users.map((user) => (
-                        <TableRow key={user.user_id}>
-                          <TableCell>{user.user_id}</TableCell>
-                          <TableCell>{user.nom}</TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>{user.numeroTelephone}</TableCell>
-                          <TableCell>{user.localite}</TableCell>
-                          <TableCell>{user.role}</TableCell>
-                          <TableCell>{new Date(user.dateCreation).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={`${getStatusClass(user.statut)}`}>
-                              {getStatusLabel(user.statut)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right space-x-1">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
-                              onClick={() => {
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    Chargement des demandes...
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Téléphone</TableHead>
+                        <TableHead>Localité</TableHead>
+                        <TableHead>Rôle</TableHead>
+                        <TableHead>Date de création</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.length > 0 ? (
+                        users.map((user) => (
+                          <TableRow key={user.user_id}>
+                            <TableCell>{user.user_id}</TableCell>
+                            <TableCell>{user.nom}</TableCell>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>{user.numeroTelephone}</TableCell>
+                            <TableCell>{user.localite}</TableCell>
+                            <TableCell>{user.role}</TableCell>
+                            <TableCell>
+                              {new Date(user.dateCreation).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={`${getStatusClass(user.statut)}`}
+                              >
+                                {getStatusLabel(user.statut)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right space-x-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
+                                onClick={() => {
+                                  // Mettre à jour le statut de l'utilisateur (en passant "approved")
+                                  updateUserStatus(user.user_id, "approved");
 
-                                // Mettre à jour le statut de l'utilisateur (en passant "approved")
-                                updateUserStatus(user.user_id, "approved")
-
-                                // Puis, associer l'utilisateur à l'entité correspondante (Prive ou Entreprise)
-                                approveUser(user.user_id, user.role);
-                                
-                              }}
-                            >
-                              Accepter
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
-                              onClick={() => deleteUser(user.user_id, user.nom)}
-                            >
-                              Refuser
-                            </Button>
+                                  // Puis, associer l'utilisateur à l'entité correspondante (Prive ou Entreprise)
+                                  approveUser(user.user_id, user.role);
+                                }}
+                              >
+                                Accepter
+                              </Button>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
+                                onClick={() =>
+                                  deleteUser(user.user_id, user.nom)
+                                }
+                              >
+                                Refuser
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center py-4">
+                            Aucune demande en attente
                           </TableCell>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center py-4">
-                          Aucune demande en attente
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
 
-        <TabsContent value="clients">
-          <Card>
-            <CardContent className="pt-6">
-              <div className="flex justify-between items-center mb-4">
-                <h2 className="text-xl font-medium">Liste des clients</h2>
-                <div className="flex items-center gap-2">
-                  <div className="relative">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="search"
-                      placeholder="Rechercher..."
-                      className="pl-8 w-[200px]"
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      onKeyDown={(e) => e.key === "Enter" && searchUsers()}
-                    />
+          <TabsContent value="clients">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <h2 className="text-xl font-medium">Liste des clients</h2>
+                  <div className="flex items-center gap-2">
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="search"
+                        placeholder="Rechercher..."
+                        className="pl-8 w-[200px]"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && searchUsers()}
+                      />
+                    </div>
+                    <Button size="sm" onClick={searchUsers}>
+                      Rechercher
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={fetchApprovedUsers}
+                      disabled={loading}
+                    >
+                      {loading ? "Chargement..." : "Tous les clients"}
+                    </Button>
                   </div>
-                  <Button size="sm" onClick={searchUsers}>
-                    Rechercher
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={fetchApprovedUsers} disabled={loading}>
-                    {loading ? "Chargement..." : "Tous les clients"}
-                  </Button>
                 </div>
-              </div>
 
-              {loading ? (
-                <div className="flex justify-center py-8">Chargement des clients...</div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>ID</TableHead>
-                      <TableHead>Nom</TableHead>
-                      <TableHead>Email</TableHead>
-                      <TableHead>Téléphone</TableHead>
-                      <TableHead>Localité</TableHead>
-                      <TableHead>Rôle</TableHead>
-                      <TableHead>Date de création</TableHead>
-                      <TableHead>Statut</TableHead>
-                      <TableHead className="text-right">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {users.length > 0 ? (
-                      users.map((user) => (
-                        <TableRow key={user.user_id}>
-                          <TableCell>{user.user_id}</TableCell>
-                          <TableCell>{user.nom}</TableCell>
-                          <TableCell>{user.email}</TableCell>
-                          <TableCell>{user.numeroTelephone}</TableCell>
-                          <TableCell>{user.localite}</TableCell>
-                          <TableCell>{user.role}</TableCell>
-                          <TableCell>{new Date(user.dateCreation).toLocaleDateString()}</TableCell>
-                          <TableCell>
-                            <Badge variant="outline" className={`${getStatusClass(user.statut)}`}>
-                              {getStatusLabel(user.statut)}
-                            </Badge>
-                          </TableCell>
-                          <TableCell className="text-right">
-                            <Button variant="ghost" size="icon">
-                              <Edit className="h-4 w-4" />
-                            </Button>
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    Chargement des clients...
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Téléphone</TableHead>
+                        <TableHead>Localité</TableHead>
+                        <TableHead>Rôle</TableHead>
+                        <TableHead>Date de création</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.length > 0 ? (
+                        users.map((user) => (
+                          <TableRow key={user.user_id}>
+                            <TableCell>{user.user_id}</TableCell>
+                            <TableCell>{user.nom}</TableCell>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>{user.numeroTelephone}</TableCell>
+                            <TableCell>{user.localite}</TableCell>
+                            <TableCell>{user.role}</TableCell>
+                            <TableCell>
+                              {new Date(user.dateCreation).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>
+                              <Badge
+                                variant="outline"
+                                className={`${getStatusClass(user.statut)}`}
+                              >
+                                {getStatusLabel(user.statut)}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-right">
+                              <Button variant="ghost" size="icon">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center py-4">
+                            Aucun client trouvé
                           </TableCell>
                         </TableRow>
-                      ))
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={9} className="text-center py-4">
-                          Aucun client trouvé
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-    </div>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
+      </div>
     </ProtectedRouteAdmin>
-  )
+  );
 }
-
