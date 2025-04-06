@@ -9,6 +9,7 @@ import { Label } from "@/components/ui/label";
 import { Loader2 } from "lucide-react";
 import axios from "axios";
 import dynamic from "next/dynamic";
+import { FormDataType } from "@/types/interfaces";
 
 const FormulaireDeclaration = dynamic(() => import("../formulaire/page"), {
   ssr: false,
@@ -98,10 +99,10 @@ export default function NouvelleDeclaration() {
 
   const handleChangesChoice = (value: string) => {
     setHasChanges(value);
-    setShowForm(true);
+    if (value === "oui") setShowForm(true);
   };
 
-  const createDeclaration = async (formData: Record<string, unknown>) => {
+  const createDeclaration = async (formData: FormDataType) => {
     try {
       const token = localStorage.getItem("auth_token");
       const userId = Number(localStorage.getItem("user_id"));
@@ -162,6 +163,39 @@ export default function NouvelleDeclaration() {
     return true;
   };
 
+  // ✅ CORRECTION : Créer déclaration uniquement 1x
+  useEffect(() => {
+    const createNewDeclarationFromPrive = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token || !priveId) {
+          router.push("/connexion");
+          return;
+        }
+
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/prives/${priveId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+          }
+        );
+
+        if (response.data) {
+          await createDeclaration(response.data);
+        }
+      } catch (error) {
+        console.error("Erreur récupération privé:", error);
+        setError("Une erreur est survenue. Veuillez réessayer.");
+      }
+    };
+
+    if (hasChanges === "non" && priveId) {
+      createNewDeclarationFromPrive();
+    }
+  }, [hasChanges, priveId, router]);
+
+  // === RENDER ===
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -201,8 +235,8 @@ export default function NouvelleDeclaration() {
           </CardHeader>
           <CardContent>
             <p className="mb-6">
-              Bienvenue ! Comme c&apos;est votre première déclaration, nous allons
-              vous guider à travers le processus.
+              Bienvenue ! Comme c&apos;est votre première déclaration, nous
+              allons vous guider à travers le processus.
             </p>
             <Button onClick={() => setShowForm(true)} className="w-full">
               Commencer ma déclaration
@@ -252,32 +286,6 @@ export default function NouvelleDeclaration() {
   }
 
   if (hasChanges === "non" && priveId) {
-    const createNewDeclarationFromPrive = async () => {
-      try {
-        const token = localStorage.getItem("auth_token");
-        if (!token) {
-          router.push("/connexion");
-          return;
-        }
-
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/prives/${priveId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (response.data) {
-          await createDeclaration(response.data);
-        }
-      } catch (error) {
-        console.error("Erreur récupération privé:", error);
-        setError("Une erreur est survenue. Veuillez réessayer.");
-      }
-    };
-
-    createNewDeclarationFromPrive();
-
     return (
       <div className="w-full px-4 py-8">
         <Card>
