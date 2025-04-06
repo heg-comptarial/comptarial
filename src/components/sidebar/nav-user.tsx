@@ -7,8 +7,6 @@ import {
   ChevronsUpDown,
   LogOut,
   Settings,
-  // CreditCard,
-  // Sparkles,
 } from "lucide-react";
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,6 +25,8 @@ import {
   SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
+import { useRouter } from "next/navigation";
+import axios from "axios";
 
 export function NavUser({
   user,
@@ -38,6 +38,35 @@ export function NavUser({
   };
 }) {
   const { isMobile } = useSidebar();
+  const router = useRouter();
+
+  // Fonction de déconnexion
+  const handleLogout = async () => {
+    try {
+      const response = await axios.post(
+        "http://localhost:8000/api/logout",
+        {},
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`, // Utilisation du token stocké
+          },
+          withCredentials: true, // Assure l'envoi des cookies de session si nécessaires
+        }
+      );
+
+      if (response.status === 200) {
+        console.log("Déconnexion réussie");
+        localStorage.removeItem("auth_token"); // Supprime le token d'authentification
+        localStorage.removeItem("user_id"); // Supprime l'ID utilisateur
+        router.push("/connexion"); // Redirection vers la page de connexion
+      } else {
+        console.error("Erreur lors de la déconnexion", response.data);
+      }
+    } catch (error) {
+      console.error("Erreur réseau lors de la déconnexion", error);
+    }
+  };
 
   return (
     <SidebarMenu>
@@ -106,7 +135,7 @@ export function NavUser({
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
             <Link href="/" passHref>
-              <DropdownMenuItem>
+              <DropdownMenuItem onClick={handleLogout}>
                 <LogOut />
                 Log out
               </DropdownMenuItem>

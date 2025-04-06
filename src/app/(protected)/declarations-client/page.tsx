@@ -334,7 +334,7 @@ export default function DeclarationsClientPage() {
     return (
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Chargement de l'utilisateur...</span>
+        <span className="ml-2">Chargement de l&apos;utilisateur...</span>
       </div>
     );
   }

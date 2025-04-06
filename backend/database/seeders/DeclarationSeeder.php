@@ -54,7 +54,7 @@ class DeclarationSeeder extends Seeder
                 // prive4@example.com
                 'user_id' => 7,
                 'titre' => 'Déclaration 2023',
-                'statut' => 'pending',
+                'statut' => 'rejected',
                 'annee' => '2023',
                 'dateCreation' => now(),
             ],

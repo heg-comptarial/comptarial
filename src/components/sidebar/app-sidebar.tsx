@@ -10,7 +10,7 @@ import {
   Shield,
   FolderOpen,
   SquareUserRound,
-  FilePlus
+  FilePlus,
 } from "lucide-react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
@@ -27,7 +27,6 @@ import {
 } from "@/components/ui/sidebar";
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-
   const data = {
     user: {
       name: "Username",
@@ -56,7 +55,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         icon: FolderOpen,
       },
       {
-        title: "Nouvelles déclarations",
+        title: "Nouvelle déclaration",
         url: "/new-declaration",
         icon: FilePlus,
       },
