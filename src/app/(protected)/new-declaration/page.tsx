@@ -19,18 +19,20 @@ const FormulaireDeclaration = dynamic(() => import("../formulaire/page"), {
   ),
 });
 
+type Declaration = {
+  declaration_id: number;
+  annee: string;
+  [key: string]: unknown;
+};
+
 export default function NouvelleDeclaration() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-  const [userId, setUserId] = useState<number | null>(null);
   const [priveId, setPriveId] = useState<number | null>(null);
   const [hasDeclaration, setHasDeclaration] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [hasChanges, setHasChanges] = useState<string | null>(null);
-  const [lastDeclarationId, setLastDeclarationId] = useState<number | null>(
-    null
-  );
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -46,8 +48,6 @@ export default function NouvelleDeclaration() {
           router.push("/connexion");
           return;
         }
-
-        setUserId(userIdResponse);
 
         const priveResponse = await axios.get(
           `http://127.0.0.1:8000/api/prives/users/${userIdResponse}`,
@@ -69,7 +69,7 @@ export default function NouvelleDeclaration() {
 
           const currentYear = new Date().getFullYear().toString();
           const existingForYear = declarationsResponse.data.find(
-            (d: any) => d.annee === currentYear
+            (d: Declaration) => d.annee === currentYear
           );
 
           if (existingForYear) {
@@ -81,9 +81,6 @@ export default function NouvelleDeclaration() {
 
           if (declarationsResponse.data.length > 0) {
             setHasDeclaration(true);
-            const lastDeclaration =
-              declarationsResponse.data[declarationsResponse.data.length - 1];
-            setLastDeclarationId(lastDeclaration.declaration_id);
           }
         }
       } catch (err) {
@@ -104,7 +101,7 @@ export default function NouvelleDeclaration() {
     setShowForm(true);
   };
 
-  const createDeclaration = async (formData: Record<string, any>) => {
+  const createDeclaration = async (formData: Record<string, unknown>) => {
     try {
       const token = localStorage.getItem("auth_token");
       const userId = Number(localStorage.getItem("user_id"));
@@ -123,7 +120,7 @@ export default function NouvelleDeclaration() {
       );
 
       const alreadyExists = existingResponse.data.some(
-        (decl: any) => decl.annee === currentYear
+        (decl: Declaration) => decl.annee === currentYear
       );
 
       if (alreadyExists) {
@@ -152,9 +149,9 @@ export default function NouvelleDeclaration() {
       );
 
       router.push("/declarations-client");
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error("Erreur création déclaration:", error);
-      if (error.response?.status === 409) {
+      if (axios.isAxiosError(error) && error.response?.status === 409) {
         setError(error.response.data.message);
       } else {
         setError("Une erreur est survenue. Veuillez réessayer.");
@@ -204,8 +201,8 @@ export default function NouvelleDeclaration() {
           </CardHeader>
           <CardContent>
             <p className="mb-6">
-              Bienvenue ! Comme c&apos;est votre première déclaration, nous
-              allons vous guider à travers le processus.
+              Bienvenue ! Comme c&apos;est votre première déclaration, nous allons
+              vous guider à travers le processus.
             </p>
             <Button onClick={() => setShowForm(true)} className="w-full">
               Commencer ma déclaration

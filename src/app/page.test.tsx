@@ -1,8 +1,7 @@
-import { render, screen, fireEvent } from "@testing-library/react";
+import { render, screen } from "@testing-library/react";
 import Home from "./page";
 import "@testing-library/jest-dom";
 import { describe, it, expect, vi } from "vitest";
-import { useRouter } from "next/navigation";
 
 // Mock du router Next.js
 vi.mock("next/navigation", () => ({

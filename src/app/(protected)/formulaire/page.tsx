@@ -25,9 +25,10 @@ import {
 } from "@/components/ui/accordion";
 import { Loader2 } from "lucide-react";
 import axios from "axios";
+import { Enfant, FormDataType } from "@/types/interfaces";
 
 interface FormulaireDeclarationProps {
-  onSubmitSuccess?: (formData: any) => Promise<boolean>;
+  onSubmitSuccess?: (formData: FormDataType) => Promise<boolean>;
   priveId?: number | null;
 }
 
@@ -40,7 +41,6 @@ export default function FormulaireDeclaration({
   const [isDataLoading, setIsDataLoading] = useState(!!priveId);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(1);
-  const [userId, setUserId] = useState<number | null>(null);
 
   // Informations de base
   const [infoBase, setInfoBase] = useState({
@@ -134,8 +134,6 @@ export default function FormulaireDeclaration({
           return;
         }
 
-        setUserId(userIdResponse);
-
         // Si nous avons un priveId, récupérer les données du privé
         if (priveId) {
           try {
@@ -195,7 +193,7 @@ export default function FormulaireDeclaration({
               ) {
                 setHasEnfants(true);
                 const formattedEnfants = priveResponse.data.enfants.map(
-                  (enfant: any) => ({
+                  (enfant: Enfant) => ({
                     nom: enfant.nom || "",
                     prenom: enfant.prenom || "",
                     dateNaissance: formatDate(enfant.dateNaissance || ""),
@@ -691,7 +689,9 @@ export default function FormulaireDeclaration({
               <SelectItem value="salarie">Salarié(e)</SelectItem>
               <SelectItem value="independant">Indépendant(e)</SelectItem>
               <SelectItem value="retraite">Retraité(e)</SelectItem>
-              <SelectItem value="chomage">En recherche d'emploi</SelectItem>
+              <SelectItem value="chomage">
+                En recherche d&apos;emploi
+              </SelectItem>
               <SelectItem value="etudiant">Étudiant(e)</SelectItem>
               <SelectItem value="autre">Autre</SelectItem>
             </SelectContent>
@@ -933,7 +933,7 @@ export default function FormulaireDeclaration({
             }
           />
           <Label htmlFor="fo_autreRevenu" className="font-medium">
-            Avez-vous d'autres revenus?
+            Avez-vous d&apos;autres revenus?
           </Label>
         </div>
 
@@ -998,7 +998,7 @@ export default function FormulaireDeclaration({
             }
           />
           <Label htmlFor="fo_autrePersonneCharge" className="font-medium">
-            Avez-vous d'autres personnes à charge?
+            Avez-vous d&apos;autres personnes à charge?
           </Label>
         </div>
 
@@ -1011,7 +1011,7 @@ export default function FormulaireDeclaration({
             }
           />
           <Label htmlFor="fo_autreDeduction" className="font-medium">
-            Avez-vous d'autres déductions?
+            Avez-vous d&apos;autres déductions?
           </Label>
         </div>
 
@@ -1024,7 +1024,7 @@ export default function FormulaireDeclaration({
             }
           />
           <Label htmlFor="fo_autreInformations" className="font-medium">
-            Avez-vous d'autres informations à communiquer?
+            Avez-vous d&apos;autres informations à communiquer?
           </Label>
         </div>
       </div>

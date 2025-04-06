@@ -89,123 +89,125 @@ export default function DeclarationsClientPage() {
             .map((r) => r.rubrique_id)
         );
 
+        const fetchOrCreateRubrique = async () => {
+          if (!selectedYear || !userId) return;
+          setLoading(true);
+      
+          try {
+            const declarationResponse = await fetch(
+              `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${selectedYear}`
+            );
+      
+            if (!declarationResponse.ok) {
+              setError("Déclaration non trouvée");
+              setLoading(false);
+              return;
+            }
+      
+            const declarationData = await declarationResponse.json();
+      
+            if (declarationData.rubriques && declarationData.rubriques.length > 0) {
+              setDeclaration(declarationData);
+      
+              const alreadyUploaded = declarationData.rubriques
+                .filter(
+                  (rubrique: Rubrique) =>
+                    rubrique.documents && rubrique.documents.length > 0
+                )
+                .map((r: Rubrique) => r.rubrique_id);
+      
+              setUploadedRubriques(alreadyUploaded);
+              setLoading(false);
+            } else {
+              const priveResponse = await fetch(`http://localhost:8000/api/prives`);
+              const privesData: Prive[] = await priveResponse.json();
+      
+              const userPrive: Prive | undefined = privesData.find(
+                (prive) => prive.user_id === userId
+              );
+      
+              if (!userPrive) {
+                setError("Données privées non trouvées pour cet utilisateur");
+                setLoading(false);
+                return;
+              }
+      
+              const createdRubriques = [];
+      
+              for (const [field, value] of Object.entries(userPrive)) {
+                if (
+                  field.startsWith("fo_") &&
+                  value === true &&
+                  foFields[field as keyof typeof foFields]
+                ) {
+                  const rubriqueInfo = foFields[field as keyof typeof foFields];
+      
+                  try {
+                    const createResponse = await fetch(
+                      `http://127.0.0.1:8000/api/rubriques`,
+                      {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({
+                          declaration_id: declarationData.declaration_id,
+                          titre: rubriqueInfo.titre,
+                          description: rubriqueInfo.description,
+                        }),
+                      }
+                    );
+      
+                    if (createResponse.ok) {
+                      const createdRubrique = await createResponse.json();
+                      createdRubriques.push(createdRubrique);
+                    }
+                  } catch (err) {
+                    console.error(`Error creating rubrique for ${field}:`, err);
+                  }
+                }
+              }
+      
+              const updatedDeclarationResponse = await fetch(
+                `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationData.declaration_id}`
+              );
+              if (updatedDeclarationResponse.ok) {
+                const updatedDeclarationData =
+                  await updatedDeclarationResponse.json();
+                setDeclaration(updatedDeclarationData);
+      
+                const alreadyUploaded = updatedDeclarationData.rubriques
+                  .filter(
+                    (rubrique: Rubrique) =>
+                      rubrique.documents && rubrique.documents.length > 0
+                  )
+                  .map((r: Rubrique) => r.rubrique_id);
+                setUploadedRubriques(alreadyUploaded);
+              } else {
+                setDeclaration({
+                  ...declarationData,
+                  rubriques: createdRubriques,
+                });
+              }
+      
+              setToastShown(true);
+            }
+          } catch (err) {
+            setError("Erreur lors de la récupération ou création des données");
+            console.error(err);
+          } finally {
+            setLoading(false);
+          }
+        }
+
         fetchOrCreateRubrique();
       }
     }
-  }, [selectedYear, userDeclarations]);
+  }, [selectedYear, userDeclarations, userId]);
 
   const handleYearChange = (year: number) => {
     setSelectedYear(year.toString());
   };
 
-  async function fetchOrCreateRubrique() {
-    if (!selectedYear || !userId) return;
-    setLoading(true);
 
-    try {
-      const declarationResponse = await fetch(
-        `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${selectedYear}`
-      );
-
-      if (!declarationResponse.ok) {
-        setError("Déclaration non trouvée");
-        setLoading(false);
-        return;
-      }
-
-      const declarationData = await declarationResponse.json();
-
-      if (declarationData.rubriques && declarationData.rubriques.length > 0) {
-        setDeclaration(declarationData);
-
-        const alreadyUploaded = declarationData.rubriques
-          .filter(
-            (rubrique: Rubrique) =>
-              rubrique.documents && rubrique.documents.length > 0
-          )
-          .map((r: Rubrique) => r.rubrique_id);
-
-        setUploadedRubriques(alreadyUploaded);
-        setLoading(false);
-      } else {
-        const priveResponse = await fetch(`http://localhost:8000/api/prives`);
-        const privesData: Prive[] = await priveResponse.json();
-
-        const userPrive: Prive | undefined = privesData.find(
-          (prive) => prive.user_id === userId
-        );
-
-        if (!userPrive) {
-          setError("Données privées non trouvées pour cet utilisateur");
-          setLoading(false);
-          return;
-        }
-
-        const createdRubriques = [];
-
-        for (const [field, value] of Object.entries(userPrive)) {
-          if (
-            field.startsWith("fo_") &&
-            value === true &&
-            foFields[field as keyof typeof foFields]
-          ) {
-            const rubriqueInfo = foFields[field as keyof typeof foFields];
-
-            try {
-              const createResponse = await fetch(
-                `http://127.0.0.1:8000/api/rubriques`,
-                {
-                  method: "POST",
-                  headers: { "Content-Type": "application/json" },
-                  body: JSON.stringify({
-                    declaration_id: declarationData.declaration_id,
-                    titre: rubriqueInfo.titre,
-                    description: rubriqueInfo.description,
-                  }),
-                }
-              );
-
-              if (createResponse.ok) {
-                const createdRubrique = await createResponse.json();
-                createdRubriques.push(createdRubrique);
-              }
-            } catch (err) {
-              console.error(`Error creating rubrique for ${field}:`, err);
-            }
-          }
-        }
-
-        const updatedDeclarationResponse = await fetch(
-          `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationData.declaration_id}`
-        );
-        if (updatedDeclarationResponse.ok) {
-          const updatedDeclarationData =
-            await updatedDeclarationResponse.json();
-          setDeclaration(updatedDeclarationData);
-
-          const alreadyUploaded = updatedDeclarationData.rubriques
-            .filter(
-              (rubrique: Rubrique) =>
-                rubrique.documents && rubrique.documents.length > 0
-            )
-            .map((r: Rubrique) => r.rubrique_id);
-          setUploadedRubriques(alreadyUploaded);
-        } else {
-          setDeclaration({
-            ...declarationData,
-            rubriques: createdRubriques,
-          });
-        }
-
-        setToastShown(true);
-      }
-    } catch (err) {
-      setError("Erreur lors de la récupération ou création des données");
-      console.error(err);
-    } finally {
-      setLoading(false);
-    }
-  }
 
   useEffect(() => {
     if (!loading && toastShown) {

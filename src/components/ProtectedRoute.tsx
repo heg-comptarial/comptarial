@@ -71,7 +71,7 @@ export default function ProtectedRoutePrive({ children }: ProtectedRouteProps) {
 
   if (!isAuthenticated || !isAccepted) {
     // Affiche un message si l'accès est refusé
-    return <div>Accès refusé. Votre compte n'est pas encore accepté.</div>;
+    return <div>Accès refusé. Votre compte n&apos;est pas encore accepté.</div>;
   }
 
   return <>{children}</>; // Rendre les enfants (la page protégée)

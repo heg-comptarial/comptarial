@@ -51,3 +51,47 @@ export interface Prive {
   fo_autreDeduction: boolean;
   fo_autreInformations: boolean;
 }
+
+export interface Enfant {
+  nom: string;
+  prenom: string;
+  dateNaissance: string;
+  adresse: string;
+  codePostal: string;
+  localite: string;
+  noAVS: string;
+  noContribuable: string;
+  revenuBrut: string;
+  fortuneNet: string;
+}
+
+interface PriveData {
+  dateNaissance: string;
+  nationalite: string;
+  etatCivil: string;
+  genre: string;
+  [key: string]: boolean | string; // pour les rubriques dynamiques comme `fo_salarie`
+}
+
+interface Conjoint {
+  id?: number;
+  nom: string;
+  prenom: string;
+  dateNaissance: string;
+  nationalite: string;
+  adresse: string;
+  localite: string;
+  codePostal: string;
+  situationProfessionnelle: string;
+}
+
+export interface FormDataType {
+  user_id: number;
+  titre: string;
+  statut: string;
+  annee: string;
+  dateCreation: string;
+  priveData: PriveData;
+  conjoint: Conjoint | null;
+  enfants: Enfant[];
+}
