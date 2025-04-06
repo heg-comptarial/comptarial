@@ -1,56 +1,70 @@
-"use client"
+"use client";
 
-import type React from "react"
+import type React from "react";
 
-import { useState, useEffect } from "react"
-import { useRouter } from "next/navigation"
-import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Label } from "@/components/ui/label"
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Loader2 } from "lucide-react"
-import axios from "axios"
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Label } from "@/components/ui/label";
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { Loader2 } from "lucide-react";
+import axios from "axios";
 
 interface FormulaireDeclarationProps {
-  onSubmitSuccess?: (formData: any) => Promise<boolean>
-  priveId?: number | null
+  onSubmitSuccess?: (formData: any) => Promise<boolean>;
+  priveId?: number | null;
 }
 
-export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null }: FormulaireDeclarationProps) {
-  const router = useRouter()
-  const [isLoading, setIsLoading] = useState(false)
-  const [isDataLoading, setIsDataLoading] = useState(!!priveId)
-  const [error, setError] = useState<string | null>(null)
-  const [step, setStep] = useState(1)
-  const [userId, setUserId] = useState<number | null>(null)
+export default function FormulaireDeclaration({
+  onSubmitSuccess,
+  priveId = null,
+}: FormulaireDeclarationProps) {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDataLoading, setIsDataLoading] = useState(!!priveId);
+  const [error, setError] = useState<string | null>(null);
+  const [step, setStep] = useState(1);
+  const [userId, setUserId] = useState<number | null>(null);
 
   // Informations de base
   const [infoBase, setInfoBase] = useState({
     dateNaissance: "",
     nationalite: "",
     etatCivil: "celibataire", // celibataire, marie, pacse, veuf, divorce
-  })
+  });
 
   // État pour les enfants
-  const [hasEnfants, setHasEnfants] = useState(false)
+  const [hasEnfants, setHasEnfants] = useState(false);
   const [enfants, setEnfants] = useState<
     Array<{
-      nom: string
-      prenom: string
-      dateNaissance: string
-      adresse: string
-      codePostal: string
-      localite: string
-      noAVS: string
-      noContribuable: string
-      revenuBrut: string
-      fortuneNet: string
+      nom: string;
+      prenom: string;
+      dateNaissance: string;
+      adresse: string;
+      codePostal: string;
+      localite: string;
+      noAVS: string;
+      noContribuable: string;
+      revenuBrut: string;
+      fortuneNet: string;
     }>
-  >([])
+  >([]);
 
   // État pour le conjoint
   const [conjointInfo, setConjointInfo] = useState({
@@ -62,11 +76,11 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
     localite: "",
     codePostal: "",
     situationProfessionnelle: "",
-  })
+  });
 
   // État pour les rubriques du formulaire
   const [formSections, setFormSections] = useState<{
-    [key: string]: boolean
+    [key: string]: boolean;
   }>({
     fo_banques: false,
     fo_dettes: false,
@@ -79,80 +93,88 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
     fo_assurance: false,
     fo_autreDeduction: false,
     fo_autreInformations: false,
-  })
+  });
 
   // Fonction pour formater une date au format YYYY-MM-DD
   const formatDate = (dateString: string): string => {
-    if (!dateString) return ""
+    if (!dateString) return "";
 
     try {
       // Si la date est déjà au format YYYY-MM-DD, la retourner telle quelle
       if (dateString.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        return dateString
+        return dateString;
       }
 
       // Sinon, essayer de la convertir
-      const date = new Date(dateString)
+      const date = new Date(dateString);
       if (!isNaN(date.getTime())) {
-        return date.toISOString().split("T")[0]
+        return date.toISOString().split("T")[0];
       }
     } catch (e) {
-      console.error("Erreur lors de la conversion de la date:", e)
+      console.error("Erreur lors de la conversion de la date:", e);
     }
 
-    return ""
-  }
+    return "";
+  };
 
   // Récupérer les données de l'utilisateur et les données du privé si disponibles
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const token = localStorage.getItem("auth_token")
+        const token = localStorage.getItem("auth_token");
         if (!token) {
-          router.push("/connexion")
-          return
+          router.push("/connexion");
+          return;
         }
 
         // Récupérer l'ID utilisateur depuis localStorage
-        const userIdResponse = Number(localStorage.getItem("user_id"))
+        const userIdResponse = Number(localStorage.getItem("user_id"));
         if (!userIdResponse) {
-          router.push("/connexion")
-          return
+          router.push("/connexion");
+          return;
         }
 
-        setUserId(userIdResponse)
+        setUserId(userIdResponse);
 
         // Si nous avons un priveId, récupérer les données du privé
         if (priveId) {
           try {
-            const priveResponse = await axios.get(`http://127.0.0.1:8000/api/prives/${priveId}`, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-              },
-            })
+            const priveResponse = await axios.get(
+              `http://127.0.0.1:8000/api/prives/${priveId}`,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                },
+              }
+            );
 
             if (priveResponse.data) {
-              console.log("Données du privé récupérées:", priveResponse.data)
+              console.log("Données du privé récupérées:", priveResponse.data);
 
               // Pré-remplir les informations de base
               setInfoBase({
-                dateNaissance: formatDate(priveResponse.data.dateNaissance || ""),
+                dateNaissance: formatDate(
+                  priveResponse.data.dateNaissance || ""
+                ),
                 nationalite: priveResponse.data.nationalite || "",
                 etatCivil: priveResponse.data.etatCivil || "celibataire",
-              })
+              });
 
               // Pré-remplir les sections du formulaire (fo_*)
-              const sections = { ...formSections }
+              const sections = { ...formSections };
               Object.keys(formSections).forEach((key) => {
                 if (priveResponse.data[key] !== undefined) {
-                  sections[key] = Boolean(priveResponse.data[key])
+                  sections[key] = Boolean(priveResponse.data[key]);
                 }
-              })
-              setFormSections(sections)
+              });
+              setFormSections(sections);
 
               // Vérifier et pré-remplir les informations du conjoint
-              if (priveResponse.data.conjoints && priveResponse.data.conjoints.length > 0) {
-                const conjoint = priveResponse.data.conjoints[0]
+              if (
+                priveResponse.data.conjoints &&
+                priveResponse.data.conjoints.length > 0
+              ) {
+                const conjoint = priveResponse.data.conjoints[0];
                 setConjointInfo({
                   nom: conjoint.nom || "",
                   prenom: conjoint.prenom || "",
@@ -161,53 +183,66 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
                   adresse: conjoint.adresse || "",
                   localite: conjoint.localite || "",
                   codePostal: conjoint.codePostal || "",
-                  situationProfessionnelle: conjoint.situationProfessionnelle || "",
-                })
+                  situationProfessionnelle:
+                    conjoint.situationProfessionnelle || "",
+                });
               }
 
               // Vérifier et pré-remplir les informations des enfants
-              if (priveResponse.data.enfants && priveResponse.data.enfants.length > 0) {
-                setHasEnfants(true)
-                const formattedEnfants = priveResponse.data.enfants.map((enfant: any) => ({
-                  nom: enfant.nom || "",
-                  prenom: enfant.prenom || "",
-                  dateNaissance: formatDate(enfant.dateNaissance || ""),
-                  adresse: enfant.adresse || "",
-                  codePostal: enfant.codePostal || "",
-                  localite: enfant.localite || "",
-                  noAVS: enfant.noAVS || "",
-                  noContribuable: enfant.noContribuable || "",
-                  revenuBrut: enfant.revenuBrut?.toString() || "",
-                  fortuneNet: enfant.fortuneNet?.toString() || "",
-                }))
-                setEnfants(formattedEnfants)
+              if (
+                priveResponse.data.enfants &&
+                priveResponse.data.enfants.length > 0
+              ) {
+                setHasEnfants(true);
+                const formattedEnfants = priveResponse.data.enfants.map(
+                  (enfant: any) => ({
+                    nom: enfant.nom || "",
+                    prenom: enfant.prenom || "",
+                    dateNaissance: formatDate(enfant.dateNaissance || ""),
+                    adresse: enfant.adresse || "",
+                    codePostal: enfant.codePostal || "",
+                    localite: enfant.localite || "",
+                    noAVS: enfant.noAVS || "",
+                    noContribuable: enfant.noContribuable || "",
+                    revenuBrut: enfant.revenuBrut?.toString() || "",
+                    fortuneNet: enfant.fortuneNet?.toString() || "",
+                  })
+                );
+                setEnfants(formattedEnfants);
               }
             }
           } catch (error) {
-            console.error("Erreur lors de la récupération des données du privé:", error)
-            setError("Une erreur est survenue lors de la récupération de vos données.")
+            console.error(
+              "Erreur lors de la récupération des données du privé:",
+              error
+            );
+            setError(
+              "Une erreur est survenue lors de la récupération de vos données."
+            );
           }
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des données:", error)
-        setError("Une erreur est survenue lors de la récupération de vos données.")
+        console.error("Erreur lors de la récupération des données:", error);
+        setError(
+          "Une erreur est survenue lors de la récupération de vos données."
+        );
       } finally {
-        setIsDataLoading(false)
+        setIsDataLoading(false);
       }
-    }
+    };
 
-    fetchData()
-  }, [router, priveId])
+    fetchData();
+  }, [router, priveId]);
 
   // Gestion des changements dans les informations de base
   const handleInfoBaseChange = (name: string, value: string) => {
-    setInfoBase((prev) => ({ ...prev, [name]: value }))
-  }
+    setInfoBase((prev) => ({ ...prev, [name]: value }));
+  };
 
   // Gestion des changements dans les rubriques du formulaire
   const handleSectionChange = (name: string, checked: boolean) => {
-    setFormSections((prev) => ({ ...prev, [name]: checked }))
-  }
+    setFormSections((prev) => ({ ...prev, [name]: checked }));
+  };
 
   // Ajouter un enfant
   const addEnfant = () => {
@@ -225,27 +260,27 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
         revenuBrut: "",
         fortuneNet: "",
       },
-    ])
-  }
+    ]);
+  };
 
   // Mettre à jour les informations d'un enfant
   const updateEnfant = (index: number, field: string, value: string) => {
-    const updatedEnfants = [...enfants]
-    updatedEnfants[index] = { ...updatedEnfants[index], [field]: value }
-    setEnfants(updatedEnfants)
-  }
+    const updatedEnfants = [...enfants];
+    updatedEnfants[index] = { ...updatedEnfants[index], [field]: value };
+    setEnfants(updatedEnfants);
+  };
 
   // Supprimer un enfant
   const removeEnfant = (index: number) => {
-    const updatedEnfants = [...enfants]
-    updatedEnfants.splice(index, 1)
-    setEnfants(updatedEnfants)
-  }
+    const updatedEnfants = [...enfants];
+    updatedEnfants.splice(index, 1);
+    setEnfants(updatedEnfants);
+  };
 
   // Passer à l'étape suivante
   const nextStep = () => {
-    setStep(step + 1)
-  }
+    setStep(step + 1);
+  };
 
   // Revenir à l'étape précédente
   const prevStep = () => {
@@ -253,50 +288,53 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
     if (step === 4) {
       // Si l'utilisateur a des enfants, revenir à l'étape 3 (enfants)
       if (hasEnfants) {
-        setStep(3)
+        setStep(3);
       }
       // Si l'utilisateur est marié ou pacsé mais n'a pas d'enfants, revenir à l'étape 2 (conjoint)
-      else if (infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse") {
-        setStep(2)
+      else if (
+        infoBase.etatCivil === "marie" ||
+        infoBase.etatCivil === "pacse"
+      ) {
+        setStep(2);
       }
       // Si l'utilisateur est célibataire et n'a pas d'enfants, revenir à l'étape 1 (infos de base)
       else {
-        setStep(1)
+        setStep(1);
       }
     }
     // Si on est à l'étape 3 (enfants)
     else if (step === 3) {
       // Revenir à l'étape 2 (conjoint) si marié ou pacsé, sinon à l'étape 1
       if (infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse") {
-        setStep(2)
+        setStep(2);
       } else {
-        setStep(1)
+        setStep(1);
       }
     }
     // Si on est à l'étape 5 (récapitulatif)
     else if (step === 5) {
       // Toujours revenir à l'étape 4 (rubriques)
-      setStep(4)
+      setStep(4);
     }
     // Pour les autres cas, simplement décrémenter l'étape
     else {
-      setStep(step - 1)
+      setStep(step - 1);
     }
-  }
+  };
 
   // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setIsLoading(true)
+    e.preventDefault();
+    setError(null);
+    setIsLoading(true);
 
     try {
-      const token = localStorage.getItem("auth_token")
-      const userId = Number(localStorage.getItem("user_id"))
+      const token = localStorage.getItem("auth_token");
+      const userId = Number(localStorage.getItem("user_id"));
 
       if (!token || !userId) {
-        router.push("/connexion")
-        return
+        router.push("/connexion");
+        return;
       }
 
       // 1. Mettre à jour le privé avec les nouvelles informations
@@ -306,58 +344,73 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           dateNaissance: infoBase.dateNaissance,
           nationalite: infoBase.nationalite,
           etatCivil: infoBase.etatCivil,
-          genre: infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse" ? "couple" : "individuel",
+          genre:
+            infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse"
+              ? "couple"
+              : "individuel",
           ...formSections,
-        }
+        };
 
         // Mise à jour du privé
-        await axios.put(`http://127.0.0.1:8000/api/prives/${priveId}`, priveData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
-
-        // 2. Gérer le conjoint si marié ou pacsé
-        let conjointId = null
-        if (infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse") {
-          const conjointData = {
-            prive_id: priveId,
-            ...conjointInfo,
-          }
-
-          // Création du conjoint
-          const conjointResponse = await axios.post("http://127.0.0.1:8000/api/conjoints", conjointData, {
+        await axios.put(
+          `http://127.0.0.1:8000/api/prives/${priveId}`,
+          priveData,
+          {
             headers: {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          })
+          }
+        );
+
+        // 2. Gérer le conjoint si marié ou pacsé
+        let conjointId = null;
+        if (infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse") {
+          const conjointData = {
+            prive_id: priveId,
+            ...conjointInfo,
+          };
+
+          // Création du conjoint
+          const conjointResponse = await axios.post(
+            "http://127.0.0.1:8000/api/conjoints",
+            conjointData,
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
 
           if (conjointResponse.data && conjointResponse.data.id) {
-            conjointId = conjointResponse.data.id
+            conjointId = conjointResponse.data.id;
           }
         }
 
         // 3. Gérer les enfants si l'utilisateur a des enfants
-        const enfantIds: number[] = []
+        const enfantIds: number[] = [];
         if (hasEnfants && enfants.length > 0) {
           // Créer tous les enfants
           for (const enfant of enfants) {
             const enfantData = {
               prive_id: priveId,
               ...enfant,
-            }
+            };
 
-            const enfantResponse = await axios.post("http://127.0.0.1:8000/api/enfants", enfantData, {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            })
+            const enfantResponse = await axios.post(
+              "http://127.0.0.1:8000/api/enfants",
+              enfantData,
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              }
+            );
 
             if (enfantResponse.data && enfantResponse.data.id) {
-              enfantIds.push(enfantResponse.data.id)
+              enfantIds.push(enfantResponse.data.id);
             }
           }
         }
@@ -371,14 +424,20 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           dateCreation: new Date().toISOString(),
           priveData: priveData,
           conjoint: conjointId ? { id: conjointId, ...conjointInfo } : null,
-          enfants: enfantIds.length > 0 ? enfants.map((enfant, index) => ({ id: enfantIds[index], ...enfant })) : [],
-        }
+          enfants:
+            enfantIds.length > 0
+              ? enfants.map((enfant, index) => ({
+                  id: enfantIds[index],
+                  ...enfant,
+                }))
+              : [],
+        };
 
         // 5. Si un callback onSubmitSuccess est fourni, l'appeler
         if (onSubmitSuccess) {
-          const success = await onSubmitSuccess(formData)
+          const success = await onSubmitSuccess(formData);
           if (success) {
-            return // Le callback gère la redirection
+            return; // Le callback gère la redirection
           }
         } else {
           // Sinon, créer directement la déclaration
@@ -387,26 +446,33 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          })
+          });
 
-          // Rediriger vers le dashboard
-          router.push("/dashboard")
+          // Rediriger vers "Mes déclarations"
+          router.push("/declarations-client");
         }
       } else {
-        setError("Impossible de trouver votre profil. Veuillez contacter l'administrateur.")
+        setError(
+          "Impossible de trouver votre profil. Veuillez contacter l'administrateur."
+        );
       }
     } catch (error) {
-      console.error("Erreur lors de la soumission du formulaire:", error)
+      console.error("Erreur lors de la soumission du formulaire:", error);
 
       if (axios.isAxiosError(error) && error.response) {
-        setError(error.response.data.message || "Une erreur est survenue lors de la soumission du formulaire.")
+        setError(
+          error.response.data.message ||
+            "Une erreur est survenue lors de la soumission du formulaire."
+        );
       } else {
-        setError("Une erreur est survenue lors de la soumission du formulaire. Veuillez réessayer.")
+        setError(
+          "Une erreur est survenue lors de la soumission du formulaire. Veuillez réessayer."
+        );
       }
     } finally {
-      setIsLoading(false)
+      setIsLoading(false);
     }
-  }
+  };
 
   // Afficher un écran de chargement pendant la récupération des données
   if (isDataLoading) {
@@ -414,7 +480,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
       <div className="container max-w-3xl py-8">
         <Card>
           <CardHeader>
-            <CardTitle className="text-2xl font-bold">Chargement de vos données</CardTitle>
+            <CardTitle className="text-2xl font-bold">
+              Chargement de vos données
+            </CardTitle>
           </CardHeader>
           <CardContent className="flex flex-col items-center justify-center py-8">
             <Loader2 className="h-8 w-8 animate-spin mb-4" />
@@ -422,7 +490,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           </CardContent>
         </Card>
       </div>
-    )
+    );
   }
 
   // Rendu de l'étape 1: Informations de base
@@ -434,7 +502,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           id="dateNaissance"
           type="date"
           value={infoBase.dateNaissance}
-          onChange={(e) => handleInfoBaseChange("dateNaissance", e.target.value)}
+          onChange={(e) =>
+            handleInfoBaseChange("dateNaissance", e.target.value)
+          }
           required
         />
       </div>
@@ -494,18 +564,18 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
         Continuer
       </Button>
     </div>
-  )
+  );
 
   // Rendu de l'étape 2: Informations du conjoint (si marié ou pacsé)
   const renderStep2 = () => {
     if (infoBase.etatCivil !== "marie" && infoBase.etatCivil !== "pacse") {
       // Si pas marié ni pacsé, passer directement à l'étape suivante
-      setTimeout(() => nextStep(), 0)
+      setTimeout(() => nextStep(), 0);
       return (
         <div className="flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      )
+      );
     }
 
     return (
@@ -518,7 +588,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
             <Input
               id="conjointNom"
               value={conjointInfo.nom}
-              onChange={(e) => setConjointInfo({ ...conjointInfo, nom: e.target.value })}
+              onChange={(e) =>
+                setConjointInfo({ ...conjointInfo, nom: e.target.value })
+              }
               required
             />
           </div>
@@ -528,7 +600,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
             <Input
               id="conjointPrenom"
               value={conjointInfo.prenom}
-              onChange={(e) => setConjointInfo({ ...conjointInfo, prenom: e.target.value })}
+              onChange={(e) =>
+                setConjointInfo({ ...conjointInfo, prenom: e.target.value })
+              }
               required
             />
           </div>
@@ -540,7 +614,12 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
             id="conjointDateNaissance"
             type="date"
             value={conjointInfo.dateNaissance}
-            onChange={(e) => setConjointInfo({ ...conjointInfo, dateNaissance: e.target.value })}
+            onChange={(e) =>
+              setConjointInfo({
+                ...conjointInfo,
+                dateNaissance: e.target.value,
+              })
+            }
             required
           />
         </div>
@@ -550,7 +629,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Input
             id="conjointNationalite"
             value={conjointInfo.nationalite}
-            onChange={(e) => setConjointInfo({ ...conjointInfo, nationalite: e.target.value })}
+            onChange={(e) =>
+              setConjointInfo({ ...conjointInfo, nationalite: e.target.value })
+            }
             required
           />
         </div>
@@ -560,7 +641,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Input
             id="conjointAdresse"
             value={conjointInfo.adresse}
-            onChange={(e) => setConjointInfo({ ...conjointInfo, adresse: e.target.value })}
+            onChange={(e) =>
+              setConjointInfo({ ...conjointInfo, adresse: e.target.value })
+            }
           />
         </div>
 
@@ -570,7 +653,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
             <Input
               id="conjointLocalite"
               value={conjointInfo.localite}
-              onChange={(e) => setConjointInfo({ ...conjointInfo, localite: e.target.value })}
+              onChange={(e) =>
+                setConjointInfo({ ...conjointInfo, localite: e.target.value })
+              }
             />
           </div>
 
@@ -579,16 +664,25 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
             <Input
               id="conjointCodePostal"
               value={conjointInfo.codePostal}
-              onChange={(e) => setConjointInfo({ ...conjointInfo, codePostal: e.target.value })}
+              onChange={(e) =>
+                setConjointInfo({ ...conjointInfo, codePostal: e.target.value })
+              }
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="conjointSituationProfessionnelle">Situation professionnelle</Label>
+          <Label htmlFor="conjointSituationProfessionnelle">
+            Situation professionnelle
+          </Label>
           <Select
             value={conjointInfo.situationProfessionnelle}
-            onValueChange={(value) => setConjointInfo({ ...conjointInfo, situationProfessionnelle: value })}
+            onValueChange={(value) =>
+              setConjointInfo({
+                ...conjointInfo,
+                situationProfessionnelle: value,
+              })
+            }
           >
             <SelectTrigger>
               <SelectValue placeholder="Sélectionnez une situation" />
@@ -611,30 +705,36 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Button onClick={nextStep}>Continuer</Button>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   // Rendu de l'étape 3: Informations des enfants (si a des enfants)
   const renderStep3 = () => {
     if (!hasEnfants) {
       // Si pas d'enfants, passer directement à l'étape suivante
-      setTimeout(() => nextStep(), 0)
+      setTimeout(() => nextStep(), 0);
       return (
         <div className="flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      )
+      );
     }
 
     return (
       <div className="space-y-6">
-        <h3 className="text-lg font-medium">Informations des enfants à charge</h3>
+        <h3 className="text-lg font-medium">
+          Informations des enfants à charge
+        </h3>
 
         {enfants.map((enfant, index) => (
           <Card key={index} className="p-4">
             <div className="flex justify-between items-center mb-4">
               <h4 className="font-medium">Enfant {index + 1}</h4>
-              <Button variant="destructive" size="sm" onClick={() => removeEnfant(index)}>
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => removeEnfant(index)}
+              >
                 Supprimer
               </Button>
             </div>
@@ -655,25 +755,33 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
                 <Input
                   id={`enfantPrenom-${index}`}
                   value={enfant.prenom}
-                  onChange={(e) => updateEnfant(index, "prenom", e.target.value)}
+                  onChange={(e) =>
+                    updateEnfant(index, "prenom", e.target.value)
+                  }
                   required
                 />
               </div>
             </div>
 
             <div className="space-y-2 mb-4">
-              <Label htmlFor={`enfantDateNaissance-${index}`}>Date de naissance</Label>
+              <Label htmlFor={`enfantDateNaissance-${index}`}>
+                Date de naissance
+              </Label>
               <Input
                 id={`enfantDateNaissance-${index}`}
                 type="date"
                 value={enfant.dateNaissance}
-                onChange={(e) => updateEnfant(index, "dateNaissance", e.target.value)}
+                onChange={(e) =>
+                  updateEnfant(index, "dateNaissance", e.target.value)
+                }
                 required
               />
             </div>
 
             <div className="space-y-2 mb-4">
-              <Label htmlFor={`enfantAdresse-${index}`}>Adresse (si différente)</Label>
+              <Label htmlFor={`enfantAdresse-${index}`}>
+                Adresse (si différente)
+              </Label>
               <Input
                 id={`enfantAdresse-${index}`}
                 value={enfant.adresse}
@@ -687,7 +795,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
                 <Input
                   id={`enfantLocalite-${index}`}
                   value={enfant.localite}
-                  onChange={(e) => updateEnfant(index, "localite", e.target.value)}
+                  onChange={(e) =>
+                    updateEnfant(index, "localite", e.target.value)
+                  }
                 />
               </div>
 
@@ -696,7 +806,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
                 <Input
                   id={`enfantCodePostal-${index}`}
                   value={enfant.codePostal}
-                  onChange={(e) => updateEnfant(index, "codePostal", e.target.value)}
+                  onChange={(e) =>
+                    updateEnfant(index, "codePostal", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -711,11 +823,15 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
             </div>
 
             <div className="space-y-2 mb-4">
-              <Label htmlFor={`enfantNoContribuable-${index}`}>Numéro de contribuable</Label>
+              <Label htmlFor={`enfantNoContribuable-${index}`}>
+                Numéro de contribuable
+              </Label>
               <Input
                 id={`enfantNoContribuable-${index}`}
                 value={enfant.noContribuable}
-                onChange={(e) => updateEnfant(index, "noContribuable", e.target.value)}
+                onChange={(e) =>
+                  updateEnfant(index, "noContribuable", e.target.value)
+                }
               />
             </div>
 
@@ -725,16 +841,22 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
                 <Input
                   id={`enfantRevenuBrut-${index}`}
                   value={enfant.revenuBrut}
-                  onChange={(e) => updateEnfant(index, "revenuBrut", e.target.value)}
+                  onChange={(e) =>
+                    updateEnfant(index, "revenuBrut", e.target.value)
+                  }
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor={`enfantFortuneNet-${index}`}>Fortune nette</Label>
+                <Label htmlFor={`enfantFortuneNet-${index}`}>
+                  Fortune nette
+                </Label>
                 <Input
                   id={`enfantFortuneNet-${index}`}
                   value={enfant.fortuneNet}
-                  onChange={(e) => updateEnfant(index, "fortuneNet", e.target.value)}
+                  onChange={(e) =>
+                    updateEnfant(index, "fortuneNet", e.target.value)
+                  }
                 />
               </div>
             </div>
@@ -752,20 +874,24 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Button onClick={nextStep}>Continuer</Button>
         </div>
       </div>
-    )
-  }
+    );
+  };
 
   // Rendu de l'étape 4: Sélection des rubriques
   const renderStep4 = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium">Sélectionnez les rubriques qui vous concernent</h3>
+      <h3 className="text-lg font-medium">
+        Sélectionnez les rubriques qui vous concernent
+      </h3>
 
       <div className="space-y-4">
         <div className="flex items-center space-x-2">
           <Checkbox
             id="fo_salarie"
             checked={formSections.fo_salarie}
-            onCheckedChange={(checked) => handleSectionChange("fo_salarie", checked as boolean)}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_salarie", checked as boolean)
+            }
           />
           <Label htmlFor="fo_salarie" className="font-medium">
             Êtes-vous salarié?
@@ -776,7 +902,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Checkbox
             id="fo_independant"
             checked={formSections.fo_independant}
-            onCheckedChange={(checked) => handleSectionChange("fo_independant", checked as boolean)}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_independant", checked as boolean)
+            }
           />
           <Label htmlFor="fo_independant" className="font-medium">
             Êtes-vous indépendant?
@@ -787,7 +915,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Checkbox
             id="fo_rentier"
             checked={formSections.fo_rentier}
-            onCheckedChange={(checked) => handleSectionChange("fo_rentier", checked as boolean)}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_rentier", checked as boolean)
+            }
           />
           <Label htmlFor="fo_rentier" className="font-medium">
             Êtes-vous rentier?
@@ -798,7 +928,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Checkbox
             id="fo_autreRevenu"
             checked={formSections.fo_autreRevenu}
-            onCheckedChange={(checked) => handleSectionChange("fo_autreRevenu", checked as boolean)}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_autreRevenu", checked as boolean)
+            }
           />
           <Label htmlFor="fo_autreRevenu" className="font-medium">
             Avez-vous d'autres revenus?
@@ -809,7 +941,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Checkbox
             id="fo_banques"
             checked={formSections.fo_banques}
-            onCheckedChange={(checked) => handleSectionChange("fo_banques", checked as boolean)}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_banques", checked as boolean)
+            }
           />
           <Label htmlFor="fo_banques" className="font-medium">
             Avez-vous des comptes bancaires?
@@ -820,7 +954,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Checkbox
             id="fo_immobiliers"
             checked={formSections.fo_immobiliers}
-            onCheckedChange={(checked) => handleSectionChange("fo_immobiliers", checked as boolean)}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_immobiliers", checked as boolean)
+            }
           />
           <Label htmlFor="fo_immobiliers" className="font-medium">
             Possédez-vous des biens immobiliers?
@@ -831,7 +967,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Checkbox
             id="fo_dettes"
             checked={formSections.fo_dettes}
-            onCheckedChange={(checked) => handleSectionChange("fo_dettes", checked as boolean)}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_dettes", checked as boolean)
+            }
           />
           <Label htmlFor="fo_dettes" className="font-medium">
             Avez-vous des dettes?
@@ -842,7 +980,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Checkbox
             id="fo_assurance"
             checked={formSections.fo_assurance}
-            onCheckedChange={(checked) => handleSectionChange("fo_assurance", checked as boolean)}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_assurance", checked as boolean)
+            }
           />
           <Label htmlFor="fo_assurance" className="font-medium">
             Avez-vous des assurances?
@@ -853,7 +993,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Checkbox
             id="fo_autrePersonneCharge"
             checked={formSections.fo_autrePersonneCharge}
-            onCheckedChange={(checked) => handleSectionChange("fo_autrePersonneCharge", checked as boolean)}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_autrePersonneCharge", checked as boolean)
+            }
           />
           <Label htmlFor="fo_autrePersonneCharge" className="font-medium">
             Avez-vous d'autres personnes à charge?
@@ -864,7 +1006,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Checkbox
             id="fo_autreDeduction"
             checked={formSections.fo_autreDeduction}
-            onCheckedChange={(checked) => handleSectionChange("fo_autreDeduction", checked as boolean)}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_autreDeduction", checked as boolean)
+            }
           />
           <Label htmlFor="fo_autreDeduction" className="font-medium">
             Avez-vous d'autres déductions?
@@ -875,7 +1019,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
           <Checkbox
             id="fo_autreInformations"
             checked={formSections.fo_autreInformations}
-            onCheckedChange={(checked) => handleSectionChange("fo_autreInformations", checked as boolean)}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_autreInformations", checked as boolean)
+            }
           />
           <Label htmlFor="fo_autreInformations" className="font-medium">
             Avez-vous d'autres informations à communiquer?
@@ -890,12 +1036,14 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
         <Button onClick={nextStep}>Continuer</Button>
       </div>
     </div>
-  )
+  );
 
   // Rendu de l'étape 5: Récapitulatif et confirmation
   const renderStep5 = () => (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium">Récapitulatif de votre déclaration</h3>
+      <h3 className="text-lg font-medium">
+        Récapitulatif de votre déclaration
+      </h3>
 
       <Accordion type="single" collapsible className="w-full">
         <AccordionItem value="info-base">
@@ -913,12 +1061,12 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
                 {infoBase.etatCivil === "celibataire"
                   ? "Célibataire"
                   : infoBase.etatCivil === "marie"
-                    ? "Marié(e)"
-                    : infoBase.etatCivil === "pacse"
-                      ? "Pacsé(e)"
-                      : infoBase.etatCivil === "divorce"
-                        ? "Divorcé(e)"
-                        : "Veuf/Veuve"}
+                  ? "Marié(e)"
+                  : infoBase.etatCivil === "pacse"
+                  ? "Pacsé(e)"
+                  : infoBase.etatCivil === "divorce"
+                  ? "Divorcé(e)"
+                  : "Veuf/Veuve"}
               </p>
             </div>
           </AccordionContent>
@@ -936,7 +1084,8 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
                   <strong>Prénom:</strong> {conjointInfo.prenom}
                 </p>
                 <p>
-                  <strong>Date de naissance:</strong> {conjointInfo.dateNaissance}
+                  <strong>Date de naissance:</strong>{" "}
+                  {conjointInfo.dateNaissance}
                 </p>
                 <p>
                   <strong>Nationalité:</strong> {conjointInfo.nationalite}
@@ -946,14 +1095,14 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
                   {conjointInfo.situationProfessionnelle === "salarie"
                     ? "Salarié(e)"
                     : conjointInfo.situationProfessionnelle === "independant"
-                      ? "Indépendant(e)"
-                      : conjointInfo.situationProfessionnelle === "retraite"
-                        ? "Retraité(e)"
-                        : conjointInfo.situationProfessionnelle === "chomage"
-                          ? "En recherche d'emploi"
-                          : conjointInfo.situationProfessionnelle === "etudiant"
-                            ? "Étudiant(e)"
-                            : "Autre"}
+                    ? "Indépendant(e)"
+                    : conjointInfo.situationProfessionnelle === "retraite"
+                    ? "Retraité(e)"
+                    : conjointInfo.situationProfessionnelle === "chomage"
+                    ? "En recherche d'emploi"
+                    : conjointInfo.situationProfessionnelle === "etudiant"
+                    ? "Étudiant(e)"
+                    : "Autre"}
                 </p>
                 {conjointInfo.adresse && (
                   <>
@@ -975,7 +1124,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
 
         {hasEnfants && enfants.length > 0 && (
           <AccordionItem value="enfants">
-            <AccordionTrigger>Enfants à charge ({enfants.length})</AccordionTrigger>
+            <AccordionTrigger>
+              Enfants à charge ({enfants.length})
+            </AccordionTrigger>
             <AccordionContent>
               {enfants.map((enfant, index) => (
                 <div key={index} className="mb-4 pb-4 border-b last:border-0">
@@ -998,7 +1149,8 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
                   )}
                   {enfant.noContribuable && (
                     <p>
-                      <strong>Numéro de contribuable:</strong> {enfant.noContribuable}
+                      <strong>Numéro de contribuable:</strong>{" "}
+                      {enfant.noContribuable}
                     </p>
                   )}
                   {enfant.revenuBrut && (
@@ -1042,9 +1194,13 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
               {formSections.fo_immobiliers && <li>Immobiliers</li>}
               {formSections.fo_dettes && <li>Dettes</li>}
               {formSections.fo_assurance && <li>Assurances</li>}
-              {formSections.fo_autrePersonneCharge && <li>Autres personnes à charge</li>}
+              {formSections.fo_autrePersonneCharge && (
+                <li>Autres personnes à charge</li>
+              )}
               {formSections.fo_autreDeduction && <li>Autres déductions</li>}
-              {formSections.fo_autreInformations && <li>Autres informations</li>}
+              {formSections.fo_autreInformations && (
+                <li>Autres informations</li>
+              )}
             </ul>
           </AccordionContent>
         </AccordionItem>
@@ -1068,43 +1224,71 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
         </Button>
       </div>
     </div>
-  )
+  );
 
   // Rendu du formulaire en fonction de l'étape actuelle
   const renderForm = () => {
     switch (step) {
       case 1:
-        return renderStep1()
+        return renderStep1();
       case 2:
-        return renderStep2()
+        return renderStep2();
       case 3:
-        return renderStep3()
+        return renderStep3();
       case 4:
-        return renderStep4()
+        return renderStep4();
       case 5:
-        return renderStep5()
+        return renderStep5();
       default:
-        return renderStep1()
+        return renderStep1();
     }
-  }
+  };
 
   return (
     <div className="container max-w-3xl py-8">
       <Card>
         <CardHeader>
-          <CardTitle className="text-2xl font-bold">Formulaire de déclaration</CardTitle>
+          <CardTitle className="text-2xl font-bold">
+            Formulaire de déclaration
+          </CardTitle>
         </CardHeader>
         <CardContent>
           {/* Indicateur d'étape */}
           <div className="mb-8">
             <div className="flex justify-between mb-2">
-              <span className={`font-medium ${step >= 1 ? "text-primary" : "text-muted-foreground"}`}>
+              <span
+                className={`font-medium ${
+                  step >= 1 ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
                 Informations personnelles
               </span>
-              <span className={`font-medium ${step >= 2 ? "text-primary" : "text-muted-foreground"}`}>Conjoint</span>
-              <span className={`font-medium ${step >= 3 ? "text-primary" : "text-muted-foreground"}`}>Enfants</span>
-              <span className={`font-medium ${step >= 4 ? "text-primary" : "text-muted-foreground"}`}>Rubriques</span>
-              <span className={`font-medium ${step >= 5 ? "text-primary" : "text-muted-foreground"}`}>
+              <span
+                className={`font-medium ${
+                  step >= 2 ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                Conjoint
+              </span>
+              <span
+                className={`font-medium ${
+                  step >= 3 ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                Enfants
+              </span>
+              <span
+                className={`font-medium ${
+                  step >= 4 ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
+                Rubriques
+              </span>
+              <span
+                className={`font-medium ${
+                  step >= 5 ? "text-primary" : "text-muted-foreground"
+                }`}
+              >
                 Confirmation
               </span>
             </div>
@@ -1120,6 +1304,5 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
-

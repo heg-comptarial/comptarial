@@ -11,19 +11,34 @@ class RubriqueSeeder extends Seeder
     {
         DB::table('rubrique')->insert([
             [
-                'declaration_id' => 1,
-                'titre' => 'Rubrique 1',
-                'description' => 'Description de la rubrique 1',
+                'declaration_id' => 6,
+                'titre' => 'Banques',
+                'description' => 'Informations bancaires',
             ],
             [
-                'declaration_id' => 1,
-                'titre' => 'Rubrique 2',
-                'description' => 'Description de la rubrique 2',
+                'declaration_id' => 6,
+                'titre' => 'Dettes',
+                'description' => 'Informations sur les dettes',
             ],
             [
-                'declaration_id' => 1,
-                'titre' => 'Rubrique 3',
-                'description' => 'Description de la rubrique 3',
+                'declaration_id' => 7,
+                'titre' => 'Banques',
+                'description' => 'Informations bancaires',
+            ],
+            [
+                'declaration_id' => 7,
+                'titre' => 'Dettes',
+                'description' => 'Informations sur les dettes',
+            ],
+            [
+                'declaration_id' => 7,
+                'titre' => 'Immobiliers',
+                'description' => 'Informations sur les biens immobiliers',
+            ],
+            [
+                'declaration_id' => 7,
+                'titre' => 'Salariés',
+                'description' => 'Informations sur les revenus salariés',
             ],
         ]);
     }
