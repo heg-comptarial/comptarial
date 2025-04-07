@@ -26,6 +26,7 @@ import {
 import { Loader2 } from "lucide-react";
 import axios from "axios";
 import { Enfant, FormDataType } from "@/types/interfaces";
+import ProtectedPrive from "@/components/ProtectedRoutePrive";
 
 interface FormulaireDeclarationProps {
   onSubmitSuccess?: (formData: FormDataType) => Promise<boolean>;
@@ -475,6 +476,7 @@ export default function FormulaireDeclaration({
   // Afficher un écran de chargement pendant la récupération des données
   if (isDataLoading) {
     return (
+      <ProtectedPrive>
       <div className="container max-w-3xl py-8">
         <Card>
           <CardHeader>
@@ -488,11 +490,13 @@ export default function FormulaireDeclaration({
           </CardContent>
         </Card>
       </div>
+      </ProtectedPrive>
     );
   }
 
   // Rendu de l'étape 1: Informations de base
   const renderStep1 = () => (
+    <ProtectedPrive>
     <div className="space-y-6">
       <div className="space-y-2">
         <Label htmlFor="dateNaissance">Date de naissance</Label>
@@ -562,6 +566,7 @@ export default function FormulaireDeclaration({
         Continuer
       </Button>
     </div>
+    </ProtectedPrive>
   );
 
   // Rendu de l'étape 2: Informations du conjoint (si marié ou pacsé)
@@ -570,13 +575,16 @@ export default function FormulaireDeclaration({
       // Si pas marié ni pacsé, passer directement à l'étape suivante
       setTimeout(() => nextStep(), 0);
       return (
+        <ProtectedPrive>
         <div className="flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
+        </ProtectedPrive>
       );
     }
 
     return (
+      <ProtectedPrive>
       <div className="space-y-6">
         <h3 className="text-lg font-medium">Informations du conjoint</h3>
 
@@ -705,6 +713,7 @@ export default function FormulaireDeclaration({
           <Button onClick={nextStep}>Continuer</Button>
         </div>
       </div>
+      </ProtectedPrive>
     );
   };
 
@@ -714,13 +723,16 @@ export default function FormulaireDeclaration({
       // Si pas d'enfants, passer directement à l'étape suivante
       setTimeout(() => nextStep(), 0);
       return (
+        <ProtectedPrive>
         <div className="flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
+        </ProtectedPrive>
       );
     }
 
     return (
+      <ProtectedPrive>
       <div className="space-y-6">
         <h3 className="text-lg font-medium">
           Informations des enfants à charge
@@ -874,11 +886,13 @@ export default function FormulaireDeclaration({
           <Button onClick={nextStep}>Continuer</Button>
         </div>
       </div>
+      </ProtectedPrive>
     );
   };
 
   // Rendu de l'étape 4: Sélection des rubriques
   const renderStep4 = () => (
+    <ProtectedPrive>
     <div className="space-y-6">
       <h3 className="text-lg font-medium">
         Sélectionnez les rubriques qui vous concernent
@@ -1036,10 +1050,12 @@ export default function FormulaireDeclaration({
         <Button onClick={nextStep}>Continuer</Button>
       </div>
     </div>
+    </ProtectedPrive>
   );
 
   // Rendu de l'étape 5: Récapitulatif et confirmation
   const renderStep5 = () => (
+    <ProtectedPrive>
     <div className="space-y-6">
       <h3 className="text-lg font-medium">
         Récapitulatif de votre déclaration
@@ -1224,6 +1240,7 @@ export default function FormulaireDeclaration({
         </Button>
       </div>
     </div>
+    </ProtectedPrive>
   );
 
   // Rendu du formulaire en fonction de l'étape actuelle
@@ -1245,6 +1262,7 @@ export default function FormulaireDeclaration({
   };
 
   return (
+    <ProtectedPrive>
     <div className="container max-w-3xl py-8">
       <Card>
         <CardHeader>
@@ -1304,5 +1322,6 @@ export default function FormulaireDeclaration({
         </CardContent>
       </Card>
     </div>
+    </ProtectedPrive>
   );
 }

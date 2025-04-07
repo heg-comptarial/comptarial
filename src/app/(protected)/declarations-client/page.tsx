@@ -16,7 +16,7 @@ import { DocumentUpload } from "@/components/protected/declaration-client/docume
 import { DocumentList } from "@/components/protected/declaration-client/document-list";
 import { foFields } from "@/utils/foFields";
 import YearSelector from "@/components/YearSelector";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import ProtectedRoute from "@/components/ProtectedRoutePrive";
 
 export default function DeclarationsClientPage() {
   const [userId, setUserId] = useState<number | null>(null);

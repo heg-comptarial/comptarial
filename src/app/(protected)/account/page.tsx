@@ -12,7 +12,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProtectedRoute from "@/components/ProtectedRoute";
+import ProtectedLogin from "@/components/ProtectedRouteLogin";
 
 export const metadata: Metadata = {
   title: "Account",
@@ -21,7 +21,7 @@ export const metadata: Metadata = {
 
 export default function AccountPage() {
   return (
-    <ProtectedRoute>
+    <ProtectedLogin>
       <div className="flex justify-center">
         <Tabs defaultValue="account" className="w-[400px]">
           <TabsList className="grid w-full grid-cols-2">
@@ -77,6 +77,6 @@ export default function AccountPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </ProtectedRoute>
+    </ProtectedLogin>
   );
 }

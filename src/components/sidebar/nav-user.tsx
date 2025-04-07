@@ -134,12 +134,10 @@ export function NavUser({
               </Link>
             </DropdownMenuGroup>
             <DropdownMenuSeparator />
-            <Link href="/" passHref>
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut />
                 Log out
               </DropdownMenuItem>
-            </Link>
           </DropdownMenuContent>
         </DropdownMenu>
       </SidebarMenuItem>

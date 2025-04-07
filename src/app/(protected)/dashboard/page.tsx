@@ -2,7 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { FileText, Edit } from "lucide-react";
-import ProtectedRoute from "@/components/ProtectedRoute";  // Importer le composant
+import ProtectedRoute from "@/components/ProtectedRoutePrive";  // Importer le composant
 
 export default function Dashboard() {
   return (
