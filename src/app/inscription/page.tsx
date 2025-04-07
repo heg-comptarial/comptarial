@@ -74,6 +74,7 @@ export default function SignupPage() {
       if (response.data && response.data.token) {
         // Stocker le token d'authentification
         localStorage.setItem("auth_token", response.data.token)
+        localStorage.setItem("user_id", response.data.user.user_id)
         return true
       }
       return false
@@ -116,8 +117,8 @@ export default function SignupPage() {
         router.push("/dashboard")
       } else {
         // Si la connexion automatique échoue, rediriger vers la page de connexion
-        alert("Inscription réussie! Veuillez vous connecter.")
-        router.push("/connexion")
+        console.error("Échec de la connexion automatique après l'inscription.")
+        alert("Login échoué! Veuillez vous connecter.")
       }
     } catch (error) {
       console.error("Erreur lors de l'inscription:", error)
