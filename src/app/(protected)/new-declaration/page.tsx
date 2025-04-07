@@ -85,11 +85,16 @@ export default function NouvelleDeclaration() {
           }
         }
       } catch (err) {
-        console.error("Erreur lors de la récupération des données:", err);
-        setError(
-          "Impossible de récupérer vos informations. Veuillez vous reconnecter."
-        );
-      } finally {
+        // Assertion de type pour indiquer que err est une erreur Axios
+        if (axios.isAxiosError(err) && err.response && err.response.status === 404) {
+          console.log("Erreur 404 : L'utilisateur n'a pas été trouvé. Le compte est peut-être en attente d'approbation.");
+          setError("Votre compte n'as pas été encore approuve par l'admin");
+        }else{
+              console.error("Erreur lors de la récupération des données:", err);
+              setError(
+                "Impossible de récupérer vos informations. Veuillez vous reconnecter."
+              );
+            }} finally {
         setIsLoading(false);
       }
     };
