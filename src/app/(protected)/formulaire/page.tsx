@@ -118,6 +118,20 @@ export default function FormulaireDeclaration({
     return "";
   };
 
+  const formatDateToDDMMYYYY = (dateString: string): string => {
+    if (!dateString) return "";
+ 
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return ""; // Vérifie si la date est valide
+ 
+    // Extraction des parties de la date
+    const day = String(date.getDate()).padStart(2, '0'); // Ajoute un 0 devant si nécessaire
+    const month = String(date.getMonth() + 1).padStart(2, '0'); // Les mois commencent à 0
+    const year = date.getFullYear();
+ 
+    return `${day}.${month}.${year}`;
+  };
+
   // Récupérer les données de l'utilisateur et les données du privé si disponibles
   useEffect(() => {
     const fetchData = async () => {
@@ -278,6 +292,26 @@ export default function FormulaireDeclaration({
 
   // Passer à l'étape suivante
   const nextStep = () => {
+    const { dateNaissance, nationalite, etatCivil } = infoBase;
+ 
+    let verifCocheRempli = false;
+ 
+    if(step === 4){
+      for (const key in formSections) {
+        // Si la valeur est false
+        if (formSections[key] === true) {
+          verifCocheRempli = true;
+        }
+      }
+      if(!verifCocheRempli){
+        alert("Merci de verifier vos réponse, aucune n'a été choisi.");
+        return;
+      }
+    }
+    if (!dateNaissance || !nationalite.trim() || !etatCivil) {
+      alert("Merci de remplir tous les champs obligatoires.");
+      return;
+    }
     setStep(step + 1);
   };
 
@@ -527,6 +561,7 @@ export default function FormulaireDeclaration({
           value={infoBase.etatCivil}
           onValueChange={(value) => handleInfoBaseChange("etatCivil", value)}
           className="flex flex-col space-y-2"
+          required
         >
           <div className="flex items-center space-x-2">
             <RadioGroupItem value="celibataire" id="celibataire" />
@@ -1067,7 +1102,7 @@ export default function FormulaireDeclaration({
           <AccordionContent>
             <div className="space-y-2">
               <p>
-                <strong>Date de naissance:</strong> {infoBase.dateNaissance}
+                <strong>Date de naissance:</strong> {formatDateToDDMMYYYY(infoBase.dateNaissance)}
               </p>
               <p>
                 <strong>Nationalité:</strong> {infoBase.nationalite}

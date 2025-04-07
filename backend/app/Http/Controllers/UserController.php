@@ -146,9 +146,9 @@ class UserController extends Controller
             if ($user->role === 'prive') {
                 Prive::create([
                     'user_id' => $user->user_id, // Utilisez user_id ici
-                    'dateNaissance' => now(), // Par défaut
-                    'nationalite' => 'Non spécifiée',
-                    'etatCivil' => 'Non spécifié',
+                    'dateNaissance' => null, // Par défaut
+                    'nationalite' => null,
+                    'etatCivil' => null,
                     'fo_banques' => false,
                     'fo_dettes' => false,
                     'fo_immobiliers' => false,

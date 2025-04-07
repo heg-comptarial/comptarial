@@ -130,12 +130,13 @@ export default function NouvelleDeclaration() {
       }
 
       const declarationData = {
+        ...formData,
         user_id: userId,
         titre: `Déclaration ${currentYear}`,
         statut: "pending",
         annee: currentYear,
         dateCreation: new Date().toISOString(),
-        ...formData,
+        
       };
 
       await axios.post(
