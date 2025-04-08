@@ -15,5 +15,8 @@ export default defineConfig({
     include: [...configDefaults.include, 'src/app/**/*.test.tsx'], // Inclut les fichiers de tests .test.tsx
     environment: 'jsdom', // Utilise jsdom pour tester les composants React
     globals: true, // Active les globals comme `expect`, `it`, `describe`
+    compilerOptions: {
+      types: ['vitest/globals'], // Inclut les types globaux de vitest
+    },
   },
 })

@@ -1,14 +1,19 @@
-import '@testing-library/jest-dom';
-import { render, screen, fireEvent } from "@testing-library/react";
+import "@testing-library/jest-dom";
+import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import LoginPage from "./page";
 import { describe, it, expect, vi } from "vitest";
 
-// Mock du router Next.js pour éviter l'erreur "expected app router to be mounted"
+// ✅ Mock du router Next.js
 vi.mock("next/navigation", () => ({
   useRouter: () => ({
-    push: vi.fn(), // Mock de la redirection
+    push: vi.fn(),
   }),
 }));
+
+// ✅ Mock d’Axios
+import axios from "axios";
+vi.mock("axios");
+const mockedAxios = vi.mocked(axios);
 
 describe("LoginPage component", () => {
   it("affiche correctement le formulaire de login", () => {
@@ -17,7 +22,9 @@ describe("LoginPage component", () => {
     expect(screen.getByText("LOGIN")).toBeInTheDocument();
     expect(screen.getByLabelText("Email")).toBeInTheDocument();
     expect(screen.getByLabelText("Mot de passe")).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: /Se connecter/i })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: /Se connecter/i })
+    ).toBeInTheDocument();
   });
 
   it("permet à l'utilisateur de saisir un email et un mot de passe", () => {
@@ -51,24 +58,36 @@ describe("LoginPage component", () => {
   });
 
   it("soumet le formulaire et déclenche une requête API", async () => {
-    global.fetch = vi.fn(() =>
-      Promise.resolve({
-        ok: true,
-        json: () => Promise.resolve({ token: "fake-token" }),
-      })
-    ) as unknown as typeof fetch;
-    
+    // Simule la réponse API avec Axios
+    mockedAxios.post.mockResolvedValueOnce({
+      status: 200,
+      data: {
+        token: "fake-token",
+        user: {
+          user_id: 42,
+          role: "user", // ou "admin"
+        },
+      },
+    });
 
     render(<LoginPage />);
 
     const emailInput = screen.getByLabelText("Email");
     const passwordInput = screen.getByLabelText("Mot de passe");
-    const submitButton = screen.getByRole("button", { name: /Se connecter/i });
+    const submitButton = screen.getByRole("button", {
+      name: /Se connecter/i,
+    });
 
-    fireEvent.change(emailInput, { target: { value: "test@example.com" } });
-    fireEvent.change(passwordInput, { target: { value: "password123" } });
+    fireEvent.change(emailInput, { target: { value: "prive@example.com" } });
+    fireEvent.change(passwordInput, { target: { value: "password" } });
     fireEvent.click(submitButton);
 
-    expect(global.fetch).toHaveBeenCalledWith("http://127.0.0.1:8000/api/login", expect.any(Object));
+    await waitFor(() => {
+      expect(mockedAxios.post).toHaveBeenCalledWith(
+        "http://127.0.0.1:8000/api/login",
+        { email: "prive@example.com", password: "password" },
+        expect.any(Object)
+      );
+    });
   });
 });
