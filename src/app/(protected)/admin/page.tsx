@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit, Search, UserPlus, Users } from "lucide-react";
+import { Search, UserPlus, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -17,6 +17,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import ProtectedRouteAdmin from "@/components/ProtectedRouteAdmin";
 import { useRouter } from "next/navigation";
+
 
 interface User {
   user_id: number;
