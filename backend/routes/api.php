@@ -72,6 +72,9 @@ Route::get('/users/{userId}/declarations', [UserController::class, 'getAllDeclar
 // Route pour obtenir la declaration d'un user d'une année spécifique
 Route::get('/users/{userId}/declarations/year/{year}', [UserController::class, 'getDeclarationByYear']);
 
+// Route pour obtenir tous les commentaires d'un document
+Route::get('/documents/{documentId}/commentaires', [DocumentController::class, 'getCommentairesByDocument']);
+
 // Route pour l'authentification
 Route::post('login', [AuthController::class, 'login']);
 Route::post('logout', [AuthController::class, 'logout'])->middleware("auth:sanctum");

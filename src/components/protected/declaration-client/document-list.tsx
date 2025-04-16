@@ -9,21 +9,25 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download, Trash2 } from "lucide-react";
+import { CommentsDialog } from "@/components/protected/declaration-client/comment-dialog";
+import { Download, Trash2, MessageSquareMore } from "lucide-react";
 import { getFileTypeIcon } from "@/utils/getFileTypeIcon";
 import { getStatusBadge } from "@/utils/getStatusBadge";
+import { Commentaire } from "@/types/interfaces";
 import { toast } from "sonner";
 import { useState } from "react";
 
 interface Document {
   doc_id: number;
+  rubrique_id: number;
   nom: string;
   type: string;
   cheminFichier: string;
   statut: string;
-  sous_rubrique?: string | null;
+  sous_rubrique: string | null;
   dateCreation?: string;
   fileSize?: number;
+  commentaires?: Commentaire[];
 }
 
 interface DocumentListProps {
@@ -33,6 +37,7 @@ interface DocumentListProps {
 }
 
 export function DocumentList({
+  rubriqueId,
   rubriqueName,
   documents: initialDocuments,
 }: DocumentListProps) {
@@ -163,6 +168,24 @@ export function DocumentList({
                     >
                       <Trash2 className="h-4 w-4 inline" />
                     </button>
+
+                    <CommentsDialog
+                      document={{
+                        ...doc,
+                        rubrique_id: rubriqueId,
+                        sous_rubrique: doc.sous_rubrique ?? null,
+                        dateCreation: doc.dateCreation ?? "",
+                        commentaires: doc.commentaires ?? [],
+                      }}
+                      trigger={
+                        <button
+                          className="text-yellow-500 hover:text-yellow-600 ml-2"
+                          title="Voir les commentaires"
+                        >
+                          <MessageSquareMore className="h-4 w-4 inline" />
+                        </button>
+                      }
+                    />
                   </TableCell>
                 </TableRow>
               ))}

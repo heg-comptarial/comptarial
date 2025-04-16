@@ -92,48 +92,53 @@ export default function DeclarationsClientPage() {
         const fetchOrCreateRubrique = async () => {
           if (!selectedYear || !userId) return;
           setLoading(true);
-      
+
           try {
             const declarationResponse = await fetch(
               `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${selectedYear}`
             );
-      
+
             if (!declarationResponse.ok) {
               setError("Déclaration non trouvée");
               setLoading(false);
               return;
             }
-      
+
             const declarationData = await declarationResponse.json();
-      
-            if (declarationData.rubriques && declarationData.rubriques.length > 0) {
+
+            if (
+              declarationData.rubriques &&
+              declarationData.rubriques.length > 0
+            ) {
               setDeclaration(declarationData);
-      
+
               const alreadyUploaded = declarationData.rubriques
                 .filter(
                   (rubrique: Rubrique) =>
                     rubrique.documents && rubrique.documents.length > 0
                 )
                 .map((r: Rubrique) => r.rubrique_id);
-      
+
               setUploadedRubriques(alreadyUploaded);
               setLoading(false);
             } else {
-              const priveResponse = await fetch(`http://localhost:8000/api/prives`);
+              const priveResponse = await fetch(
+                `http://localhost:8000/api/prives`
+              );
               const privesData: Prive[] = await priveResponse.json();
-      
+
               const userPrive: Prive | undefined = privesData.find(
                 (prive) => prive.user_id === userId
               );
-      
+
               if (!userPrive) {
                 setError("Données privées non trouvées pour cet utilisateur");
                 setLoading(false);
                 return;
               }
-      
+
               const createdRubriques = [];
-      
+
               for (const [field, value] of Object.entries(userPrive)) {
                 if (
                   field.startsWith("fo_") &&
@@ -141,7 +146,7 @@ export default function DeclarationsClientPage() {
                   foFields[field as keyof typeof foFields]
                 ) {
                   const rubriqueInfo = foFields[field as keyof typeof foFields];
-      
+
                   try {
                     const createResponse = await fetch(
                       `http://127.0.0.1:8000/api/rubriques`,
@@ -155,7 +160,7 @@ export default function DeclarationsClientPage() {
                         }),
                       }
                     );
-      
+
                     if (createResponse.ok) {
                       const createdRubrique = await createResponse.json();
                       createdRubriques.push(createdRubrique);
@@ -165,7 +170,7 @@ export default function DeclarationsClientPage() {
                   }
                 }
               }
-      
+
               const updatedDeclarationResponse = await fetch(
                 `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationData.declaration_id}`
               );
@@ -173,7 +178,7 @@ export default function DeclarationsClientPage() {
                 const updatedDeclarationData =
                   await updatedDeclarationResponse.json();
                 setDeclaration(updatedDeclarationData);
-      
+
                 const alreadyUploaded = updatedDeclarationData.rubriques
                   .filter(
                     (rubrique: Rubrique) =>
@@ -187,7 +192,7 @@ export default function DeclarationsClientPage() {
                   rubriques: createdRubriques,
                 });
               }
-      
+
               setToastShown(true);
             }
           } catch (err) {
@@ -196,7 +201,7 @@ export default function DeclarationsClientPage() {
           } finally {
             setLoading(false);
           }
-        }
+        };
 
         fetchOrCreateRubrique();
       }
@@ -206,8 +211,6 @@ export default function DeclarationsClientPage() {
   const handleYearChange = (year: number) => {
     setSelectedYear(year.toString());
   };
-
-
 
   useEffect(() => {
     if (!loading && toastShown) {
@@ -242,9 +245,9 @@ export default function DeclarationsClientPage() {
       toast.warning("Aucun fichier sélectionné");
       return;
     }
-  
+
     setIsSaving(true);
-  
+
     try {
       const uploadPromises = selectedFiles.map(async (fileData) => {
         const formData = new FormData();
@@ -254,20 +257,22 @@ export default function DeclarationsClientPage() {
         formData.append("rubriqueId", fileData.rubriqueId.toString());
         formData.append(
           "rubriqueName",
-          declaration?.rubriques.find((r) => r.rubrique_id === fileData.rubriqueId)?.titre || ""
+          declaration?.rubriques.find(
+            (r) => r.rubrique_id === fileData.rubriqueId
+          )?.titre || ""
         );
-  
+
         const response = await fetch("/api/upload", {
           method: "POST",
           body: formData,
         });
-  
+
         if (!response.ok) {
           throw new Error(`Échec du téléversement : ${fileData.file.name}`);
         }
-  
+
         const result = await response.json();
-  
+
         return {
           rubrique_id: fileData.rubriqueId,
           nom: result.fileName,
@@ -278,22 +283,24 @@ export default function DeclarationsClientPage() {
           fileSize: fileData.file.size,
         };
       });
-  
+
       const documentsToSave = await Promise.all(uploadPromises);
-  
+
       const saveResponse = await fetch("http://127.0.0.1:8000/api/documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ documents: documentsToSave }),
       });
-  
+
       if (!saveResponse.ok) {
         const errorText = await saveResponse.text();
         throw new Error(`Erreur lors de la sauvegarde : ${errorText}`);
       }
-  
-      toast.success(`${documentsToSave.length} documents enregistrés avec succès`);
-  
+
+      toast.success(
+        `${documentsToSave.length} documents enregistrés avec succès`
+      );
+
       // ✅ Re-fetch declaration to get doc_id values
       if (userId && declaration?.declaration_id) {
         try {
@@ -303,32 +310,36 @@ export default function DeclarationsClientPage() {
           if (refreshedRes.ok) {
             const refreshedData = await refreshedRes.json();
             setDeclaration(refreshedData);
-  
+
             const uploadedIds = (refreshedData.rubriques as Rubrique[])
               .filter((r) => r.documents && r.documents.length > 0)
               .map((r) => r.rubrique_id);
-  
+
             setUploadedRubriques(uploadedIds);
           } else {
             console.warn("⚠️ Impossible de rafraîchir la déclaration");
           }
         } catch (err) {
-          console.error("❌ Erreur lors du rechargement de la déclaration:", err);
+          console.error(
+            "❌ Erreur lors du rechargement de la déclaration:",
+            err
+          );
         }
       }
-  
+
       setSelectedFiles([]); // clear the pending file list
     } catch (error) {
       console.error("Erreur globale:", error);
       toast.error("Erreur lors de l'enregistrement des documents", {
         description:
-          error instanceof Error ? error.message : "Une erreur inconnue est survenue",
+          error instanceof Error
+            ? error.message
+            : "Une erreur inconnue est survenue",
       });
     } finally {
       setIsSaving(false);
     }
   };
-  
 
   if (loading || !userId) {
     return (
@@ -347,7 +358,6 @@ export default function DeclarationsClientPage() {
       </div>
     );
   }
-
 
   return (
     <ProtectedRoute>
@@ -384,7 +394,10 @@ export default function DeclarationsClientPage() {
                       <DocumentList
                         rubriqueId={rubrique.rubrique_id}
                         rubriqueName={rubrique.titre}
-                        documents={rubrique.documents || []}
+                        documents={(rubrique.documents || []).map((doc) => ({
+                          ...doc,
+                          sous_rubrique: doc.sous_rubrique ?? null,
+                        }))}
                       />
                     ) : (
                       <DocumentUpload
