@@ -9,11 +9,14 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Download } from "lucide-react";
+import { Download, Trash2 } from "lucide-react";
 import { getFileTypeIcon } from "@/utils/getFileTypeIcon";
+import { toast } from "sonner";
+import { useState } from "react";
 
 interface Document {
-  doc_id: number;
+  doc_id: number | undefined;
+  id?: number;
   nom: string;
   type: string;
   cheminFichier: string;
@@ -26,13 +29,14 @@ interface DocumentListProps {
   rubriqueId: number;
   rubriqueName: string;
   documents: Document[];
-  onAddMore?: () => void;
 }
 
 export function DocumentList({
   rubriqueName,
-  documents = [],
+  documents: initialDocuments,
 }: DocumentListProps) {
+  const [documents, setDocuments] = useState<Document[]>(initialDocuments);
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "approved":
@@ -43,6 +47,89 @@ export function DocumentList({
         return <span className="text-red-500">Rejeté</span>;
       default:
         return <span>Inconnu</span>;
+    }
+  };
+
+  const getYearFromDate = (dateStr?: string): string => {
+    if (!dateStr) return new Date().getFullYear().toString(); // fallback
+    const match = dateStr.match(/^\d{4}/);
+    return match ? match[0] : new Date().getFullYear().toString();
+  };
+
+  const handleDownload = async (doc: Document) => {
+    try {
+      const year = getYearFromDate(doc.dateCreation);
+
+      const params = new URLSearchParams({
+        fileName: doc.nom,
+        year,
+        userId: localStorage.getItem("user_id")!,
+        rubriqueName,
+      });
+
+      const res = await fetch(`/api/download?${params.toString()}`);
+      if (!res.ok) throw new Error("Download failed");
+
+      const blob = await res.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = doc.nom;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors du téléchargement");
+    }
+  };
+
+  const handleDelete = async (doc: Document) => {
+    const confirmed = window.confirm(`Supprimer ${doc.nom} ?`);
+    if (!confirmed) return;
+
+    try {
+      const year = getYearFromDate(doc.dateCreation);
+      const userId = localStorage.getItem("user_id")!;
+      const docId = doc.doc_id ?? doc.id;
+
+      if (!docId) {
+        console.error("Document ID is missing:", doc);
+        throw new Error("Impossible de supprimer : ID manquant");
+      }
+
+      const params = new URLSearchParams({
+        fileName: doc.nom,
+        year,
+        userId,
+        rubriqueName, // correct rubrique name from props
+      });
+
+      // 🔹 Delete from S3
+      const s3Res = await fetch(`/api/delete?${params.toString()}`, {
+        method: "DELETE",
+      });
+      if (!s3Res.ok) throw new Error("Erreur S3");
+
+      // 🔹 Delete from Laravel
+      console.log("Trying to delete doc with ID:", docId);
+
+      const backendRes = await fetch(
+        `http://localhost:8000/api/documents/${docId}`,
+        { method: "DELETE" }
+      );
+      const text = await backendRes.text();
+      console.log("Laravel delete response:", text);
+
+      if (!backendRes.ok) throw new Error("Erreur API Laravel");
+
+      toast.success("Document supprimé avec succès");
+
+      // 🔹 Remove from local state
+      setDocuments((prev) => prev.filter((d) => (d.doc_id ?? d.id) !== docId));
+    } catch (err) {
+      console.error("Delete error:", err);
+      toast.error("Échec de la suppression");
     }
   };
 
@@ -79,15 +166,20 @@ export function DocumentList({
                     {getStatusBadge(doc.statut)}
                   </TableCell>
                   <TableCell className="w-1/6 text-right">
-                    <a
-                      href={doc.cheminFichier}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-blue-500 hover:text-blue-700"
+                    <button
+                      onClick={() => handleDownload(doc)}
+                      className="text-blue-500 hover:text-blue-700 mr-2"
                       title="Télécharger"
                     >
                       <Download className="h-4 w-4 inline" />
-                    </a>
+                    </button>
+                    <button
+                      onClick={() => handleDelete(doc)}
+                      className="text-red-500 hover:text-red-700"
+                      title="Supprimer"
+                    >
+                      <Trash2 className="h-4 w-4 inline" />
+                    </button>
                   </TableCell>
                 </TableRow>
               ))}
