@@ -93,7 +93,7 @@ class DocumentController extends Controller
     public function getCommentairesByDocument($documentId)
     {
         // Récupère tous les commentaires d'un document
-        $document = Document::with('commentaires')->findOrFail($documentId);
+        $document = Document::with('commentaires.administrateur.user')->findOrFail($documentId);
         return response()->json($document->commentaires);
     }
 }

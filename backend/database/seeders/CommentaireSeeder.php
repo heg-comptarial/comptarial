@@ -45,7 +45,7 @@ class CommentaireSeeder extends Seeder
             // user 7, declaration 7
             [
                 'document_id' => 3,
-                'admin_id' => 2,
+                'admin_id' => 1,
                 'contenu' => 'Il faut signer le document.',
                 'dateCreation' => now(),
             ],

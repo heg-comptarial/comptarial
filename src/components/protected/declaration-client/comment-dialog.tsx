@@ -40,9 +40,7 @@ export function CommentsDialog({
 
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
-          <DialogTitle>
-            Commentaires pour le document : {documentNom}
-          </DialogTitle>
+          <DialogTitle>{documentNom}</DialogTitle>
           <DialogDescription>
             {commentaires.length} commentaire
             {commentaires.length > 1 ? "s" : ""}
@@ -56,11 +54,20 @@ export function CommentsDialog({
                   key={comment.commentaire_id}
                   className="border rounded-lg p-4"
                 >
-                  <div className="text-sm text-muted-foreground mb-1">
-                    {format(
-                      new Date(comment.dateCreation),
-                      "d MMMM yyyy à HH:mm",
-                      { locale: fr }
+                  <div className="flex justify-between text-sm text-muted-foreground mb-1">
+                    <span>
+                      {format(
+                        new Date(comment.dateCreation),
+                        "d MMMM yyyy à HH:mm",
+                        {
+                          locale: fr,
+                        }
+                      )}
+                    </span>
+                    {comment.administrateur?.user?.nom && (
+                      <span className="italic text-right">
+                        — {comment.administrateur.user.nom}
+                      </span>
                     )}
                   </div>
                   <p className="text-sm">{comment.contenu}</p>
