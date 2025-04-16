@@ -11,17 +11,18 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Download, Trash2 } from "lucide-react";
 import { getFileTypeIcon } from "@/utils/getFileTypeIcon";
+import { getStatusBadge } from "@/utils/getStatusBadge";
 import { toast } from "sonner";
 import { useState } from "react";
 
 interface Document {
-  doc_id: number | undefined;
-  id?: number;
+  doc_id: number;
   nom: string;
   type: string;
   cheminFichier: string;
   statut: string;
-  dateCreation: string;
+  sous_rubrique?: string | null;
+  dateCreation?: string;
   fileSize?: number;
 }
 
@@ -37,21 +38,8 @@ export function DocumentList({
 }: DocumentListProps) {
   const [documents, setDocuments] = useState<Document[]>(initialDocuments);
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "approved":
-        return <span className="text-green-500">Approuvé</span>;
-      case "pending":
-        return <span className="text-yellow-500">En attente</span>;
-      case "rejected":
-        return <span className="text-red-500">Rejeté</span>;
-      default:
-        return <span>Inconnu</span>;
-    }
-  };
-
   const getYearFromDate = (dateStr?: string): string => {
-    if (!dateStr) return new Date().getFullYear().toString(); // fallback
+    if (!dateStr) return new Date().getFullYear().toString();
     const match = dateStr.match(/^\d{4}/);
     return match ? match[0] : new Date().getFullYear().toString();
   };
@@ -59,11 +47,12 @@ export function DocumentList({
   const handleDownload = async (doc: Document) => {
     try {
       const year = getYearFromDate(doc.dateCreation);
+      const userId = localStorage.getItem("user_id")!;
 
       const params = new URLSearchParams({
         fileName: doc.nom,
         year,
-        userId: localStorage.getItem("user_id")!,
+        userId,
         rubriqueName,
       });
 
@@ -91,7 +80,7 @@ export function DocumentList({
     try {
       const year = getYearFromDate(doc.dateCreation);
       const userId = localStorage.getItem("user_id")!;
-      const docId = doc.doc_id ?? doc.id;
+      const docId = doc.doc_id;
 
       if (!docId) {
         console.error("Document ID is missing:", doc);
@@ -102,17 +91,13 @@ export function DocumentList({
         fileName: doc.nom,
         year,
         userId,
-        rubriqueName, // correct rubrique name from props
+        rubriqueName,
       });
 
-      // 🔹 Delete from S3
       const s3Res = await fetch(`/api/delete?${params.toString()}`, {
         method: "DELETE",
       });
       if (!s3Res.ok) throw new Error("Erreur S3");
-
-      // 🔹 Delete from Laravel
-      console.log("Trying to delete doc with ID:", docId);
 
       const backendRes = await fetch(
         `http://localhost:8000/api/documents/${docId}`,
@@ -124,9 +109,7 @@ export function DocumentList({
       if (!backendRes.ok) throw new Error("Erreur API Laravel");
 
       toast.success("Document supprimé avec succès");
-
-      // 🔹 Remove from local state
-      setDocuments((prev) => prev.filter((d) => (d.doc_id ?? d.id) !== docId));
+      setDocuments((prev) => prev.filter((d) => d.doc_id !== docId));
     } catch (err) {
       console.error("Delete error:", err);
       toast.error("Échec de la suppression");
@@ -156,7 +139,7 @@ export function DocumentList({
             </TableHeader>
             <TableBody>
               {documents.map((doc) => (
-                <TableRow key={doc.doc_id ?? `${doc.nom}-${doc.cheminFichier}`}>
+                <TableRow key={doc.doc_id}>
                   <TableCell className="w-[40px]">
                     {getFileTypeIcon(doc.nom)}
                   </TableCell>

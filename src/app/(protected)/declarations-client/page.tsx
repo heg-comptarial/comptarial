@@ -8,13 +8,13 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { toast, Toaster } from "sonner";
 import { DocumentUpload } from "@/components/protected/declaration-client/document-upload";
 import { DocumentList } from "@/components/protected/declaration-client/document-list";
 import { foFields } from "@/utils/foFields";
+import { getStatusBadge } from "@/utils/getStatusBadge";
 import YearSelector from "@/components/YearSelector";
 import ProtectedRoute from "@/components/ProtectedRoutePrive";
 
@@ -242,9 +242,9 @@ export default function DeclarationsClientPage() {
       toast.warning("Aucun fichier sélectionné");
       return;
     }
-
+  
     setIsSaving(true);
-
+  
     try {
       const uploadPromises = selectedFiles.map(async (fileData) => {
         const formData = new FormData();
@@ -254,21 +254,20 @@ export default function DeclarationsClientPage() {
         formData.append("rubriqueId", fileData.rubriqueId.toString());
         formData.append(
           "rubriqueName",
-          declaration?.rubriques.find(
-            (r) => r.rubrique_id === fileData.rubriqueId
-          )?.titre || ""
+          declaration?.rubriques.find((r) => r.rubrique_id === fileData.rubriqueId)?.titre || ""
         );
-
+  
         const response = await fetch("/api/upload", {
           method: "POST",
           body: formData,
         });
-
+  
         if (!response.ok) {
-          throw new Error(`Failed to upload ${fileData.file.name}`);
+          throw new Error(`Échec du téléversement : ${fileData.file.name}`);
         }
-
+  
         const result = await response.json();
+  
         return {
           rubrique_id: fileData.rubriqueId,
           nom: result.fileName,
@@ -279,58 +278,57 @@ export default function DeclarationsClientPage() {
           fileSize: fileData.file.size,
         };
       });
-
+  
       const documentsToSave = await Promise.all(uploadPromises);
-
+  
       const saveResponse = await fetch("http://127.0.0.1:8000/api/documents", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ documents: documentsToSave }),
       });
-
+  
       if (!saveResponse.ok) {
         const errorText = await saveResponse.text();
-        throw new Error(`Failed to save documents: ${errorText}`);
+        throw new Error(`Erreur lors de la sauvegarde : ${errorText}`);
       }
-
-      toast.success(
-        `${documentsToSave.length} documents enregistrés avec succès`
-      );
-
-      const uploadedIds = documentsToSave.map((doc) => doc.rubrique_id);
-      setUploadedRubriques((prev) => [...new Set([...prev, ...uploadedIds])]);
-      setSelectedFiles([]);
-
-      setDeclaration((prev) => {
-        if (!prev) return prev;
-
-        const updatedRubriques = prev.rubriques.map((rubrique) => {
-          const newDocs = documentsToSave.filter(
-            (doc) => doc.rubrique_id === rubrique.rubrique_id
+  
+      toast.success(`${documentsToSave.length} documents enregistrés avec succès`);
+  
+      // ✅ Re-fetch declaration to get doc_id values
+      if (userId && declaration?.declaration_id) {
+        try {
+          const refreshedRes = await fetch(
+            `http://localhost:8000/api/users/${userId}/declarations/${declaration.declaration_id}`
           );
-
-          return newDocs.length > 0
-            ? ({
-                ...rubrique,
-                documents: [...(rubrique.documents || []), ...newDocs],
-              } as Rubrique)
-            : rubrique;
-        });
-
-        return { ...prev, rubriques: updatedRubriques };
-      });
+          if (refreshedRes.ok) {
+            const refreshedData = await refreshedRes.json();
+            setDeclaration(refreshedData);
+  
+            const uploadedIds = (refreshedData.rubriques as Rubrique[])
+              .filter((r) => r.documents && r.documents.length > 0)
+              .map((r) => r.rubrique_id);
+  
+            setUploadedRubriques(uploadedIds);
+          } else {
+            console.warn("⚠️ Impossible de rafraîchir la déclaration");
+          }
+        } catch (err) {
+          console.error("❌ Erreur lors du rechargement de la déclaration:", err);
+        }
+      }
+  
+      setSelectedFiles([]); // clear the pending file list
     } catch (error) {
-      console.error("Error uploading and saving documents:", error);
+      console.error("Erreur globale:", error);
       toast.error("Erreur lors de l'enregistrement des documents", {
         description:
-          error instanceof Error
-            ? error.message
-            : "Une erreur inconnue est survenue",
+          error instanceof Error ? error.message : "Une erreur inconnue est survenue",
       });
     } finally {
       setIsSaving(false);
     }
   };
+  
 
   if (loading || !userId) {
     return (
@@ -350,18 +348,6 @@ export default function DeclarationsClientPage() {
     );
   }
 
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "approved":
-        return <Badge className="bg-green-500">Approuvé</Badge>;
-      case "pending":
-        return <Badge className="bg-yellow-500">En attente</Badge>;
-      case "rejected":
-        return <Badge className="bg-red-500">Rejeté</Badge>;
-      default:
-        return <Badge>Inconnu</Badge>;
-    }
-  };
 
   return (
     <ProtectedRoute>
