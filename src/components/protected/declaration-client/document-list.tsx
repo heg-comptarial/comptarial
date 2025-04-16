@@ -27,7 +27,6 @@ interface Document {
   sous_rubrique: string | null;
   dateCreation?: string;
   fileSize?: number;
-  commentaires?: Commentaire[];
 }
 
 interface DocumentListProps {
@@ -37,11 +36,13 @@ interface DocumentListProps {
 }
 
 export function DocumentList({
-  rubriqueId,
   rubriqueName,
   documents: initialDocuments,
 }: DocumentListProps) {
   const [documents, setDocuments] = useState<Document[]>(initialDocuments);
+  const [commentMap, setCommentMap] = useState<Record<number, Commentaire[]>>(
+    {}
+  );
 
   const getYearFromDate = (dateStr?: string): string => {
     if (!dateStr) return new Date().getFullYear().toString();
@@ -121,6 +122,21 @@ export function DocumentList({
     }
   };
 
+  const fetchComments = async (docId: number) => {
+    if (commentMap[docId]) return; // already loaded
+    try {
+      const res = await fetch(
+        `http://localhost:8000/api/documents/${docId}/commentaires`
+      );
+      const data = await res.json();
+      if (Array.isArray(data) && data.length > 0) {
+        setCommentMap((prev) => ({ ...prev, [docId]: data }));
+      }
+    } catch (err) {
+      console.error("Erreur lors du chargement des commentaires", err);
+    }
+  };
+
   return (
     <Card className="w-full">
       <CardHeader>
@@ -153,10 +169,10 @@ export function DocumentList({
                   <TableCell className="w-1/6">
                     {getStatusBadge(doc.statut)}
                   </TableCell>
-                  <TableCell className="w-1/6 text-right">
+                  <TableCell className="w-1/6 text-right space-x-2">
                     <button
                       onClick={() => handleDownload(doc)}
-                      className="text-blue-500 hover:text-blue-700 mr-2"
+                      className="text-blue-500 hover:text-blue-700"
                       title="Télécharger"
                     >
                       <Download className="h-4 w-4 inline" />
@@ -169,22 +185,20 @@ export function DocumentList({
                       <Trash2 className="h-4 w-4 inline" />
                     </button>
 
+                    {/* Show the comment button ONLY if there are comments */}
                     <CommentsDialog
-                      document={{
-                        ...doc,
-                        rubrique_id: rubriqueId,
-                        sous_rubrique: doc.sous_rubrique ?? null,
-                        dateCreation: doc.dateCreation ?? "",
-                        commentaires: doc.commentaires ?? [],
-                      }}
+                      documentId={doc.doc_id}
+                      documentNom={doc.nom}
+                      commentaires={commentMap[doc.doc_id] ?? []}
                       trigger={
                         <button
-                          className="text-yellow-500 hover:text-yellow-600 ml-2"
+                          className="text-yellow-500 hover:text-yellow-600"
                           title="Voir les commentaires"
                         >
                           <MessageSquareMore className="h-4 w-4 inline" />
                         </button>
                       }
+                      onOpen={() => fetchComments(doc.doc_id)}
                     />
                   </TableCell>
                 </TableRow>
