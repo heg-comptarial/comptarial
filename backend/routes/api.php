@@ -20,6 +20,9 @@ use Illuminate\Support\Facades\Crypt;
 // Routes pour les utilisateurs
 Route::apiResource('users', UserController::class);
 
+// Routes supplémentaires pour récupere les info d'un utilisateur par son id
+Route::get('/users/{id}/details', [UserController::class, 'getUserDetails']);
+
 // Routes supplémentaires pour les utilisateurs qui ont un statur pending
 Route::get('/users/status/pending', [UserController::class, 'getPending']);
 

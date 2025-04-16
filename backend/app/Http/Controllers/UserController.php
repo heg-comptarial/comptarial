@@ -179,17 +179,39 @@ class UserController extends Controller
     }
 
     public function getDeclarationByYear($userId, $year)
-{
-    // Récupère la déclaration d'un utilisateur spécifique pour une année donnée
-    $declaration = Declaration::where('user_id', $userId)
-        ->where('annee', $year)
-        ->with(['rubriques.documents']) // Inclut les rubriques et documents associés
-        ->first();
+    {
+        // Récupère la déclaration d'un utilisateur spécifique pour une année donnée
+        $declaration = Declaration::where('user_id', $userId)
+            ->where('annee', $year)
+            ->with(['rubriques.documents']) // Inclut les rubriques et documents associés
+            ->first();
 
-    if (!$declaration) {
-        return response()->json(['message' => 'Déclaration non trouvée pour cette année.'], 404);
+        if (!$declaration) {
+            return response()->json(['message' => 'Déclaration non trouvée pour cette année.'], 404);
+        }
+
+        return response()->json($declaration);
     }
 
-    return response()->json($declaration);
-}
+    public function getUserDetails($id)
+    {
+        try {
+            // Récupérer l'utilisateur avec ses relations (entreprises, prives, déclarations, etc.)
+            $user = User::with(['entreprises', 'prives', 'declarations.rubriques.sousRubriques.documents'])
+                ->findOrFail($id);
+
+            // Retourner les détails de l'utilisateur
+            return response()->json([
+                'success' => true,
+                'data' => $user,
+            ], 200);
+        } catch (\Exception $e) {
+            // Gérer les erreurs (par exemple, utilisateur non trouvé)
+            return response()->json([
+                'success' => false,
+                'message' => 'Utilisateur non trouvé',
+                'error' => $e->getMessage(),
+            ], 404);
+        }
+    }
 }
