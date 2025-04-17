@@ -47,8 +47,10 @@ export default function LoginPage() {
         // Redirection vers la page des utilisateurs (ou dashboard)
         if (response.data.user.role === "admin") {
           router.push("/admin");
-        } else {
+        } else if (response.data.user.statut === "approved") {
           router.push("/dashboard");
+        } else if (response.data.user.statut === "pending") {
+          router.push("/dashboard-pending");
         }
       } else {
         // Si la connexion échoue, on affiche une erreur

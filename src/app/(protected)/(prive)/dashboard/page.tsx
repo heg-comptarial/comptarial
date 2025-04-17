@@ -2,11 +2,11 @@
 
 import { Button } from "@/components/ui/button";
 import { FileText, Edit } from "lucide-react";
-import ProtectedRoute from "@/components/ProtectedRoutePrive";  // Importer le composant
+import ProtectedRoutePrive from "@/components/routes/ProtectedRoutePrive";  // Importer le composant
 
 export default function Dashboard() {
   return (
-    <ProtectedRoute>
+    <ProtectedRoutePrive>
       <div className="container mx-auto py-10 px-4 max-w-3xl">
         <h1 className="text-2xl font-semibold mb-8">
           Infos générales (page s&apos;inscrire)
@@ -27,6 +27,6 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-    </ProtectedRoute>
+    </ProtectedRoutePrive>
   );
 }

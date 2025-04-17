@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -53,7 +54,6 @@ export default function ProtectedRouteAdmin({ children }: ProtectedRouteProps) {
           setIsAuthenticated(false);
           setIsAdmin(false);
           setErrorMessage("Vous n'êtes pas autorisé à accéder à cette page.");
-          router.back(); // Redirection vers la page précédente
         }
       } catch (error) {
         console.error("Erreur lors de la vérification de l'utilisateur :", error);
@@ -67,13 +67,13 @@ export default function ProtectedRouteAdmin({ children }: ProtectedRouteProps) {
   }, [router]);
 
   if (isAuthenticated === null || isAdmin === null) {
-    // Affiche un écran de chargement pendant la vérification
-    return <div>Chargement...</div>;
+    // Affiche un message d'erreur spécifique
+    return; // Affiche un message de chargement
   }
 
   if (!isAuthenticated || !isAdmin) {
     // Affiche un message d'erreur spécifique
-    return <div>{errorMessage}</div>;
+    return notFound();
   }
 
   return <>{children}</>; // Rendre les enfants (la page protégée)

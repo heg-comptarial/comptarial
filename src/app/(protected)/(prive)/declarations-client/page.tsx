@@ -16,7 +16,7 @@ import { DocumentUpload } from "@/components/protected/declaration-client/docume
 import { DocumentList } from "@/components/protected/declaration-client/document-list";
 import { foFields } from "@/utils/foFields";
 import YearSelector from "@/components/YearSelector";
-import ProtectedRoute from "@/components/ProtectedRoutePrive";
+import ProtectedRoutePrive from "@/components/routes/ProtectedRoutePrive";
 
 export default function DeclarationsClientPage() {
   const [userId, setUserId] = useState<number | null>(null);
@@ -364,7 +364,7 @@ export default function DeclarationsClientPage() {
   };
 
   return (
-    <ProtectedRoute>
+    <ProtectedRoutePrive>
       <Toaster position="bottom-right" richColors closeButton />
       <div className="px-10">
         <h2 className="text-lg font-semibold px-2">Année de la déclaration</h2>
@@ -451,6 +451,6 @@ export default function DeclarationsClientPage() {
           </div>
         )}
       </div>
-    </ProtectedRoute>
+    </ProtectedRoutePrive>
   );
 }

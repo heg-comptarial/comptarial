@@ -26,7 +26,7 @@ import {
 import { Loader2 } from "lucide-react";
 import axios from "axios";
 import { Enfant, FormDataType } from "@/types/interfaces";
-import ProtectedPrive from "@/components/ProtectedRoutePrive";
+import ProtectedPrive from "@/components/routes/ProtectedRoutePrive";
 
 interface FormulaireDeclarationProps {
   onSubmitSuccess?: (formData: FormDataType) => Promise<boolean>;

@@ -1,0 +1,69 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import { notFound, useRouter } from "next/navigation";
+
+interface ProtectedRouteProps {
+  children: React.ReactNode;
+}
+
+async function fetchUserDetails(userId: string | null): Promise<{ status: string | null }> {
+  if (!userId) return { status: null };
+
+  const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!response.ok) {
+    console.error("Failed to fetch user details");
+    return { status: null };
+  }
+
+  const data = await response.json();
+  return { status: data.statut };
+}
+
+export default function ProtectedRoutePending({ children }: ProtectedRouteProps) {
+  const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
+  const router = useRouter();
+
+  useEffect(() => {
+    const checkAccess = async () => {
+      const userId = localStorage.getItem("user_id");
+      const authToken = localStorage.getItem("auth_token");
+
+      if (!authToken || !userId) {
+        router.push("/connexion");
+        return;
+      }
+
+      try {
+        const { status } = await fetchUserDetails(userId);
+
+        if (status === "pending") {
+          setIsAllowed(true);
+        } else {
+          setIsAllowed(false);
+        }
+      } catch (error) {
+        console.error("Erreur lors de la vérification :", error);
+        setIsAllowed(false);
+      }
+    };
+
+    checkAccess();
+  }, [router]);
+
+  if (isAllowed === null) {
+    return; // Loading
+  }
+
+  if (!isAllowed) {
+    return notFound(); // 404 si pas pending
+  }
+
+  return <>{children}</>;
+}

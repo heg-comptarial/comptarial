@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import ProtectedRouteAdmin from "@/components/ProtectedRouteAdmin";
+import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin";
 
 interface User {
   user_id: number;

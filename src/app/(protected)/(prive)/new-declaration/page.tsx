@@ -10,6 +10,7 @@ import { Loader2 } from "lucide-react";
 import axios from "axios";
 import dynamic from "next/dynamic";
 import { FormDataType } from "@/types/interfaces";
+import ProtectedRoutePrive from "@/components/routes/ProtectedRoutePrive";
 
 const FormulaireDeclaration = dynamic(() => import("../formulaire/page"), {
   ssr: false,
@@ -204,14 +205,17 @@ export default function NouvelleDeclaration() {
 
   if (isLoading) {
     return (
+      <ProtectedRoutePrive>
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
+      </ProtectedRoutePrive>
     );
   }
 
   if (error) {
     return (
+      <ProtectedRoutePrive>
       <div className="w-full px-4 py-8">
         <Card>
           <CardHeader>
@@ -227,11 +231,13 @@ export default function NouvelleDeclaration() {
           </CardContent>
         </Card>
       </div>
+      </ProtectedRoutePrive>
     );
   }
 
   if (!hasDeclaration && !showForm) {
     return (
+      <ProtectedRoutePrive>
       <div className="w-full px-4 py-8">
         <Card>
           <CardHeader>
@@ -250,11 +256,13 @@ export default function NouvelleDeclaration() {
           </CardContent>
         </Card>
       </div>
+      </ProtectedRoutePrive>
     );
   }
 
   if (hasDeclaration && hasChanges === null && !showForm) {
     return (
+      <ProtectedRoutePrive>
       <div className="w-full px-4 py-8">
         <Card>
           <CardHeader>
@@ -288,11 +296,13 @@ export default function NouvelleDeclaration() {
           </CardContent>
         </Card>
       </div>
+      </ProtectedRoutePrive>
     );
   }
 
   if (hasChanges === "non" && priveId) {
     return (
+      <ProtectedRoutePrive>
       <div className="w-full px-4 py-8">
         <Card>
           <CardHeader>
@@ -306,11 +316,13 @@ export default function NouvelleDeclaration() {
           </CardContent>
         </Card>
       </div>
+      </ProtectedRoutePrive>
     );
   }
 
   if (showForm) {
     return (
+      <ProtectedRoutePrive>
       <>
         {hasDeclaration && (
           <div className="w-full px-4 py-8">
@@ -329,10 +341,12 @@ export default function NouvelleDeclaration() {
           priveId={priveId}
         />
       </>
+      </ProtectedRoutePrive>
     );
   }
 
   return (
+    <ProtectedRoutePrive>
     <div className="w-full px-4 py-8">
       <Card>
         <CardHeader>
@@ -348,5 +362,6 @@ export default function NouvelleDeclaration() {
         </CardContent>
       </Card>
     </div>
+    </ProtectedRoutePrive>
   );
 }
