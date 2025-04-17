@@ -23,6 +23,10 @@ Route::apiResource('users', UserController::class);
 // Routes supplémentaires pour récupere les info d'un utilisateur par son id
 Route::get('/users/{id}/details', [UserController::class, 'getUserDetails']);
 
+// Routes supplémentaires pour récupérer les informations d'un utilisateur avec toutes ses relations
+Route::get('/users/{id}/full-data', [UserController::class, 'getFullUserData']);
+
+
 // Routes supplémentaires pour les utilisateurs qui ont un statur pending
 Route::get('/users/status/pending', [UserController::class, 'getPending']);
 
