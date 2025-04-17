@@ -214,4 +214,33 @@ class UserController extends Controller
             ], 404);
         }
     }
+
+    /**
+     * Récupère les données complètes d'un utilisateur avec ses déclarations et documents associés.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+
+    public function getFullUserData($id)
+    {
+        try {
+            $user = User::with([
+                'declarations.rubriques.documents'
+            ])->findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $user
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Utilisateur non trouvé ou erreur de chargement.',
+                'error' => $e->getMessage()
+            ], 404);
+        }
+    }
+
 }
