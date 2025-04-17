@@ -232,12 +232,18 @@ export default function DeclarationsClientPage() {
   const handleFilesSelected = (rubriqueId: number, files: File[]) => {
     setSelectedFiles((prev) => [
       ...prev,
-      ...files.map((file) => ({ file, rubriqueId })),
+      ...files.map((file) => ({
+        file,
+        rubriqueId,
+        id: file.name + file.size, // même logique que pour remove
+      })),
     ]);
   };
 
   const handleFileRemoved = (fileId: string) => {
-    console.log("File removed:", fileId);
+    setSelectedFiles((prev) =>
+      prev.filter((f) => f.file.name + f.file.size !== fileId)
+    );
   };
 
   const uploadAndSaveDocuments = async () => {
@@ -328,6 +334,9 @@ export default function DeclarationsClientPage() {
       }
 
       setSelectedFiles([]); // clear the pending file list
+      document
+        .querySelectorAll("[data-hide-uploader]")
+        .forEach((el) => el.dispatchEvent(new CustomEvent("closeUploader")));
     } catch (error) {
       console.error("Erreur globale:", error);
       toast.error("Erreur lors de l'enregistrement des documents", {
@@ -338,6 +347,24 @@ export default function DeclarationsClientPage() {
       });
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  const refreshDeclaration = async () => {
+    if (userId && declaration?.declaration_id) {
+      const refreshedRes = await fetch(
+        `http://localhost:8000/api/users/${userId}/declarations/${declaration.declaration_id}`
+      );
+      if (refreshedRes.ok) {
+        const refreshedData = await refreshedRes.json();
+        setDeclaration(refreshedData);
+
+        const uploadedIds = (refreshedData.rubriques as Rubrique[])
+          .filter((r) => r.documents && r.documents.length > 0)
+          .map((r) => r.rubrique_id);
+
+        setUploadedRubriques(uploadedIds);
+      }
     }
   };
 
@@ -398,8 +425,17 @@ export default function DeclarationsClientPage() {
                           ...doc,
                           sous_rubrique: doc.sous_rubrique ?? null,
                         }))}
+                        declarationStatus={declaration?.statut ?? "pending"}
+                        onFilesSelected={(files) =>
+                          handleFilesSelected(rubrique.rubrique_id, files)
+                        }
+                        onFileRemoved={handleFileRemoved}
+                        onUploadCompleted={async () => {
+                          await refreshDeclaration();
+                          setSelectedFiles([]);
+                        }}
                       />
-                    ) : (
+                    ) : declaration?.statut === "pending" ? (
                       <DocumentUpload
                         userId={userId}
                         year={declaration.annee}
@@ -411,6 +447,11 @@ export default function DeclarationsClientPage() {
                         }
                         onFileRemoved={handleFileRemoved}
                       />
+                    ) : (
+                      <p className="text-sm text-muted-foreground">
+                        Cette déclaration est figée. Vous ne pouvez plus ajouter
+                        de documents.
+                      </p>
                     )}
                   </div>
                 </AccordionContent>

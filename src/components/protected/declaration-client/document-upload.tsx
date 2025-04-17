@@ -13,11 +13,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Upload,
-  Trash2,
-  Download,
-} from "lucide-react";
+import { Upload, Trash2, Download } from "lucide-react";
 import { toast } from "sonner";
 import { formatFileSize } from "@/utils/format-file-size";
 import { allowedFileTypes } from "@/utils/allowedFileTypes";
@@ -43,9 +39,11 @@ interface DocumentUploadProps {
   year: string;
   rubriqueId: number;
   rubriqueName: string;
+  hideExistingList?: boolean;
   existingDocuments?: ExistingDocument[];
   onFilesSelected: (files: File[]) => void;
   onFileRemoved: (fileId: string) => void;
+  onUploadCompleted?: () => void;
 }
 
 export function DocumentUpload({
@@ -54,6 +52,7 @@ export function DocumentUpload({
   existingDocuments = [],
   onFilesSelected,
   onFileRemoved,
+  hideExistingList = false, // ✅ par défaut = false
 }: DocumentUploadProps) {
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
 
@@ -172,8 +171,8 @@ export function DocumentUpload({
           </div>
         )}
 
-        {/* Liste des documents existants */}
-        {existingDocuments.length > 0 && (
+        {/* Liste des documents existants (affichée seulement si hideExistingList = false) */}
+        {!hideExistingList && existingDocuments.length > 0 && (
           <div className="space-y-4 mt-6">
             <h3 className="text-sm font-medium">Documents existants</h3>
             <Table>
