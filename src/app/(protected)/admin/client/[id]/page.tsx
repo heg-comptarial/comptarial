@@ -257,9 +257,12 @@ export default function ClientDetail() {
 
 
   // Modifier la fonction handleDocumentStatusChange pour recharger les données avec la nouvelle route
-  const handleDocumentStatusChange = async (documentId: number, newStatus: string) => {
+  const handleDocumentStatusChange = async (
+    documentId: number,
+    newStatus: 'approved' | 'pending' | 'rejected'
+    ) => {
     try {
-      const response = await fetch(`${API_URL}/documents/${documentId}/status`, {
+      const response = await fetch(`${API_URL}/documents/${documentId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
@@ -298,47 +301,58 @@ export default function ClientDetail() {
     }
   }
 
-  // Modifier la fonction handleDeclarationStatusChange pour recharger les données avec la nouvelle route
-  const handleDeclarationStatusChange = async (declarationId: number, newStatus: string) => {
+  const handleDeclarationStatusChange = async (
+    declarationId: number,
+    newStatus: 'approved' | 'pending' | 'rejected'
+  ) => {
     try {
-      const response = await fetch(`${API_URL}/declarations/${declarationId}/status`, {
+      const response = await fetch(`${API_URL}/declarations/${declarationId}`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({ statut: newStatus }),
-      })
-
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
-
-      toast.success(`Statut de la déclaration mis à jour avec succès`)
-
-      // Mettre à jour l'état local en utilisant la nouvelle route
-      const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`)
-      if (fetchResponse.ok) {
-        const data = await fetchResponse.json()
-        if (data.success) {
-          setUserDetails(data.data)
-
-          // Mettre à jour la déclaration active
-          if (activeDeclaration && data.data.declarations) {
-            const updatedActiveDeclaration = data.data.declarations.find(
-              (d: Declaration) =>
-                d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
-            )
-            if (updatedActiveDeclaration) {
-              setActiveDeclaration(updatedActiveDeclaration)
-            }
-          }
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+  
+        if (response.status === 422 && errorData.documents_non_valides) {
+          toast.error(
+            `${errorData.message}\n\nDocuments non validés :\n- ${errorData.documents_non_valides.join("\n- ")}`
+          );
         } else {
-          toast.error(data.message || "Erreur lors du rechargement des données")
+          toast.error(errorData.message || "Erreur lors de la mise à jour du statut");
+        }
+  
+        return;
+      }
+  
+      toast.success("Statut de la déclaration mis à jour avec succès");
+  
+      const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`);
+      if (fetchResponse.ok) {
+        const data = await fetchResponse.json();
+        if (data.success) {
+          setUserDetails(data.data);
+  
+          const updated = data.data.declarations.find(
+            (d: Declaration) =>
+              d.id === declarationId || d.declaration_id === declarationId
+          );
+          if (updated) {
+            setActiveDeclaration(updated);
+          }
         }
       }
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du statut de la déclaration:", error)
-      toast.error("Erreur lors de la mise à jour du statut de la déclaration")
+      console.error("Erreur lors de la mise à jour de la déclaration:", error);
+      toast.error("Erreur inattendue lors de la mise à jour");
     }
-  }
+  };
+  
+  
+  
 
   // Fonction pour ajouter un commentaire
   const handleAddComment = async (documentId: number) => {
@@ -714,7 +728,7 @@ export default function ClientDetail() {
                                     onClick={() =>
                                       handleDeclarationStatusChange(
                                         activeDeclaration.id || activeDeclaration.declaration_id || 0,
-                                        "validé",
+                                        "approved",
                                       )
                                     }
                                   >
@@ -728,7 +742,7 @@ export default function ClientDetail() {
                                     onClick={() =>
                                       handleDeclarationStatusChange(
                                         activeDeclaration.id || activeDeclaration.declaration_id || 0,
-                                        "en_attente",
+                                        "pending",
                                       )
                                     }
                                   >
@@ -742,7 +756,7 @@ export default function ClientDetail() {
                                     onClick={() =>
                                       handleDeclarationStatusChange(
                                         activeDeclaration.id || activeDeclaration.declaration_id || 0,
-                                        "refusé",
+                                        "rejected",
                                       )
                                     }
                                   >
@@ -836,7 +850,7 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.id, "validé")}
+                                                        onClick={() => handleDocumentStatusChange(doc.id, "approved")}
                                                         title="Valider le document"
                                                       >
                                                         <CheckCircle className="h-4 w-4" />
@@ -845,7 +859,7 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.id, "refusé")}
+                                                        onClick={() => handleDocumentStatusChange(doc.id, "rejected")}
                                                         title="Refuser le document"
                                                       >
                                                         <XCircle className="h-4 w-4" />
@@ -854,7 +868,7 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.id, "en_attente")}
+                                                        onClick={() => handleDocumentStatusChange(doc.id, "pending")}
                                                         title="Mettre en attente"
                                                       >
                                                         <AlertTriangle className="h-4 w-4" />
@@ -969,7 +983,7 @@ export default function ClientDetail() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() =>
-                                                                  handleDocumentStatusChange(doc.id, "validé")
+                                                                  handleDocumentStatusChange(doc.id, "approved")
                                                                 }
                                                                 title="Valider le document"
                                                               >
@@ -980,7 +994,7 @@ export default function ClientDetail() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() =>
-                                                                  handleDocumentStatusChange(doc.id, "refusé")
+                                                                  handleDocumentStatusChange(doc.id, "rejected")
                                                                 }
                                                                 title="Refuser le document"
                                                               >
@@ -991,7 +1005,7 @@ export default function ClientDetail() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() =>
-                                                                  handleDocumentStatusChange(doc.id, "en_attente")
+                                                                  handleDocumentStatusChange(doc.id, "pending")
                                                                 }
                                                                 title="Mettre en attente"
                                                               >
@@ -1114,7 +1128,7 @@ export default function ClientDetail() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleDocumentStatusChange(doc.id, "validé")}
+                                      onClick={() => handleDocumentStatusChange(doc.id, "approved")}
                                       title="Valider le document"
                                     >
                                       <CheckCircle className="h-4 w-4" />
@@ -1123,7 +1137,7 @@ export default function ClientDetail() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleDocumentStatusChange(doc.id, "refusé")}
+                                      onClick={() => handleDocumentStatusChange(doc.id, "rejected")}
                                       title="Refuser le document"
                                     >
                                       <XCircle className="h-4 w-4" />
@@ -1132,7 +1146,7 @@ export default function ClientDetail() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleDocumentStatusChange(doc.id, "en_attente")}
+                                      onClick={() => handleDocumentStatusChange(doc.id, "pending")}
                                       title="Mettre en attente"
                                     >
                                       <AlertTriangle className="h-4 w-4" />

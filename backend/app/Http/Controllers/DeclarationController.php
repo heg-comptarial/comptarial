@@ -62,25 +62,23 @@ class DeclarationController extends Controller
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
-            'statut' => 'required|in:validé,en_attente,refusé',
+            'statut' => 'required|in:approved,pending,rejected',
         ]);
 
         $declaration = Declaration::with('rubriques.documents', 'rubriques.sousRubriques.documents')
-            ->findOrFail($id);
+            ->where('declaration_id', $id)
+            ->firstOrFail();
 
-        // Si on veut valider la déclaration, on vérifie les documents
-        if ($request->statut === 'validé') {
+        if ($request->statut === 'approved') {
             $documentsNonValidés = [];
 
             foreach ($declaration->rubriques as $rubrique) {
-                // Vérifie les documents de la rubrique
                 foreach ($rubrique->documents as $doc) {
                     if ($doc->statut !== 'validé') {
                         $documentsNonValidés[] = $doc->nom ?? 'Document sans nom';
                     }
                 }
 
-                // Vérifie les documents des sous-rubriques (si la relation existe)
                 if ($rubrique->relationLoaded('sousRubriques')) {
                     foreach ($rubrique->sousRubriques as $sousRubrique) {
                         foreach ($sousRubrique->documents as $doc) {
@@ -107,8 +105,9 @@ class DeclarationController extends Controller
         return response()->json([
             'success' => true,
             'message' => 'Statut de la déclaration mis à jour avec succès.',
-            'declaration' => $declaration
+            'declaration' => $declaration,
         ]);
     }
+
 
 }
