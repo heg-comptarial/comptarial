@@ -7,6 +7,7 @@ use App\Models\Prive;
 use App\Models\Entreprise;
 use Illuminate\Http\Request;
 use App\Models\Declaration;
+use App\Models\Administrateur;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
@@ -263,11 +264,21 @@ class UserController extends Controller
                 ], 403);
             }
 
-            // Retourne l'ID de l'administrateur
-            return response()->json([
-                'success' => true,
-                'admin_id' => $user->id,
-            ], 200);
+                    // Trouve l'administrateur correspondant
+                $admin = Administrateur::where('user_id', $user->user_id)->first();
+                if (!$admin) {
+                    return response()->json([
+                        'test'=> $user,
+                        'success' => false,
+                        'message' => 'Administrateur non trouvé.',
+                    ], 404);
+                }
+        
+                return response()->json([
+                    'success' => true,
+                    'admin_id' => $admin->admin_id,
+                ], 200);
+        
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

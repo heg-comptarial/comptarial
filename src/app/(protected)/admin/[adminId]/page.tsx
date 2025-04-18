@@ -16,7 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import ProtectedRouteAdmin from "@/components/ProtectedRouteAdmin";
-import { useRouter } from "next/navigation";
+import { useParams, useRouter } from "next/navigation"
 
 
 interface User {
@@ -51,7 +51,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("general");
-  const router = useRouter()
+  const router = useRouter();
+  const params = useParams();
+  const adminId = params?.adminId;
 
   const fetchPendingUsers = async () => {
     setLoading(true);
@@ -469,7 +471,7 @@ export default function Dashboard() {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-right space-x-1">
-                            <Button variant="outline" size="sm" onClick={() => router.push(`/admin/client/${user.user_id}`)}>
+                            <Button variant="outline" size="sm" onClick={() => router.push(`/admin/${adminId}/client/${user.user_id}`)}>
                               Voir détails
                             </Button>
                           </TableCell>

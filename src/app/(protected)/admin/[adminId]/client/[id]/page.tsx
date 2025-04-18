@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { toast, Toaster } from "sonner"
+import axios from "axios"
 
 // Définition des types pour les modèles
 interface Entreprise {
@@ -60,7 +61,7 @@ interface Prive {
 }
 
 interface Document {
-  id: number
+  doc_id: number
   nom: string
   chemin: string
   type: string
@@ -134,7 +135,6 @@ export default function ClientDetail() {
   const [editedUser, setEditedUser] = useState<any>(null)
   // Ajouter un état pour stocker l'ID de l'administrateur
   const [adminId, setAdminId] = useState<number | null>(null)
-  
 
   // Fonction pour basculer l'état d'une sous-rubrique
   const toggleSousRubrique = (sousRubriqueId: number) => {
@@ -144,19 +144,15 @@ export default function ClientDetail() {
     }))
   }
 
-
   // Supprimer la partie qui utilise sessionStorage car nous utilisons maintenant directement l'API
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
         setLoading(true)
-        // Utiliser la nouvelle route API pour récupérer les données complètes
-        const response = await fetch(`${API_URL}/users/${userId}/full-data`)
-        if (!response.ok) {
-          throw new Error(`Erreur HTTP ! Statut : ${response.status}`)
-        }
-        const data = await response.json()
+        // Utiliser axios au lieu de fetch
+        const response = await axios.get(`${API_URL}/users/${userId}/full-data`)
 
+        const data = response.data
         if (!data.success) {
           throw new Error(data.message || "Erreur lors de la récupération des données")
         }
@@ -230,34 +226,24 @@ export default function ClientDetail() {
   // Modifier la fonction handleDocumentStatusChange pour recharger les données avec la nouvelle route
   const handleDocumentStatusChange = async (documentId: number, newStatus: string) => {
     try {
-      const response = await fetch(`${API_URL}/documents/${documentId}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ statut: newStatus }),
-      })
-
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+      await axios.patch(`${API_URL}/documents/${documentId}/status`, { statut: newStatus })
 
       toast.success(`Statut du document mis à jour avec succès`)
 
       // Mettre à jour l'état local en utilisant la nouvelle route
-      const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`)
-      if (fetchResponse.ok) {
-        const data = await fetchResponse.json()
-        if (data.success) {
-          setUserDetails(data.data)
+      const fetchResponse = await axios.get(`${API_URL}/users/${userId}/full-data`)
+      const data = fetchResponse.data
 
-          // Mettre à jour la déclaration active si nécessaire
-          if (activeDeclaration && data.data.declarations) {
-            const updatedActiveDeclaration = data.data.declarations.find(
-              (d: Declaration) =>
-                d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
-            )
-            if (updatedActiveDeclaration) {
-              setActiveDeclaration(updatedActiveDeclaration)
-            }
+      if (data.success) {
+        setUserDetails(data.data)
+
+        // Mettre à jour la déclaration active si nécessaire
+        if (activeDeclaration && data.data.declarations) {
+          const updatedActiveDeclaration = data.data.declarations.find(
+            (d: Declaration) => d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
+          )
+          if (updatedActiveDeclaration) {
+            setActiveDeclaration(updatedActiveDeclaration)
           }
         } else {
           toast.error(data.message || "Erreur lors du rechargement des données")
@@ -272,34 +258,24 @@ export default function ClientDetail() {
   // Modifier la fonction handleDeclarationStatusChange pour recharger les données avec la nouvelle route
   const handleDeclarationStatusChange = async (declarationId: number, newStatus: string) => {
     try {
-      const response = await fetch(`${API_URL}/declarations/${declarationId}/status`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ statut: newStatus }),
-      })
-
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+      await axios.patch(`${API_URL}/declarations/${declarationId}/status`, { statut: newStatus })
 
       toast.success(`Statut de la déclaration mis à jour avec succès`)
 
       // Mettre à jour l'état local en utilisant la nouvelle route
-      const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`)
-      if (fetchResponse.ok) {
-        const data = await fetchResponse.json()
-        if (data.success) {
-          setUserDetails(data.data)
+      const fetchResponse = await axios.get(`${API_URL}/users/${userId}/full-data`)
+      const data = fetchResponse.data
 
-          // Mettre à jour la déclaration active
-          if (activeDeclaration && data.data.declarations) {
-            const updatedActiveDeclaration = data.data.declarations.find(
-              (d: Declaration) =>
-                d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
-            )
-            if (updatedActiveDeclaration) {
-              setActiveDeclaration(updatedActiveDeclaration)
-            }
+      if (data.success) {
+        setUserDetails(data.data)
+
+        // Mettre à jour la déclaration active
+        if (activeDeclaration && data.data.declarations) {
+          const updatedActiveDeclaration = data.data.declarations.find(
+            (d: Declaration) => d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
+          )
+          if (updatedActiveDeclaration) {
+            setActiveDeclaration(updatedActiveDeclaration)
           }
         } else {
           toast.error(data.message || "Erreur lors du rechargement des données")
@@ -323,39 +299,49 @@ export default function ClientDetail() {
       return
     }
 
+    // Vérifier explicitement que l'ID du document est valide
+    if (!documentId || isNaN(Number(documentId))) {
+      toast.error("ID du document invalide ou manquant")
+      console.error("ID du document invalide:", documentId)
+      return
+    }
+
     try {
-      const response = await fetch(`${API_URL}/commentaires`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          document_id: documentId,
-          admin_id: adminId,
-          contenu: commentaire,
-        }),
+      // Formater la date au format requis: YYYY-MM-DD HH:MM:SS
+      const now = new Date()
+      const dateCreation = now.toISOString().slice(0, 19).replace("T", " ")
+
+      // Afficher les données qui seront envoyées pour le débogage
+      console.log("Données envoyées à l'API:", {
+        document_id: documentId,
+        admin_id: adminId,
+        contenu: commentaire,
+        dateCreation: dateCreation,
       })
 
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+      await axios.post(`${API_URL}/commentaires`, {
+        document_id: documentId,
+        admin_id: adminId,
+        contenu: commentaire,
+        dateCreation: dateCreation,
+      })
 
       toast.success("Commentaire ajouté avec succès")
 
       // Mettre à jour l'état local en utilisant la nouvelle route
-      const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`)
-      if (fetchResponse.ok) {
-        const data = await fetchResponse.json()
-        if (data.success) {
-          setUserDetails(data.data)
+      const fetchResponse = await axios.get(`${API_URL}/users/${userId}/full-data`)
+      const data = fetchResponse.data
 
-          // Mettre à jour la déclaration active si nécessaire
-          if (activeDeclaration && data.data.declarations) {
-            const updatedActiveDeclaration = data.data.declarations.find(
-              (d: Declaration) =>
-                d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
-            )
-            if (updatedActiveDeclaration) {
-              setActiveDeclaration(updatedActiveDeclaration)
-            }
+      if (data.success) {
+        setUserDetails(data.data)
+
+        // Mettre à jour la déclaration active si nécessaire
+        if (activeDeclaration && data.data.declarations) {
+          const updatedActiveDeclaration = data.data.declarations.find(
+            (d: Declaration) => d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
+          )
+          if (updatedActiveDeclaration) {
+            setActiveDeclaration(updatedActiveDeclaration)
           }
         } else {
           toast.error(data.message || "Erreur lors du rechargement des données")
@@ -365,19 +351,26 @@ export default function ClientDetail() {
       setCommentaire("")
     } catch (error) {
       console.error("Erreur lors de l'ajout du commentaire:", error)
-      toast.error("Erreur lors de l'ajout du commentaire")
+
+      // Afficher des détails plus précis sur l'erreur
+      if (axios.isAxiosError(error) && error.response) {
+        const errorMessage = error.response.data.message || "Erreur lors de l'ajout du commentaire"
+        toast.error(errorMessage)
+        console.error("Détails de l'erreur:", error.response.data)
+      } else {
+        toast.error("Erreur lors de l'ajout du commentaire")
+      }
     }
   }
 
-
-// Effet pour récupérer l'ID administrateur depuis sessionStorage
-useEffect(() => {
-  // Essayer de récupérer l'ID administrateur depuis sessionStorage
-  const storedAdminId = sessionStorage.getItem("admin_id");
-  if (storedAdminId) {
-    setAdminId(Number(storedAdminId));
-  }
-}, []);
+  // Effet pour récupérer l'ID administrateur depuis sessionStorage
+  useEffect(() => {
+    // Récupérer l'ID administrateur depuis les paramètres d'URL
+    const storedAdminId = params.adminId
+    if (storedAdminId) {
+      setAdminId(Number(storedAdminId))
+    }
+  }, [params.adminId])
 
   const handleYearChange = (year: string) => {
     if (userDetails && userDetails.declarations) {
@@ -395,18 +388,45 @@ useEffect(() => {
 
     setIsSaving(true)
     try {
-      const response = await fetch(`${API_URL}/users/${userId}`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(editedUser),
-      })
+      // 1. Mettre à jour les informations de l'utilisateur
+      await axios.put(`${API_URL}/users/${userId}`, editedUser)
 
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+      // 2. Après la mise à jour réussie, récupérer toutes les données complètes
+      const fetchResponse = await axios.get(`${API_URL}/users/${userId}/full-data`)
+      const data = fetchResponse.data
 
-      const updatedUser = await response.json()
-      setUserDetails(updatedUser)
+      if (data.success) {
+        // 3. Mettre à jour l'état avec les données complètes
+        setUserDetails(data.data)
+
+        // 4. Extraire les années des déclarations
+        if (data.data.declarations && data.data.declarations.length > 0) {
+          const years = data.data.declarations.map((d: Declaration) =>
+            d.annee ? d.annee.toString() : new Date(d.dateSoumission).getFullYear().toString(),
+          )
+          setDeclarationYears(Array.from(new Set(years))) // Éliminer les doublons
+
+          // 5. Mettre à jour la déclaration active si nécessaire
+          if (activeDeclaration) {
+            const updatedActiveDeclaration = data.data.declarations.find(
+              (d: Declaration) =>
+                d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
+            )
+            if (updatedActiveDeclaration) {
+              setActiveDeclaration(updatedActiveDeclaration)
+            } else {
+              // Si la déclaration active n'est plus disponible, utiliser la première
+              setActiveDeclaration(data.data.declarations[0])
+            }
+          } else {
+            // Si aucune déclaration active n'était définie, utiliser la première
+            setActiveDeclaration(data.data.declarations[0])
+          }
+        }
+      } else {
+        toast.error(data.message || "Erreur lors du rechargement des données")
+      }
+
       setIsEditingUser(false)
       toast.success("Informations utilisateur mises à jour avec succès")
     } catch (error) {
@@ -456,7 +476,6 @@ useEffect(() => {
     document.body.removeChild(link)
   }
 
-
   if (loading || !userId) {
     return (
       <ProtectedRouteAdmin>
@@ -486,11 +505,9 @@ useEffect(() => {
     <ProtectedRouteAdmin>
       <Toaster position="bottom-right" richColors closeButton />
 
-      
-
       <div className="container mx-auto py-10 px-4">
         <div className="flex items-center gap-2 mb-6">
-          <Button variant="outline" size="sm" onClick={() => router.push("/admin")}>
+          <Button variant="outline" size="sm" onClick={() => router.push(`/admin/${params.adminId}`)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
           </Button>
@@ -779,7 +796,7 @@ useEffect(() => {
                                             </TableHeader>
                                             <TableBody>
                                               {rubrique.documents.map((doc, index) => (
-                                                <TableRow key={`rubrique-doc-${doc.id || "unknown"}-${index}`}>
+                                                <TableRow key={`rubrique-doc-${doc.doc_id || "unknown"}-${index}`}>
                                                   <TableCell>{doc.nom}</TableCell>
                                                   <TableCell>{getStatusBadge(doc.statut)}</TableCell>
                                                   <TableCell>{new Date(doc.dateUpload).toLocaleDateString()}</TableCell>
@@ -822,7 +839,9 @@ useEffect(() => {
                                                           </div>
                                                           <DialogFooter>
                                                             <Button
-                                                              onClick={() => handleAddComment(doc.id)}
+                                                              onClick={() => {
+                                                                handleAddComment(doc.doc_id)
+                                                              }}
                                                               disabled={!commentaire.trim()}
                                                             >
                                                               Enregistrer
@@ -834,7 +853,7 @@ useEffect(() => {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.id, "validé")}
+                                                        onClick={() => handleDocumentStatusChange(doc.doc_id, "validé")}
                                                         title="Valider le document"
                                                       >
                                                         <CheckCircle className="h-4 w-4" />
@@ -843,7 +862,7 @@ useEffect(() => {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.id, "refusé")}
+                                                        onClick={() => handleDocumentStatusChange(doc.doc_id, "refusé")}
                                                         title="Refuser le document"
                                                       >
                                                         <XCircle className="h-4 w-4" />
@@ -852,7 +871,7 @@ useEffect(() => {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.id, "en_attente")}
+                                                        onClick={() => handleDocumentStatusChange(doc.doc_id, "en_attente")}
                                                         title="Mettre en attente"
                                                       >
                                                         <AlertTriangle className="h-4 w-4" />
@@ -904,7 +923,7 @@ useEffect(() => {
                                                     <TableBody>
                                                       {sousRubrique.documents.map((doc, index) => (
                                                         <TableRow
-                                                          key={`sous-rubrique-doc-${doc.id || "unknown"}-${index}`}
+                                                          key={`sous-rubrique-doc-${doc.doc_id || "unknown"}-${index}`}
                                                         >
                                                           <TableCell>{doc.nom}</TableCell>
                                                           <TableCell>{getStatusBadge(doc.statut)}</TableCell>
@@ -954,7 +973,13 @@ useEffect(() => {
                                                                   </div>
                                                                   <DialogFooter>
                                                                     <Button
-                                                                      onClick={() => handleAddComment(doc.id)}
+                                                                      onClick={() => {
+                                                                        console.log(
+                                                                          "ID du document à commenter (sous-rubrique):",
+                                                                          doc.doc_id,
+                                                                        )
+                                                                        handleAddComment(doc.doc_id)
+                                                                      }}
                                                                       disabled={!commentaire.trim()}
                                                                     >
                                                                       Enregistrer
@@ -967,7 +992,7 @@ useEffect(() => {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() =>
-                                                                  handleDocumentStatusChange(doc.id, "validé")
+                                                                  handleDocumentStatusChange(doc.doc_id, "validé")
                                                                 }
                                                                 title="Valider le document"
                                                               >
@@ -978,7 +1003,7 @@ useEffect(() => {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() =>
-                                                                  handleDocumentStatusChange(doc.id, "refusé")
+                                                                  handleDocumentStatusChange(doc.doc_id, "refusé")
                                                                 }
                                                                 title="Refuser le document"
                                                               >
@@ -989,7 +1014,7 @@ useEffect(() => {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() =>
-                                                                  handleDocumentStatusChange(doc.id, "en_attente")
+                                                                  handleDocumentStatusChange(doc.doc_id, "en_attente")
                                                                 }
                                                                 title="Mettre en attente"
                                                               >
@@ -1100,7 +1125,10 @@ useEffect(() => {
                                         </div>
                                         <DialogFooter>
                                           <Button
-                                            onClick={() => handleAddComment(doc.id)}
+                                            onClick={() => {
+                                              console.log("ID du document à commenter (tous documents):", doc.id)
+                                              handleAddComment(doc.id)
+                                            }}
                                             disabled={!commentaire.trim()}
                                           >
                                             Enregistrer

@@ -37,7 +37,7 @@ Route::get('/users/status/approved', [UserController::class, 'getApproved']);
 Route::post('/users/{id}/approve', [UserController::class, 'approveUser']);
 
 // Routes supplémentaires pour les utilisateurs afin de trouver l'id d'un admin
-Route::middleware('auth:api')->get('/admin', [UserController::class, 'getAdminId']);
+Route::get('/admin', [UserController::class, 'getAdminId'])->middleware("auth:sanctum");
 
 
 // Routes pour les administrateurs

@@ -46,7 +46,13 @@ export default function LoginPage() {
 
         // Redirection vers la page des utilisateurs (ou dashboard)
         if (response.data.user.role === "admin") {
-          router.push("/admin");
+          const respAdmin = await axios.get("http://127.0.0.1:8000/api/admin", {
+            headers: {
+              Authorization: `Bearer ${response.data.token}`, // Assure-toi que ce token est bien défini
+            },
+          });
+          console.log(respAdmin.data)
+          router.push(`/admin/${respAdmin.data.admin_id}`);
         } else {
           router.push("/dashboard");
         }
