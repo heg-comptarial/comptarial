@@ -7,6 +7,7 @@ use App\Models\Prive;
 use App\Models\Entreprise;
 use Illuminate\Http\Request;
 use App\Models\Declaration;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -240,6 +241,39 @@ class UserController extends Controller
                 'message' => 'Utilisateur non trouvé ou erreur de chargement.',
                 'error' => $e->getMessage()
             ], 404);
+        }
+    }
+
+    /**
+     * Récupère l'ID de l'administrateur connecté.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAdminId()
+    {
+        try {
+            // Vérifie si un utilisateur est authentifié
+            $user = Auth::user();
+
+            // Vérifie si l'utilisateur est un administrateur
+            if (!$user || $user->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Utilisateur non authentifié ou non administrateur.',
+                ], 403);
+            }
+
+            // Retourne l'ID de l'administrateur
+            return response()->json([
+                'success' => true,
+                'admin_id' => $user->id,
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération de l\'ID administrateur.',
+                'error' => $e->getMessage(),
+            ], 500);
         }
     }
 

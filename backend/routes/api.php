@@ -36,6 +36,9 @@ Route::get('/users/status/approved', [UserController::class, 'getApproved']);
 // Routes supplémentaires pour les utilisateurs afin de créer soit un privé soit une entreprise
 Route::post('/users/{id}/approve', [UserController::class, 'approveUser']);
 
+// Routes supplémentaires pour les utilisateurs afin de trouver l'id d'un admin
+Route::middleware('auth:api')->get('/admin', [UserController::class, 'getAdminId']);
+
 
 // Routes pour les administrateurs
 Route::apiResource('administrateurs', AdministrateurController::class);
