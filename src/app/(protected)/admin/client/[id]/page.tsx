@@ -227,6 +227,34 @@ export default function ClientDetail() {
     setFilteredDocuments(filtered)
   }, [searchTerm, userDetails])
 
+  // Fonction pour récupérer l'ID administrateur
+  const fetchAdminId = async () => {
+    try {
+      const response = await fetch(`${API_URL}/users/admin`, {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`, // Remplacez par votre méthode d'authentification
+        },
+      });
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de la récupération de l'ID administrateur");
+      }
+
+      const data = await response.json();
+      if (data.success) {
+        console.log("Admin ID:", data.admin_id);
+        setAdminId(data.admin_id); // Stocke l'ID administrateur dans l'état local
+      } else {
+        console.error(data.message);
+      }
+    } catch (error) {
+      console.error(error);
+      toast.error("Impossible de récupérer l'ID administrateur");
+    }
+  };
+
+
   // Modifier la fonction handleDocumentStatusChange pour recharger les données avec la nouvelle route
   const handleDocumentStatusChange = async (documentId: number, newStatus: string) => {
     try {
@@ -311,16 +339,16 @@ export default function ClientDetail() {
     }
   }
 
-  // Modifier la fonction handleAddComment pour utiliser directement un ID administrateur par défaut
+  // Fonction pour ajouter un commentaire
   const handleAddComment = async (documentId: number) => {
     if (!commentaire.trim()) {
-      toast.error("Veuillez saisir un commentaire")
-      return
+      toast.error("Veuillez saisir un commentaire");
+      return;
     }
 
     if (!adminId) {
-      toast.error("ID administrateur non trouvé. Veuillez vous reconnecter à la page d'administration.")
-      return
+      toast.error("ID administrateur non trouvé. Veuillez vous reconnecter à la page d'administration.");
+      return;
     }
 
     try {
@@ -334,50 +362,23 @@ export default function ClientDetail() {
           admin_id: adminId,
           contenu: commentaire,
         }),
-      })
+      });
 
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
 
-      toast.success("Commentaire ajouté avec succès")
-
-      // Mettre à jour l'état local en utilisant la nouvelle route
-      const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`)
-      if (fetchResponse.ok) {
-        const data = await fetchResponse.json()
-        if (data.success) {
-          setUserDetails(data.data)
-
-          // Mettre à jour la déclaration active si nécessaire
-          if (activeDeclaration && data.data.declarations) {
-            const updatedActiveDeclaration = data.data.declarations.find(
-              (d: Declaration) =>
-                d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
-            )
-            if (updatedActiveDeclaration) {
-              setActiveDeclaration(updatedActiveDeclaration)
-            }
-          }
-        } else {
-          toast.error(data.message || "Erreur lors du rechargement des données")
-        }
-      }
-
-      setCommentaire("")
+      toast.success("Commentaire ajouté avec succès");
+      setCommentaire(""); // Réinitialise le champ de commentaire
     } catch (error) {
-      console.error("Erreur lors de l'ajout du commentaire:", error)
-      toast.error("Erreur lors de l'ajout du commentaire")
+      console.error("Erreur lors de l'ajout du commentaire:", error);
+      toast.error("Erreur lors de l'ajout du commentaire");
     }
-  }
+  };
 
 
-// Effet pour récupérer l'ID administrateur depuis sessionStorage
-useEffect(() => {
-  // Essayer de récupérer l'ID administrateur depuis sessionStorage
-  const storedAdminId = sessionStorage.getItem("admin_id");
-  if (storedAdminId) {
-    setAdminId(Number(storedAdminId));
-  }
-}, []);
+  // Effet pour récupérer l'ID administrateur au chargement de la page
+  useEffect(() => {
+    fetchAdminId();
+  }, []);
 
   const handleYearChange = (year: string) => {
     if (userDetails && userDetails.declarations) {
