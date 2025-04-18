@@ -134,9 +134,7 @@ export default function ClientDetail() {
   const [editedUser, setEditedUser] = useState<any>(null)
   // Ajouter un état pour stocker l'ID de l'administrateur
   const [adminId, setAdminId] = useState<number | null>(null)
-  // Ajouter un état pour le formulaire d'ID administrateur
-  const [showAdminIdForm, setShowAdminIdForm] = useState<boolean>(false)
-  const [adminIdInput, setAdminIdInput] = useState<string>("")
+  
 
   // Fonction pour basculer l'état d'une sous-rubrique
   const toggleSousRubrique = (sousRubriqueId: number) => {
@@ -146,40 +144,6 @@ export default function ClientDetail() {
     }))
   }
 
-  // Modifier la fonction fetchUserDetails pour utiliser la nouvelle route API
-  const fetchUserDetails = async () => {
-    try {
-      setLoading(true)
-      // Utiliser la nouvelle route API pour récupérer les données complètes
-      const response = await fetch(`${API_URL}/users/${userId}/full-data`)
-      if (!response.ok) {
-        throw new Error(`Erreur HTTP ! Statut : ${response.status}`)
-      }
-
-      const data = await response.json()
-
-      if (!data.success) {
-        throw new Error(data.message || "Erreur lors de la récupération des données")
-      }
-
-      setUserDetails(data.data) // Stockez les détails dans l'état local
-      setEditedUser(data.data)
-
-      // Extraire les années des déclarations
-      if (data.data.declarations && data.data.declarations.length > 0) {
-        const years = data.data.declarations.map((d: Declaration) =>
-          d.annee ? d.annee.toString() : new Date(d.dateSoumission).getFullYear().toString(),
-        )
-        setDeclarationYears(years)
-        setActiveDeclaration(data.data.declarations[0])
-      }
-    } catch (error) {
-      console.error("Erreur lors de la récupération des détails de l'utilisateur :", error)
-      toast.error("Erreur lors du chargement des données utilisateur")
-    } finally {
-      setLoading(false)
-    }
-  }
 
   // Supprimer la partie qui utilise sessionStorage car nous utilisons maintenant directement l'API
   useEffect(() => {
@@ -405,25 +369,6 @@ export default function ClientDetail() {
     }
   }
 
-  // Fonction pour sauvegarder l'ID administrateur
-const saveAdminId = () => {
-  if (!adminIdInput.trim()) {
-    toast.error("Veuillez saisir un ID administrateur valide");
-    return;
-  }
-
-  const id = Number(adminIdInput);
-  if (isNaN(id)) {
-    toast.error("L'ID administrateur doit être un nombre");
-    return;
-  }
-
-  setAdminId(id);
-  // Stocker l'ID dans sessionStorage pour les futures sessions
-  sessionStorage.setItem("admin_id", id.toString());
-  setShowAdminIdForm(false);
-  toast.success("ID administrateur enregistré");
-};
 
 // Effet pour récupérer l'ID administrateur depuis sessionStorage
 useEffect(() => {
@@ -511,24 +456,6 @@ useEffect(() => {
     document.body.removeChild(link)
   }
 
-  // Modifier la fonction useEffect pour vérifier différentes clés possibles
-  useEffect(() => {
-    // Essayer de récupérer l'ID administrateur depuis différentes sources possibles dans sessionStorage
-    // Vérifier les clés les plus probables où l'ID admin pourrait être stocké
-    const storedAdminId =
-      (sessionStorage.getItem("userRole") === "admin" && sessionStorage.getItem("userId")) ||
-      sessionStorage.getItem("admin_id") ||
-      sessionStorage.getItem("adminId") ||
-      sessionStorage.getItem("user_id")
-
-    if (storedAdminId) {
-      setAdminId(Number(storedAdminId))
-      // Assurer que l'ID est également disponible sous la clé admin_id pour une utilisation cohérente
-      if (!sessionStorage.getItem("admin_id")) {
-        sessionStorage.setItem("admin_id", storedAdminId)
-      }
-    }
-  }, [])
 
   if (loading || !userId) {
     return (
@@ -568,16 +495,6 @@ useEffect(() => {
             Retour
           </Button>
           <h1 className="text-2xl font-semibold">Détails du client</h1>
-
-          {/* Afficher l'ID administrateur actuel s'il existe */}
-          {adminId && (
-            <div className="ml-auto flex items-center">
-              <span className="text-sm text-muted-foreground mr-2">Admin ID: {adminId}</span>
-              <Button variant="outline" size="sm" onClick={() => setShowAdminIdForm(true)}>
-                Changer
-              </Button>
-            </div>
-          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
