@@ -135,6 +135,7 @@ export default function ClientDetail() {
   // Ajouter un état pour stocker l'ID de l'administrateur
   const [adminId, setAdminId] = useState<number | null>(null)
   
+  
 
   // Fonction pour basculer l'état d'une sous-rubrique
   const toggleSousRubrique = (sousRubriqueId: number) => {
