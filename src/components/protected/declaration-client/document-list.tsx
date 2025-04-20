@@ -17,7 +17,7 @@ import { getFileTypeIcon } from "@/utils/getFileTypeIcon";
 import { getStatusBadge } from "@/utils/getStatusBadge";
 import { Commentaire } from "@/types/interfaces";
 import { toast } from "sonner";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 
 interface Document {
   doc_id: number;
@@ -134,20 +134,32 @@ export function DocumentList({
     }
   };
 
-  const fetchComments = async (docId: number) => {
-    if (commentMap[docId]) return;
-    try {
-      const res = await fetch(
-        `http://localhost:8000/api/documents/${docId}/commentaires`
-      );
-      const data = await res.json();
-      if (Array.isArray(data) && data.length > 0) {
-        setCommentMap((prev) => ({ ...prev, [docId]: data }));
+  const fetchComments = useCallback(
+    async (docId: number) => {
+      if (commentMap[docId]) return;
+      try {
+        const res = await fetch(
+          `http://localhost:8000/api/documents/${docId}/commentaires`
+        );
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setCommentMap((prev) => ({ ...prev, [docId]: data }));
+        }
+      } catch (err) {
+        console.error("Erreur lors du chargement des commentaires", err);
       }
-    } catch (err) {
-      console.error("Erreur lors du chargement des commentaires", err);
-    }
-  };
+    },
+    [commentMap]
+  );
+
+  useEffect(() => {
+    const loadComments = async () => {
+      for (const doc of documents) {
+        await fetchComments(doc.doc_id);
+      }
+    };
+    loadComments();
+  }, [documents, fetchComments]);
 
   const handleUploadCompleted = () => {
     setShowUploader(false);
