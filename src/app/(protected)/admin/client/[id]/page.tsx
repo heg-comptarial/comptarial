@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/dialog"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { toast, Toaster } from "sonner"
+import ConfirmationDialog from "@/components/confirmation-dialog"
 
 // Définition des types pour les modèles
 interface Entreprise {
@@ -134,8 +135,14 @@ export default function ClientDetail() {
   const [editedUser, setEditedUser] = useState<any>(null)
   // Ajouter un état pour stocker l'ID de l'administrateur
   const [adminId, setAdminId] = useState<number | null>(null)
-  
-  
+
+  // Ajouter un nouvel état pour gérer le dialogue de confirmation
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false)
+  const [pendingDeclarationAction, setPendingDeclarationAction] = useState<{
+    declarationId: number
+    status: "approved" | "pending" | "rejected"
+  } | null>(null)
+  const [documentsNonValides, setDocumentsNonValides] = useState<string[]>([])
 
   // Fonction pour basculer l'état d'une sous-rubrique
   const toggleSousRubrique = (sousRubriqueId: number) => {
@@ -144,7 +151,6 @@ export default function ClientDetail() {
       [sousRubriqueId]: !prevState[sousRubriqueId],
     }))
   }
-
 
   // Supprimer la partie qui utilise sessionStorage car nous utilisons maintenant directement l'API
   useEffect(() => {
@@ -236,31 +242,27 @@ export default function ClientDetail() {
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`, // Remplacez par votre méthode d'authentification
         },
-      });
+      })
 
       if (!response.ok) {
-        throw new Error("Erreur lors de la récupération de l'ID administrateur");
+        throw new Error("Erreur lors de la récupération de l'ID administrateur")
       }
 
-      const data = await response.json();
+      const data = await response.json()
       if (data.success) {
-        console.log("Admin ID:", data.admin_id);
-        setAdminId(data.admin_id); // Stocke l'ID administrateur dans l'état local
+        console.log("Admin ID:", data.admin_id)
+        setAdminId(data.admin_id) // Stocke l'ID administrateur dans l'état local
       } else {
-        console.error(data.message);
+        console.error(data.message)
       }
     } catch (error) {
-      console.error(error);
-      toast.error("Impossible de récupérer l'ID administrateur");
+      console.error(error)
+      toast.error("Impossible de récupérer l'ID administrateur")
     }
-  };
-
+  }
 
   // Modifier la fonction handleDocumentStatusChange pour recharger les données avec la nouvelle route
-  const handleDocumentStatusChange = async (
-    documentId: number,
-    newStatus: 'approved' | 'pending' | 'rejected'
-    ) => {
+  const handleDocumentStatusChange = async (documentId: number, newStatus: "approved" | "pending" | "rejected") => {
     try {
       const response = await fetch(`${API_URL}/documents/${documentId}`, {
         method: "PATCH",
@@ -301,69 +303,120 @@ export default function ClientDetail() {
     }
   }
 
+  // Remplacer la fonction handleDeclarationStatusChange par cette nouvelle version
   const handleDeclarationStatusChange = async (
     declarationId: number,
-    newStatus: 'approved' | 'pending' | 'rejected'
+    newStatus: "approved" | "pending" | "rejected",
   ) => {
-    try {
-      const response = await fetch(`${API_URL}/declarations/${declarationId}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ statut: newStatus }),
-      });
-  
-      if (!response.ok) {
-        const errorData = await response.json();
-  
-        if (response.status === 422 && errorData.documents_non_valides) {
-          toast.error(
-            `${errorData.message}\n\nDocuments non validés :\n- ${errorData.documents_non_valides.join("\n- ")}`
-          );
-        } else {
-          toast.error(errorData.message || "Erreur lors de la mise à jour du statut");
+    // Si ce n'est pas une validation, on procède normalement
+    if (newStatus !== "approved") {
+      try {
+        const response = await fetch(`${API_URL}/declarations/${declarationId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ statut: newStatus }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          toast.error(errorData.message || "Erreur lors de la mise à jour du statut")
+          return
         }
-  
-        return;
-      }
-  
-      toast.success("Statut de la déclaration mis à jour avec succès");
-  
-      const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`);
-      if (fetchResponse.ok) {
-        const data = await fetchResponse.json();
-        if (data.success) {
-          setUserDetails(data.data);
-  
-          const updated = data.data.declarations.find(
-            (d: Declaration) =>
-              d.id === declarationId || d.declaration_id === declarationId
-          );
-          if (updated) {
-            setActiveDeclaration(updated);
+
+        toast.success("Statut de la déclaration mis à jour avec succès")
+
+        const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`)
+        if (fetchResponse.ok) {
+          const data = await fetchResponse.json()
+          if (data.success) {
+            setUserDetails(data.data)
+
+            const updated = data.data.declarations.find(
+              (d: Declaration) => d.id === declarationId || d.declaration_id === declarationId,
+            )
+            if (updated) {
+              setActiveDeclaration(updated)
+            }
           }
         }
+      } catch (error) {
+        console.error("Erreur lors de la mise à jour de la déclaration:", error)
+        toast.error("Erreur inattendue lors de la mise à jour")
+      }
+      return
+    }
+
+    // Pour les validations, vérifier d'abord si tous les documents sont approuvés
+    try {
+      // Vérifier si tous les documents sont approuvés
+      const checkResponse = await fetch(`${API_URL}/declarations/${declarationId}/check-documents`)
+      const checkData = await checkResponse.json()
+
+      if (!checkResponse.ok) {
+        toast.error(checkData.message || "Erreur lors de la vérification des documents")
+        return
+      }
+
+      // Si tous les documents sont approuvés, procéder normalement
+      if (checkData.all_documents_approved) {
+        const response = await fetch(`${API_URL}/declarations/${declarationId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ statut: newStatus }),
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          toast.error(errorData.message || "Erreur lors de la mise à jour du statut")
+          return
+        }
+
+        toast.success("Statut de la déclaration mis à jour avec succès")
+
+        // Rafraîchir les données
+        const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`)
+        if (fetchResponse.ok) {
+          const data = await fetchResponse.json()
+          if (data.success) {
+            setUserDetails(data.data)
+
+            const updated = data.data.declarations.find(
+              (d: Declaration) => d.id === declarationId || d.declaration_id === declarationId,
+            )
+            if (updated) {
+              setActiveDeclaration(updated)
+            }
+          }
+        }
+      } else {
+        // Si certains documents ne sont pas approuvés, ouvrir le dialogue de confirmation
+        setDocumentsNonValides(checkData.documents_non_valides || [])
+        setPendingDeclarationAction({
+          declarationId,
+          status: newStatus,
+        })
+        setConfirmationDialogOpen(true)
       }
     } catch (error) {
-      console.error("Erreur lors de la mise à jour de la déclaration:", error);
-      toast.error("Erreur inattendue lors de la mise à jour");
+      console.error("Erreur lors de la vérification des documents:", error)
+      toast.error("Erreur inattendue lors de la vérification des documents")
     }
-  };
-  
-  
-  
+  }
 
   // Fonction pour ajouter un commentaire
   const handleAddComment = async (documentId: number) => {
     if (!commentaire.trim()) {
-      toast.error("Veuillez saisir un commentaire");
-      return;
+      toast.error("Veuillez saisir un commentaire")
+      return
     }
 
     if (!adminId) {
-      toast.error("ID administrateur non trouvé. Veuillez vous reconnecter à la page d'administration.");
-      return;
+      toast.error("ID administrateur non trouvé. Veuillez vous reconnecter à la page d'administration.")
+      return
     }
 
     try {
@@ -377,23 +430,22 @@ export default function ClientDetail() {
           admin_id: adminId,
           contenu: commentaire,
         }),
-      });
+      })
 
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
 
-      toast.success("Commentaire ajouté avec succès");
-      setCommentaire(""); // Réinitialise le champ de commentaire
+      toast.success("Commentaire ajouté avec succès")
+      setCommentaire("") // Réinitialise le champ de commentaire
     } catch (error) {
-      console.error("Erreur lors de l'ajout du commentaire:", error);
-      toast.error("Erreur lors de l'ajout du commentaire");
+      console.error("Erreur lors de l'ajout du commentaire:", error)
+      toast.error("Erreur lors de l'ajout du commentaire")
     }
-  };
-
+  }
 
   // Effet pour récupérer l'ID administrateur au chargement de la page
   useEffect(() => {
-    fetchAdminId();
-  }, []);
+    fetchAdminId()
+  }, [])
 
   const handleYearChange = (year: string) => {
     if (userDetails && userDetails.declarations) {
@@ -472,6 +524,109 @@ export default function ClientDetail() {
     document.body.removeChild(link)
   }
 
+  // Fonction pour valider la déclaration sans les documents
+  const validateDeclarationOnly = async () => {
+    if (!pendingDeclarationAction) return
+
+    try {
+      const response = await fetch(`${API_URL}/declarations/${pendingDeclarationAction.declarationId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          statut: pendingDeclarationAction.status,
+          force_validation: true,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        toast.error(errorData.message || "Erreur lors de la mise à jour du statut")
+        return
+      }
+
+      toast.success("Déclaration validée avec succès (sans les documents)")
+
+      // Rafraîchir les données
+      const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`)
+      if (fetchResponse.ok) {
+        const data = await fetchResponse.json()
+        if (data.success) {
+          setUserDetails(data.data)
+
+          const updated = data.data.declarations.find(
+            (d: Declaration) =>
+              d.id === pendingDeclarationAction.declarationId ||
+              d.declaration_id === pendingDeclarationAction.declarationId,
+          )
+          if (updated) {
+            setActiveDeclaration(updated)
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la validation de la déclaration:", error)
+      toast.error("Erreur inattendue lors de la validation")
+    } finally {
+      setConfirmationDialogOpen(false)
+      setPendingDeclarationAction(null)
+    }
+  }
+
+  // Fonction pour valider la déclaration et tous les documents
+  const validateDeclarationAndDocuments = async () => {
+    if (!pendingDeclarationAction) return;
+  
+    try {
+      // Envoi de la requête PATCH pour valider la déclaration et les documents
+      const response = await fetch(`${API_URL}/declarations/${pendingDeclarationAction.declarationId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          statut: pendingDeclarationAction.status,
+          approve_all_documents: true,  // Indiquer qu'on souhaite valider tous les documents
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.message || "Erreur lors de la mise à jour du statut");
+        return;
+      }
+  
+      toast.success("Déclaration et documents validés avec succès");
+  
+      // Rafraîchir les données de l'utilisateur
+      const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`);
+      if (fetchResponse.ok) {
+        const data = await fetchResponse.json();
+        if (data.success) {
+          setUserDetails(data.data);
+  
+          // Trouver et mettre à jour la déclaration active si nécessaire
+          const updated = data.data.declarations.find(
+            (d: Declaration) =>
+              d.id === pendingDeclarationAction.declarationId ||
+              d.declaration_id === pendingDeclarationAction.declarationId
+          );
+          if (updated) {
+            setActiveDeclaration(updated);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la validation de la déclaration et des documents:", error);
+      toast.error("Erreur inattendue lors de la validation");
+    } finally {
+      // Fermer le dialogue et réinitialiser l'action en attente
+      setConfirmationDialogOpen(false);
+      setPendingDeclarationAction(null);
+    }
+  };
+  
 
   if (loading || !userId) {
     return (
@@ -501,8 +656,6 @@ export default function ClientDetail() {
   return (
     <ProtectedRouteAdmin>
       <Toaster position="bottom-right" richColors closeButton />
-
-      
 
       <div className="container mx-auto py-10 px-4">
         <div className="flex items-center gap-2 mb-6">
@@ -850,7 +1003,9 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.doc_id, "approved")}
+                                                        onClick={() =>
+                                                          handleDocumentStatusChange(doc.doc_id, "approved")
+                                                        }
                                                         title="Valider le document"
                                                       >
                                                         <CheckCircle className="h-4 w-4" />
@@ -859,7 +1014,9 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.doc_id, "rejected")}
+                                                        onClick={() =>
+                                                          handleDocumentStatusChange(doc.doc_id, "rejected")
+                                                        }
                                                         title="Refuser le document"
                                                       >
                                                         <XCircle className="h-4 w-4" />
@@ -868,7 +1025,9 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.doc_id, "pending")}
+                                                        onClick={() =>
+                                                          handleDocumentStatusChange(doc.doc_id, "pending")
+                                                        }
                                                         title="Mettre en attente"
                                                       >
                                                         <AlertTriangle className="h-4 w-4" />
@@ -1165,6 +1324,14 @@ export default function ClientDetail() {
             </Tabs>
           </div>
         </div>
+        <ConfirmationDialog
+          open={confirmationDialogOpen}
+          setOpen={setConfirmationDialogOpen}
+          documentsNonValides={documentsNonValides}
+          validateDeclarationOnly={validateDeclarationOnly}
+          validateDeclarationAndDocuments={validateDeclarationAndDocuments}
+          setPendingDeclarationAction={setPendingDeclarationAction}
+        />
       </div>
     </ProtectedRouteAdmin>
   )

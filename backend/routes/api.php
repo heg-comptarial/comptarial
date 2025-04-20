@@ -61,7 +61,9 @@ Route::apiResource('rubriques', RubriqueController::class);
 Route::apiResource('declarations', DeclarationController::class);
 
 // Mettre à jour le statut d'une déclaration
-//Route::patch('/declarations/{id}/status', [DeclarationController::class, 'updateStatus']);
+Route::patch('/declarations/{id}/status', [DeclarationController::class, 'updateStatus']);
+Route::get('/declarations/{id}/check-documents', [DeclarationController::class, 'checkDocuments']);
+
 
 // Routes pour les notifications
 Route::apiResource('notifications', NotificationController::class);
