@@ -22,6 +22,7 @@ import {
   XCircle,
   Save,
   Loader2,
+  Plus,
 } from "lucide-react"
 import ProtectedRouteAdmin from "@/components/ProtectedRouteAdmin"
 import { Separator } from "@/components/ui/separator"
@@ -39,6 +40,7 @@ import {
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { toast, Toaster } from "sonner"
 import axios from "axios"
+import AddRubriqueDialog from "@/components/adminPage/add-rubrique"
 
 // Définition des types pour les modèles
 interface Entreprise {
@@ -60,8 +62,9 @@ interface Prive {
   etatCivil?: string
 }
 
+// Mettre à jour l'interface Document pour utiliser doc_id au lieu de id
 interface Document {
-  doc_id: number
+  doc_id: number // Changé de id à doc_id
   nom: string
   chemin: string
   type: string
@@ -136,12 +139,42 @@ export default function ClientDetail() {
   // Ajouter un état pour stocker l'ID de l'administrateur
   const [adminId, setAdminId] = useState<number | null>(null)
 
+  // État pour gérer l'ouverture de la boîte de dialogue d'ajout de rubrique
+  const [isAddingRubrique, setIsAddingRubrique] = useState(false)
+
   // Fonction pour basculer l'état d'une sous-rubrique
   const toggleSousRubrique = (sousRubriqueId: number) => {
     setExpandedSousRubriques((prevState) => ({
       ...prevState,
       [sousRubriqueId]: !prevState[sousRubriqueId],
     }))
+  }
+
+  // Fonction pour rafraîchir les données utilisateur
+  const refreshUserData = async () => {
+    try {
+      const response = await axios.get(`${API_URL}/users/${userId}/full-data`)
+      const data = response.data
+
+      if (data.success) {
+        setUserDetails(data.data)
+
+        // Mettre à jour la déclaration active si nécessaire
+        if (activeDeclaration && data.data.declarations) {
+          const updatedActiveDeclaration = data.data.declarations.find(
+            (d: Declaration) => d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
+          )
+          if (updatedActiveDeclaration) {
+            setActiveDeclaration(updatedActiveDeclaration)
+          }
+        }
+      } else {
+        toast.error(data.message || "Erreur lors du rechargement des données")
+      }
+    } catch (error) {
+      console.error("Erreur lors de la récupération des données:", error)
+      toast.error("Erreur lors du rechargement des données utilisateur")
+    }
   }
 
   // Supprimer la partie qui utilise sessionStorage car nous utilisons maintenant directement l'API
@@ -231,24 +264,7 @@ export default function ClientDetail() {
       toast.success(`Statut du document mis à jour avec succès`)
 
       // Mettre à jour l'état local en utilisant la nouvelle route
-      const fetchResponse = await axios.get(`${API_URL}/users/${userId}/full-data`)
-      const data = fetchResponse.data
-
-      if (data.success) {
-        setUserDetails(data.data)
-
-        // Mettre à jour la déclaration active si nécessaire
-        if (activeDeclaration && data.data.declarations) {
-          const updatedActiveDeclaration = data.data.declarations.find(
-            (d: Declaration) => d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
-          )
-          if (updatedActiveDeclaration) {
-            setActiveDeclaration(updatedActiveDeclaration)
-          }
-        } else {
-          toast.error(data.message || "Erreur lors du rechargement des données")
-        }
-      }
+      await refreshUserData()
     } catch (error) {
       console.error("Erreur lors de la mise à jour du statut du document:", error)
       toast.error("Erreur lors de la mise à jour du statut du document")
@@ -263,24 +279,7 @@ export default function ClientDetail() {
       toast.success(`Statut de la déclaration mis à jour avec succès`)
 
       // Mettre à jour l'état local en utilisant la nouvelle route
-      const fetchResponse = await axios.get(`${API_URL}/users/${userId}/full-data`)
-      const data = fetchResponse.data
-
-      if (data.success) {
-        setUserDetails(data.data)
-
-        // Mettre à jour la déclaration active
-        if (activeDeclaration && data.data.declarations) {
-          const updatedActiveDeclaration = data.data.declarations.find(
-            (d: Declaration) => d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
-          )
-          if (updatedActiveDeclaration) {
-            setActiveDeclaration(updatedActiveDeclaration)
-          }
-        } else {
-          toast.error(data.message || "Erreur lors du rechargement des données")
-        }
-      }
+      await refreshUserData()
     } catch (error) {
       console.error("Erreur lors de la mise à jour du statut de la déclaration:", error)
       toast.error("Erreur lors de la mise à jour du statut de la déclaration")
@@ -328,25 +327,8 @@ export default function ClientDetail() {
 
       toast.success("Commentaire ajouté avec succès")
 
-      // Mettre à jour l'état local en utilisant la nouvelle route
-      const fetchResponse = await axios.get(`${API_URL}/users/${userId}/full-data`)
-      const data = fetchResponse.data
-
-      if (data.success) {
-        setUserDetails(data.data)
-
-        // Mettre à jour la déclaration active si nécessaire
-        if (activeDeclaration && data.data.declarations) {
-          const updatedActiveDeclaration = data.data.declarations.find(
-            (d: Declaration) => d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
-          )
-          if (updatedActiveDeclaration) {
-            setActiveDeclaration(updatedActiveDeclaration)
-          }
-        } else {
-          toast.error(data.message || "Erreur lors du rechargement des données")
-        }
-      }
+      // Mettre à jour l'état local
+      await refreshUserData()
 
       setCommentaire("")
     } catch (error) {
@@ -392,40 +374,7 @@ export default function ClientDetail() {
       await axios.put(`${API_URL}/users/${userId}`, editedUser)
 
       // 2. Après la mise à jour réussie, récupérer toutes les données complètes
-      const fetchResponse = await axios.get(`${API_URL}/users/${userId}/full-data`)
-      const data = fetchResponse.data
-
-      if (data.success) {
-        // 3. Mettre à jour l'état avec les données complètes
-        setUserDetails(data.data)
-
-        // 4. Extraire les années des déclarations
-        if (data.data.declarations && data.data.declarations.length > 0) {
-          const years = data.data.declarations.map((d: Declaration) =>
-            d.annee ? d.annee.toString() : new Date(d.dateSoumission).getFullYear().toString(),
-          )
-          setDeclarationYears(Array.from(new Set(years))) // Éliminer les doublons
-
-          // 5. Mettre à jour la déclaration active si nécessaire
-          if (activeDeclaration) {
-            const updatedActiveDeclaration = data.data.declarations.find(
-              (d: Declaration) =>
-                d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
-            )
-            if (updatedActiveDeclaration) {
-              setActiveDeclaration(updatedActiveDeclaration)
-            } else {
-              // Si la déclaration active n'est plus disponible, utiliser la première
-              setActiveDeclaration(data.data.declarations[0])
-            }
-          } else {
-            // Si aucune déclaration active n'était définie, utiliser la première
-            setActiveDeclaration(data.data.declarations[0])
-          }
-        }
-      } else {
-        toast.error(data.message || "Erreur lors du rechargement des données")
-      }
+      await refreshUserData()
 
       setIsEditingUser(false)
       toast.success("Informations utilisateur mises à jour avec succès")
@@ -684,8 +633,19 @@ export default function ClientDetail() {
 
               <TabsContent value="declarations">
                 <Card>
-                  <CardHeader>
+                  <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-lg">Déclarations</CardTitle>
+                    {activeDeclaration && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setIsAddingRubrique(true)}
+                        className="flex items-center gap-1"
+                      >
+                        <Plus className="h-4 w-4" />
+                        Ajouter une rubrique
+                      </Button>
+                    )}
                   </CardHeader>
                   <CardContent>
                     {!userDetails.declarations || userDetails.declarations.length === 0 ? (
@@ -871,7 +831,9 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.doc_id, "en_attente")}
+                                                        onClick={() =>
+                                                          handleDocumentStatusChange(doc.doc_id, "en_attente")
+                                                        }
                                                         title="Mettre en attente"
                                                       >
                                                         <AlertTriangle className="h-4 w-4" />
@@ -974,10 +936,6 @@ export default function ClientDetail() {
                                                                   <DialogFooter>
                                                                     <Button
                                                                       onClick={() => {
-                                                                        console.log(
-                                                                          "ID du document à commenter (sous-rubrique):",
-                                                                          doc.doc_id,
-                                                                        )
                                                                         handleAddComment(doc.doc_id)
                                                                       }}
                                                                       disabled={!commentaire.trim()}
@@ -1077,7 +1035,7 @@ export default function ClientDetail() {
                           </TableHeader>
                           <TableBody>
                             {filteredDocuments.map((doc, index) => (
-                              <TableRow key={`doc-${doc.id || "unknown"}-${index}`}>
+                              <TableRow key={`doc-${doc.doc_id || "unknown"}-${index}`}>
                                 <TableCell>{doc.nom}</TableCell>
                                 <TableCell>
                                   {doc.rubriqueNom}
@@ -1126,8 +1084,7 @@ export default function ClientDetail() {
                                         <DialogFooter>
                                           <Button
                                             onClick={() => {
-                                              console.log("ID du document à commenter (tous documents):", doc.id)
-                                              handleAddComment(doc.id)
+                                              handleAddComment(doc.doc_id)
                                             }}
                                             disabled={!commentaire.trim()}
                                           >
@@ -1140,7 +1097,7 @@ export default function ClientDetail() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleDocumentStatusChange(doc.id, "validé")}
+                                      onClick={() => handleDocumentStatusChange(doc.doc_id, "validé")}
                                       title="Valider le document"
                                     >
                                       <CheckCircle className="h-4 w-4" />
@@ -1149,7 +1106,7 @@ export default function ClientDetail() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleDocumentStatusChange(doc.id, "refusé")}
+                                      onClick={() => handleDocumentStatusChange(doc.doc_id, "refusé")}
                                       title="Refuser le document"
                                     >
                                       <XCircle className="h-4 w-4" />
@@ -1158,7 +1115,7 @@ export default function ClientDetail() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() => handleDocumentStatusChange(doc.id, "en_attente")}
+                                      onClick={() => handleDocumentStatusChange(doc.doc_id, "en_attente")}
                                       title="Mettre en attente"
                                     >
                                       <AlertTriangle className="h-4 w-4" />
@@ -1178,6 +1135,16 @@ export default function ClientDetail() {
           </div>
         </div>
       </div>
+
+      {/* Utilisation du composant AddRubriqueDialog */}
+      <AddRubriqueDialog
+        isOpen={isAddingRubrique}
+        onClose={() => setIsAddingRubrique(false)}
+        declarationId={activeDeclaration?.id || activeDeclaration?.declaration_id}
+        declarationTitle={activeDeclaration?.titre}
+        onRubriqueAdded={refreshUserData}
+        userId={userId}
+      />
     </ProtectedRouteAdmin>
   )
 }
