@@ -65,7 +65,7 @@ class DeclarationController extends Controller
             'statut' => 'required|in:approved,pending,rejected',
         ]);
 
-        $declaration = Declaration::with('rubriques.documents', 'rubriques.sousRubriques.documents')
+        $declaration = Declaration::with('rubriques.documents')
             ->where('declaration_id', $id)
             ->firstOrFail();
 
