@@ -49,7 +49,7 @@ Route::apiResource('administrateurs', AdministrateurController::class);
 Route::apiResource('documents', DocumentController::class);
 
 // Mettre à jour le statut d'un document
-Route::patch('/documents/{id}/status', [DocumentController::class, 'updateStatus']);
+//Route::patch('/documents/{id}/status', [DocumentController::class, 'updateStatus']);
 
 // Routes pour les commentaires
 Route::apiResource('commentaires', CommentaireController::class);
@@ -61,7 +61,7 @@ Route::apiResource('rubriques', RubriqueController::class);
 Route::apiResource('declarations', DeclarationController::class);
 
 // Mettre à jour le statut d'une déclaration
-Route::patch('/declarations/{id}/status', [DeclarationController::class, 'updateStatus']);
+//Route::patch('/declarations/{id}/status', [DeclarationController::class, 'updateStatus']);
 
 // Routes pour les notifications
 Route::apiResource('notifications', NotificationController::class);

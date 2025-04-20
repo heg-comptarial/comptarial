@@ -60,7 +60,7 @@ interface Prive {
 }
 
 interface Document {
-  id: number
+  doc_id: number
   nom: string
   chemin: string
   type: string
@@ -838,7 +838,7 @@ export default function ClientDetail() {
                                                           </div>
                                                           <DialogFooter>
                                                             <Button
-                                                              onClick={() => handleAddComment(doc.id)}
+                                                              onClick={() => handleAddComment(doc.doc_id)}
                                                               disabled={!commentaire.trim()}
                                                             >
                                                               Enregistrer
@@ -850,7 +850,7 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.id, "approved")}
+                                                        onClick={() => handleDocumentStatusChange(doc.doc_id, "approved")}
                                                         title="Valider le document"
                                                       >
                                                         <CheckCircle className="h-4 w-4" />
@@ -859,7 +859,7 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.id, "rejected")}
+                                                        onClick={() => handleDocumentStatusChange(doc.doc_id, "rejected")}
                                                         title="Refuser le document"
                                                       >
                                                         <XCircle className="h-4 w-4" />
@@ -868,7 +868,7 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDocumentStatusChange(doc.id, "pending")}
+                                                        onClick={() => handleDocumentStatusChange(doc.doc_id, "pending")}
                                                         title="Mettre en attente"
                                                       >
                                                         <AlertTriangle className="h-4 w-4" />
@@ -920,7 +920,7 @@ export default function ClientDetail() {
                                                     <TableBody>
                                                       {sousRubrique.documents.map((doc, index) => (
                                                         <TableRow
-                                                          key={`sous-rubrique-doc-${doc.id || "unknown"}-${index}`}
+                                                          key={`sous-rubrique-doc-${doc.doc_id || "unknown"}-${index}`}
                                                         >
                                                           <TableCell>{doc.nom}</TableCell>
                                                           <TableCell>{getStatusBadge(doc.statut)}</TableCell>
@@ -970,7 +970,7 @@ export default function ClientDetail() {
                                                                   </div>
                                                                   <DialogFooter>
                                                                     <Button
-                                                                      onClick={() => handleAddComment(doc.id)}
+                                                                      onClick={() => handleAddComment(doc.doc_id)}
                                                                       disabled={!commentaire.trim()}
                                                                     >
                                                                       Enregistrer
@@ -983,7 +983,7 @@ export default function ClientDetail() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() =>
-                                                                  handleDocumentStatusChange(doc.id, "approved")
+                                                                  handleDocumentStatusChange(doc.doc_id, "approved")
                                                                 }
                                                                 title="Valider le document"
                                                               >
@@ -994,7 +994,7 @@ export default function ClientDetail() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() =>
-                                                                  handleDocumentStatusChange(doc.id, "rejected")
+                                                                  handleDocumentStatusChange(doc.doc_id, "rejected")
                                                                 }
                                                                 title="Refuser le document"
                                                               >
@@ -1005,7 +1005,7 @@ export default function ClientDetail() {
                                                                 variant="ghost"
                                                                 size="icon"
                                                                 onClick={() =>
-                                                                  handleDocumentStatusChange(doc.id, "pending")
+                                                                  handleDocumentStatusChange(doc.doc_id, "pending")
                                                                 }
                                                                 title="Mettre en attente"
                                                               >
