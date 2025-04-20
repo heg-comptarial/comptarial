@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Command,
   Frame,
@@ -26,7 +27,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+export function PendingSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const data = {
     user: {
       name: "Username",
@@ -36,7 +37,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navMain: [
       {
         title: "Mon compte",
-        url: "/account-pending",
+        url: "/account",
         icon: SquareUserRound,
         items: [
           {
@@ -87,7 +88,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/dashboard-pending">
+            <Link href="/dashboard" passHref>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>
@@ -95,7 +96,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                   <span className="truncate font-semibold">Comptarial</span>
                   <span className="truncate text-xs">Fiduciaire</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

@@ -27,7 +27,7 @@ import {
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
 
-export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+export function EntrepriseSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const data = {
     user: {
       name: "Username",
@@ -54,11 +54,6 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         title: "Mes déclarations",
         url: "/declarations-client",
         icon: FolderOpen,
-      },
-      {
-        title: "Nouvelle déclaration",
-        url: "/new-declaration",
-        icon: FilePlus,
       },
     ],
     navSecondary: [

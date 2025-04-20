@@ -29,7 +29,7 @@ import {
 import { useRouter } from "next/navigation";
 import axios from "axios";
 
-export function NavUser({
+export function NavUserAdmin({
   user,
 }: {
   user: {
@@ -109,7 +109,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/account" className="flex items-center gap-2">
+                <Link href="/account-admin" className="flex items-center gap-2">
                   <BadgeCheck />
                   Account
                 </Link>

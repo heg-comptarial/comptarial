@@ -16,7 +16,7 @@ import { DocumentUpload } from "@/components/protected/declaration-client/docume
 import { DocumentList } from "@/components/protected/declaration-client/document-list";
 import { foFields } from "@/utils/foFields";
 import YearSelector from "@/components/YearSelector";
-import ProtectedRoutePrive from "@/components/routes/ProtectedRoutePrive";
+import ProtectedRoutePrive from "@/components/routes/ProtectedRouteApproved";
 
 export default function DeclarationsClientPage() {
   const [userId, setUserId] = useState<number | null>(null);
@@ -341,6 +341,8 @@ export default function DeclarationsClientPage() {
     );
   }
 
+  /* Mis en commentaire pour éviter de bloquer l'affichage (erreur si pending)
+
   if (error) {
     return (
       <div className="p-10">
@@ -349,6 +351,7 @@ export default function DeclarationsClientPage() {
       </div>
     );
   }
+    */
 
   const getStatusBadge = (status: string) => {
     switch (status) {

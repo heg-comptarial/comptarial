@@ -10,7 +10,7 @@ import { Loader2 } from "lucide-react";
 import axios from "axios";
 import dynamic from "next/dynamic";
 import { FormDataType } from "@/types/interfaces";
-import ProtectedRoutePrive from "@/components/routes/ProtectedRoutePrive";
+import ProtectedRoutePrive from "@/components/routes/ProtectedRouteApprovedPrive";
 
 const FormulaireDeclaration = dynamic(() => import("../formulaire/page"), {
   ssr: false,

@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { notFound, useRouter } from "next/navigation";
+import { useRouter, notFound } from "next/navigation";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -17,17 +17,15 @@ async function fetchUserDetails(userId: string | null): Promise<{ role: string |
     },
   });
 
-  if (!response.ok) {
-    console.error("Failed to fetch user details");
-    return { role: null, status: null };
-  }
+  if (!response.ok) return { role: null, status: null };
 
   const data = await response.json();
   return { role: data.role, status: data.statut };
 }
 
-export default function ProtectedRoutePending({ children }: ProtectedRouteProps) {
+export default function ProtectedRoutePrive({ children }: ProtectedRouteProps) {
   const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
+  const [status, setStatus] = useState<string | null>(null);
   const router = useRouter();
 
   useEffect(() => {
@@ -42,15 +40,12 @@ export default function ProtectedRoutePending({ children }: ProtectedRouteProps)
 
       try {
         const { role, status } = await fetchUserDetails(userId);
-
-        // Vérification du rôle et du statut
-        if (role === "prive" || role == "entreprise" && (status === "pending" || status === "approved")) {
-          setIsAllowed(true);
-        } else {
-          setIsAllowed(false);
-        }
+        setStatus(status);
+        setIsAllowed(
+          (role === "prive" || role === "entreprise") && status === "approved"
+        );
       } catch (error) {
-        console.error("Erreur lors de la vérification :", error);
+        console.error("Erreur lors de la vérification de l'utilisateur :", error);
         setIsAllowed(false);
       }
     };
@@ -66,8 +61,16 @@ export default function ProtectedRoutePending({ children }: ProtectedRouteProps)
     );
   }
 
+  if (status === "pending") {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <p>Votre compte est en attente d'approbation. Veuillez réessayer plus tard.</p>
+      </div>
+    );
+  }
+
   if (!isAllowed) {
-    return notFound(); // 404 si l'utilisateur n'est pas autorisé
+    return notFound();
   }
 
   return <>{children}</>;

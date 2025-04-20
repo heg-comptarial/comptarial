@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Link from "next/link";
 import {
   Command,
   Frame,
@@ -15,7 +16,7 @@ import {
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
-import { NavUser } from "@/components/sidebar/nav-user";
+import { NavUserAdmin } from "@/components/sidebar/nav-user-admin";
 import {
   Sidebar,
   SidebarContent,
@@ -92,7 +93,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <a href="/admin">
+              <Link href="/admin" passHref>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>
@@ -100,7 +101,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                   <span className="truncate font-semibold">Comptarial</span>
                   <span className="truncate text-xs">Fiduciaire</span>
                 </div>
-              </a>
+              </Link>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
@@ -110,7 +111,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
       <SidebarFooter>
-        <NavUser user={data.user} />
+        <NavUserAdmin user={data.user} />
       </SidebarFooter>
     </Sidebar>
   );
