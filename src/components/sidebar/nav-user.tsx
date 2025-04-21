@@ -28,6 +28,8 @@ import {
 } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { useParams } from "next/navigation";
+
 
 export function NavUser({
   user,
@@ -40,6 +42,8 @@ export function NavUser({
 }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  const params = useParams()
+  const userId = Number(params?.userId)
 
   const handleLogout = async () => {
     try {
@@ -109,7 +113,7 @@ export function NavUser({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/account" className="flex items-center gap-2">
+                <Link href={`/account/${userId}`} className="flex items-center gap-2">
                   <BadgeCheck />
                   Account
                 </Link>

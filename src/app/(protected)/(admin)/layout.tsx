@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
 import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin";
+import { useParams } from "next/navigation";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -25,6 +26,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     currentPage && currentPage !== "admin"
       ? currentPage.charAt(0).toUpperCase() + currentPage.slice(1)
       : "Admin";
+  const params = useParams()
+  const userId = Number(params?.userId)
 
   return (
     <ProtectedRouteAdmin>
@@ -39,7 +42,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Breadcrumb>
                 <BreadcrumbList>
                   <BreadcrumbItem className="hidden md:block">
-                    <BreadcrumbLink href="/admin">Admin</BreadcrumbLink>
+                    <BreadcrumbLink href={`/admin/${userId}`}>Admin</BreadcrumbLink>
                   </BreadcrumbItem>
                   {currentPage !== "admin" && (
                     <>

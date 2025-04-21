@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { User, FileText, Edit, FormInput, PlusCircle, Settings } from "lucide-react";
 import Link from "next/link";
 import ProtectedRoutePending from "@/components/routes/ProtectedRoutePending";
+import { useParams } from "next/navigation";
 
 interface UserDetails {
   nom: string;
@@ -17,7 +18,7 @@ interface UserDetails {
   statut: string;
 }
 
-async function fetchUser(userId: string | null): Promise<UserDetails | null> {
+async function fetchUser(userId: Number): Promise<UserDetails | null> {
   if (!userId) return null;
 
   const res = await fetch(`http://localhost:8000/api/users/${userId}`, {
@@ -33,11 +34,12 @@ async function fetchUser(userId: string | null): Promise<UserDetails | null> {
 
 export default function Dashboard() {
   const [user, setUser] = useState<UserDetails | null>(null);
+  const params = useParams()
+  const userId = Number(params?.userId);
 
   useEffect(() => {
-    const storedUserId = localStorage.getItem("user_id");
-    fetchUser(storedUserId).then(setUser);
-  }, []);
+    fetchUser(userId).then(setUser);
+  }, [userId]);
 
   if (!user) {
     return <div className="text-center py-20">Chargement des informations utilisateur...</div>;
@@ -68,7 +70,7 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
           {/* Accessible à tous : Compte */}
-          <DashboardLink icon={Settings} label="Mon compte" href="/account" />
+          <DashboardLink icon={Settings} label="Mon compte" href={`/account/${userId}`} />
 
           {/* Statut approved uniquement */}
           {isApproved && (
@@ -76,16 +78,16 @@ export default function Dashboard() {
               {/* Liens pour "prive" */}
               {isPrive && (
                 <>
-                  <DashboardLink icon={FileText} label="Mes déclarations" href="/declarations-client" />
-                  <DashboardLink icon={FormInput} label="Modifier formulaire" href="/formulaire" />
-                  <DashboardLink icon={PlusCircle} label="Nouvelle déclaration" href="/new-declaration" />
+                  <DashboardLink icon={FileText} label="Mes déclarations" href={`/declarations-client/${userId}`} />
+                  <DashboardLink icon={FormInput} label="Modifier formulaire" href={`/formulaire/${userId}`} />
+                  <DashboardLink icon={PlusCircle} label="Nouvelle déclaration" href={`/new-declaration/${userId}`} />
                 </>
               )}
 
               {/* Liens pour "entreprise" */}
               {isEntreprise && (
                 <>
-                  <DashboardLink icon={FileText} label="Mes déclarations" href="/declarations-client" />
+                  <DashboardLink icon={FileText} label="Mes déclarations" href={`/declarations-client/${userId}`} />
                 </>
               )}
             </>

@@ -3,12 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
+import { useParams } from "next/navigation";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-async function fetchUserRole(userId: string | null): Promise<string | null> {
+async function fetchUserRole(userId: Number): Promise<string | null> {
   if (!userId) return null; // Retourne null si userId est invalide
 
   const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
@@ -32,10 +33,11 @@ export default function ProtectedRouteAdmin({ children }: ProtectedRouteProps) {
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // État pour vérifier si l'utilisateur est "admin"
   const [errorMessage, setErrorMessage] = useState<string | null>(null); // Message d'erreur
   const router = useRouter();
+  const params = useParams()
+  const userId = Number(params?.userId)
 
   useEffect(() => {
     const checkAuthentication = async () => {
-      const userId = localStorage.getItem("user_id");
       const authToken = localStorage.getItem("auth_token");
 
       if (!userId || !authToken) {

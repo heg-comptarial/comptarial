@@ -17,9 +17,9 @@ import { DocumentList } from "@/components/protected/declaration-client/document
 import { foFields } from "@/utils/foFields";
 import YearSelector from "@/components/YearSelector";
 import ProtectedRoutePrive from "@/components/routes/ProtectedRouteApproved";
+import { useParams } from "next/navigation";
 
 export default function DeclarationsClientPage() {
-  const [userId, setUserId] = useState<number | null>(null);
   const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
   const [userDeclarations, setUserDeclarations] = useState<Declaration[]>([]);
@@ -32,17 +32,8 @@ export default function DeclarationsClientPage() {
   >([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
-
-  // ✅ Safely read userId from localStorage
-  useEffect(() => {
-    const storedId = localStorage.getItem("user_id");
-    if (storedId) {
-      setUserId(Number(storedId));
-    } else {
-      setError("Utilisateur non identifié");
-      setLoading(false);
-    }
-  }, []);
+  const params = useParams()
+  const userId = Number(params?.userId)
 
   // 🔄 Fetch user's declarations
   useEffect(() => {

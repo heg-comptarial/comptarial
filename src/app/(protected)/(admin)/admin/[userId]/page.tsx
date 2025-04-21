@@ -16,6 +16,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin";
+import { useParams } from "next/navigation"
 
 interface User {
   user_id: number;
@@ -49,6 +50,8 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("general");
+  const params = useParams()
+  const userId = Number(params?.userId)
 
   const fetchPendingUsers = async () => {
     setLoading(true);

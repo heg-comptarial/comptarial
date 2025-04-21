@@ -1,4 +1,4 @@
-import { Metadata } from "next";
+"use client";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -12,16 +12,15 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProtectedRoutePending from "@/components/routes/ProtectedRoutePending";
-
-export const metadata: Metadata = {
-  title: "Account",
-  description: "Manage your account settings",
-};
+import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin";
+import { useParams } from "next/navigation";
 
 export default function AccountPage() {
+    const params = useParams()
+    const userId = Number(params?.userId)
+
   return (
-    <ProtectedRoutePending>
+    <ProtectedRouteAdmin>
       <div className="flex justify-center">
         <Tabs defaultValue="account" className="w-[400px]">
           <TabsList className="grid w-full grid-cols-2">
@@ -77,6 +76,6 @@ export default function AccountPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </ProtectedRoutePending>
+    </ProtectedRouteAdmin>
   );
 }

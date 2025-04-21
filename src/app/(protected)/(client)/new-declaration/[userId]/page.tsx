@@ -11,8 +11,9 @@ import axios from "axios";
 import dynamic from "next/dynamic";
 import { FormDataType } from "@/types/interfaces";
 import ProtectedRoutePrive from "@/components/routes/ProtectedRouteApprovedPrive";
+import { useParams } from "next/navigation";
 
-const FormulaireDeclaration = dynamic(() => import("../formulaire/page"), {
+const FormulaireDeclaration = dynamic(() => import("../../formulaire/[userId]/page"), {
   ssr: false,
   loading: () => (
     <div className="flex justify-center items-center min-h-[400px]">
@@ -35,6 +36,8 @@ export default function NouvelleDeclaration() {
   const [hasDeclaration, setHasDeclaration] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [hasChanges, setHasChanges] = useState<string | null>(null);
+  const params = useParams()
+  const userId = Number(params?.userId)
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -45,14 +48,13 @@ export default function NouvelleDeclaration() {
           return;
         }
 
-        const userIdResponse = Number(localStorage.getItem("user_id"));
-        if (!userIdResponse) {
+        if (!userId) {
           router.push("/connexion");
           return;
         }
 
         const priveResponse = await axios.get(
-          `http://127.0.0.1:8000/api/prives/users/${userIdResponse}`,
+          `http://127.0.0.1:8000/api/prives/users/${userId}`,
           {
             headers: { Authorization: `Bearer ${token}` },
             withCredentials: true,
@@ -63,7 +65,7 @@ export default function NouvelleDeclaration() {
           setPriveId(priveResponse.data.prive_id);
 
           const declarationsResponse = await axios.get(
-            `http://127.0.0.1:8000/api/users/${userIdResponse}/declarations`,
+            `http://127.0.0.1:8000/api/users/${userId}/declarations`,
             {
               headers: { Authorization: `Bearer ${token}` },
             }
@@ -111,7 +113,6 @@ export default function NouvelleDeclaration() {
   const createDeclaration = async (formData: FormDataType) => {
     try {
       const token = localStorage.getItem("auth_token");
-      const userId = Number(localStorage.getItem("user_id"));
 
       if (!token || !userId) {
         throw new Error("Authentification requise");

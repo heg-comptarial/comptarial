@@ -26,8 +26,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useParams } from "next/navigation";
 
 export function PendingSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const params = useParams()
+  const userId = Number(params?.userId)
+
   const data = {
     user: {
       name: "Username",
@@ -37,7 +41,7 @@ export function PendingSidebar({ ...props }: React.ComponentProps<typeof Sidebar
     navMain: [
       {
         title: "Mon compte",
-        url: "/account",
+        url: `/account/${userId}`,
         icon: SquareUserRound,
         items: [
           {
@@ -88,7 +92,7 @@ export function PendingSidebar({ ...props }: React.ComponentProps<typeof Sidebar
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-            <Link href="/dashboard" passHref>
+            <Link href={`/dashboard/${userId}`} passHref>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>

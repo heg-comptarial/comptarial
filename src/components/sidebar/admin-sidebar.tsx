@@ -26,8 +26,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useParams } from "next/navigation";
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const params = useParams()
+  const userId = Number(params?.userId)
+
   const data = {
     user: {
       name: "Username",
@@ -37,7 +41,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
     navMain: [
       {
         title: "Mon compte",
-        url: "/account-admin",
+        url: `/account/${userId}`,
         icon: SquareUserRound,
         items: [
           {
@@ -52,7 +56,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
       },
       {
         title: "Dashboard",
-        url: "/admin",
+        url: `/admin/${userId}`,
         icon: Command,
       }
     ],
@@ -93,7 +97,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/admin" passHref>
+              <Link href={`/admin/${userId}`} passHref>
                 <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                   <Command className="size-4" />
                 </div>

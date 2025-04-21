@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { notFound, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-async function fetchUserDetails(userId: string | null): Promise<{ role: string | null; status: string | null }> {
+async function fetchUserDetails(userId: Number): Promise<{ role: string | null; status: string | null }> {
   if (!userId) return { role: null, status: null };
 
   const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
@@ -29,10 +30,11 @@ async function fetchUserDetails(userId: string | null): Promise<{ role: string |
 export default function ProtectedRoutePending({ children }: ProtectedRouteProps) {
   const [isAllowed, setIsAllowed] = useState<boolean | null>(null);
   const router = useRouter();
+  const params = useParams()
+  const userId = Number(params?.userId)
 
   useEffect(() => {
     const checkAccess = async () => {
-      const userId = localStorage.getItem("user_id");
       const authToken = localStorage.getItem("auth_token");
 
       if (!authToken || !userId) {

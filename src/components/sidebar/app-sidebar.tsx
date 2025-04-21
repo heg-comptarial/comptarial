@@ -26,8 +26,12 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
 } from "@/components/ui/sidebar";
+import { useParams } from "next/navigation";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
+  const params = useParams()
+  const userId = Number(params?.userId)
+
   const data = {
     user: {
       name: "Username",
@@ -37,7 +41,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
     navMain: [
       {
         title: "Mon compte",
-        url: "/account",
+        url: `/account/${userId}`,
         icon: SquareUserRound,
         items: [
           {
@@ -52,12 +56,12 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       },
       {
         title: "Mes déclarations",
-        url: "/declarations-client",
+        url: `/declarations-client/${userId}`,
         icon: FolderOpen,
       },
       {
         title: "Nouvelle déclaration",
-        url: "/new-declaration",
+        url: `/new-declaration/${userId}`,
         icon: FilePlus,
       },
     ],
@@ -103,7 +107,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton size="lg" asChild>
-              <Link href="/dashboard" passHref>
+              <Link href={`/dashboard/${userId}`} passHref>
                 <div className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted transition-colors">
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground transition-all">
                     <Command className="size-4" />

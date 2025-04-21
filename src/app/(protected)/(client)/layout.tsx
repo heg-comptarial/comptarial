@@ -1,6 +1,7 @@
 "use client";
+
 import { useEffect, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useParams } from "next/navigation";
 import { AppSidebar } from "@/components/sidebar/app-sidebar";
 import { PendingSidebar } from "@/components/sidebar/pending-sidebar";
 import { EntrepriseSidebar } from "@/components/sidebar/entreprise-sidebar";
@@ -42,11 +43,18 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const currentPage = pathname.split("/").pop()?.replace(/-/g, " ");
-  const capitalizedPage =
-    currentPage && currentPage !== "dashboard"
-      ? currentPage.charAt(0).toUpperCase() + currentPage.slice(1)
-      : "Dashboard";
+  const params = useParams();
+  const userId = params?.userId as string;
+
+  const segments = pathname.split("/").filter(Boolean);
+  const lastSegment = segments[segments.length - 2]; // e.g. "dashboard", "formulaire"
+  const isNumeric = !isNaN(Number(segments[segments.length - 1]));
+
+  const readablePage = lastSegment
+    ? lastSegment
+        .replace(/-/g, " ")
+        .replace(/^\w/, (c) => c.toUpperCase())
+    : "Dashboard";
 
   const [role, setRole] = useState<string | null>(null);
   const [status, setStatus] = useState<string | null>(null);
@@ -109,15 +117,18 @@ export default function DashboardLayout({
                 <Breadcrumb>
                   <BreadcrumbList>
                     <BreadcrumbItem className="hidden md:block">
-                      <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+                      <BreadcrumbLink href={`/dashboard/${userId}`}>
+                        Dashboard
+                      </BreadcrumbLink>
                     </BreadcrumbItem>
-                    {currentPage !== "dashboard" && (
-                      <BreadcrumbSeparator className="hidden md:block" />
-                    )}
-                    {currentPage !== "dashboard" && (
-                      <BreadcrumbItem>
-                        <BreadcrumbPage>{capitalizedPage}</BreadcrumbPage>
-                      </BreadcrumbItem>
+
+                    {isNumeric && readablePage !== "Dashboard" && (
+                      <>
+                        <BreadcrumbSeparator className="hidden md:block" />
+                        <BreadcrumbItem>
+                          <BreadcrumbPage>{readablePage}</BreadcrumbPage>
+                        </BreadcrumbItem>
+                      </>
                     )}
                   </BreadcrumbList>
                 </Breadcrumb>

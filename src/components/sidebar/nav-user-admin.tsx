@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useRouter } from "next/navigation";
 import axios from "axios";
+import { useParams } from "next/navigation";
 
 export function NavUserAdmin({
   user,
@@ -40,6 +41,8 @@ export function NavUserAdmin({
 }) {
   const { isMobile } = useSidebar();
   const router = useRouter();
+  const params = useParams()
+  const userId = Number(params?.userId)
 
   const handleLogout = async () => {
     try {
@@ -109,7 +112,7 @@ export function NavUserAdmin({
             <DropdownMenuSeparator />
             <DropdownMenuGroup>
               <DropdownMenuItem asChild>
-                <Link href="/account-admin" className="flex items-center gap-2">
+                <Link href={`/account-admin/${userId}`} className="flex items-center gap-2">
                   <BadgeCheck />
                   Account
                 </Link>

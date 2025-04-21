@@ -27,6 +27,7 @@ import { Loader2 } from "lucide-react";
 import axios from "axios";
 import { Enfant, FormDataType } from "@/types/interfaces";
 import ProtectedPrive from "@/components/routes/ProtectedRouteApprovedPrive";
+import { useParams } from "next/navigation";
 
 interface FormulaireDeclarationProps {
   onSubmitSuccess?: (formData: FormDataType) => Promise<boolean>;
@@ -42,6 +43,8 @@ export default function FormulaireDeclaration({
   const [isDataLoading, setIsDataLoading] = useState(!!priveId);
   const [error, setError] = useState<string | null>(null);
   const [step, setStep] = useState(1);
+  const params = useParams()
+  const userId = Number(params?.userId)
 
   // Informations de base
   const [infoBase, setInfoBase] = useState({
@@ -134,6 +137,7 @@ export default function FormulaireDeclaration({
 
   // Récupérer les données de l'utilisateur et les données du privé si disponibles
   useEffect(() => {
+
     const fetchData = async () => {
       try {
         const token = localStorage.getItem("auth_token");
@@ -143,8 +147,7 @@ export default function FormulaireDeclaration({
         }
 
         // Récupérer l'ID utilisateur depuis localStorage
-        const userIdResponse = Number(localStorage.getItem("user_id"));
-        if (!userIdResponse) {
+        if (!userId) {
           router.push("/connexion");
           return;
         }
@@ -363,7 +366,8 @@ export default function FormulaireDeclaration({
 
     try {
       const token = localStorage.getItem("auth_token");
-      const userId = Number(localStorage.getItem("user_id"));
+      const params = useParams()
+      const userId = Number(params?.userId)
 
       if (!token || !userId) {
         router.push("/connexion");
