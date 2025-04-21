@@ -494,11 +494,11 @@ export default function ClientDetail() {
   // Effet pour récupérer l'ID administrateur depuis sessionStorage
   useEffect(() => {
     // Récupérer l'ID administrateur depuis les paramètres d'URL
-    const storedAdminId = params.userId;
+    const storedAdminId = params.adminId;
     if (storedAdminId) {
       setAdminId(Number(storedAdminId));
     }
-  }, [params.userId]);
+  }, [params.adminId]);
 
   const handleYearChange = (year: string) => {
     if (userDetails && userDetails.declarations) {
