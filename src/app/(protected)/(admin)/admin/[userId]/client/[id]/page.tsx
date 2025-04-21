@@ -31,7 +31,7 @@ import {
   Loader2,
   Plus,
 } from "lucide-react";
-import ProtectedRouteAdmin from "@/components/ProtectedRouteAdmin";
+import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -84,6 +84,8 @@ interface Document {
   statut: string;
   dateUpload: string;
   commentaire?: string;
+  annee?: number | string;
+  rubriqueNom?: string;
 }
 
 interface SousRubrique {
@@ -142,18 +144,16 @@ export default function ClientDetail() {
   const [activeDeclaration, setActiveDeclaration] =
     useState<Declaration | null>(null);
   const [commentaire, setCommentaire] = useState("");
-  const [expandedRubriques, setExpandedRubriques] = useState<
-    Record<number, boolean>
-  >({});
+  
   const [expandedSousRubriques, setExpandedSousRubriques] = useState<
     Record<number, boolean>
   >({});
   const [searchTerm, setSearchTerm] = useState("");
-  const [filteredDocuments, setFilteredDocuments] = useState<any[]>([]);
+  const [filteredDocuments, setFilteredDocuments] = useState<Document[]>([]);
   const [declarationYears, setDeclarationYears] = useState<string[]>([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [isEditingUser, setIsEditingUser] = useState<boolean>(false);
-  const [editedUser, setEditedUser] = useState<any>(null);
+  const [editedUser, setEditedUser] = useState<Partial<UserDetails> | null>(null);
   // Ajouter un état pour stocker l'ID de l'administrateur
   const [adminId, setAdminId] = useState<number | null>(null);
 
@@ -577,7 +577,7 @@ export default function ClientDetail() {
                       <label className="text-sm font-medium">Nom</label>
                       <Input
                         name="nom"
-                        value={editedUser.nom}
+                        value={editedUser?.nom || ""}
                         onChange={handleInputChange}
                         className="mt-1"
                       />
@@ -586,7 +586,7 @@ export default function ClientDetail() {
                       <label className="text-sm font-medium">Email</label>
                       <Input
                         name="email"
-                        value={editedUser.email}
+                        value={editedUser?.email || ""}
                         onChange={handleInputChange}
                         className="mt-1"
                       />
@@ -595,7 +595,7 @@ export default function ClientDetail() {
                       <label className="text-sm font-medium">Téléphone</label>
                       <Input
                         name="numeroTelephone"
-                        value={editedUser.numeroTelephone}
+                        value={editedUser?.numeroTelephone || ""}
                         onChange={handleInputChange}
                         className="mt-1"
                       />
@@ -604,7 +604,7 @@ export default function ClientDetail() {
                       <label className="text-sm font-medium">Adresse</label>
                       <Input
                         name="adresse"
-                        value={editedUser.adresse}
+                        value={editedUser?.adresse || ""}
                         onChange={handleInputChange}
                         className="mt-1"
                       />
@@ -613,7 +613,7 @@ export default function ClientDetail() {
                       <label className="text-sm font-medium">Code Postal</label>
                       <Input
                         name="codePostal"
-                        value={editedUser.codePostal}
+                        value={editedUser?.codePostal || ""}
                         onChange={handleInputChange}
                         className="mt-1"
                       />
@@ -622,7 +622,7 @@ export default function ClientDetail() {
                       <label className="text-sm font-medium">Localité</label>
                       <Input
                         name="localite"
-                        value={editedUser.localite}
+                        value={editedUser?.localite || ""}
                         onChange={handleInputChange}
                         className="mt-1"
                       />
