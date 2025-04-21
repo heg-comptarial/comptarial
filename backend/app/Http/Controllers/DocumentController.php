@@ -82,18 +82,31 @@ class DocumentController extends Controller
 
     public function getDocumentsByUser($userId)
     {
-    // Récupère tous les documents liés à un utilisateur via les déclarations
-    $documents = Document::whereHas('rubrique.declaration', function ($query) use ($userId) {
-        $query->where('user_id', $userId);
-    })->with(['rubrique.declaration'])->get();
+        // Récupère tous les documents liés à un utilisateur via les déclarations
+        $documents = Document::whereHas('rubrique.declaration', function ($query) use ($userId) {
+            $query->where('user_id', $userId);
+        })->with(['rubrique.declaration'])->get();
 
-    return response()->json($documents);
+        return response()->json($documents);
     }
 
-    public function getCommentairesByDocument($documentId)
+
+    public function updateStatus(Request $request, $id)
     {
-        // Récupère tous les commentaires d'un document
-        $document = Document::with('commentaires.administrateur.user')->findOrFail($documentId);
-        return response()->json($document->commentaires);
+        $request->validate([
+            'statut' => 'required|in:validé,en_attente,refusé'
+        ]);
+
+        $document = Document::findOrFail($id);
+        $document->statut = $request->statut;
+        $document->save();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Statut du document mis à jour.',
+            'document' => $document
+        ]);
     }
+    
+
 }

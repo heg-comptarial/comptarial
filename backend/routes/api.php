@@ -36,6 +36,7 @@ Route::get('/users/status/approved', [UserController::class, 'getApproved']);
 // Routes supplémentaires pour les utilisateurs afin de créer soit un privé soit une entreprise
 Route::post('/users/{id}/approve', [UserController::class, 'approveUser']);
 
+
 // Routes supplémentaires pour les utilisateurs afin de trouver l'id d'un admin
 Route::get('/admin', [UserController::class, 'getAdminId'])->middleware("auth:sanctum");
 
@@ -46,6 +47,9 @@ Route::apiResource('administrateurs', AdministrateurController::class);
 // Routes pour les documents
 Route::apiResource('documents', DocumentController::class);
 
+// Mettre à jour le statut d'un document
+//Route::patch('/documents/{id}/status', [DocumentController::class, 'updateStatus']);
+
 // Routes pour les commentaires
 Route::apiResource('commentaires', CommentaireController::class);
 
@@ -54,6 +58,11 @@ Route::apiResource('rubriques', RubriqueController::class);
 
 // Routes pour les déclarations
 Route::apiResource('declarations', DeclarationController::class);
+
+// Mettre à jour le statut d'une déclaration
+Route::patch('/declarations/{id}/status', [DeclarationController::class, 'updateStatus']);
+Route::get('/declarations/{id}/check-documents', [DeclarationController::class, 'checkDocuments']);
+
 
 // Routes pour les notifications
 Route::apiResource('notifications', NotificationController::class);
