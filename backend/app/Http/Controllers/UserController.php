@@ -7,6 +7,8 @@ use App\Models\Prive;
 use App\Models\Entreprise;
 use Illuminate\Http\Request;
 use App\Models\Declaration;
+use App\Models\Administrateur;
+use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
 {
@@ -179,17 +181,111 @@ class UserController extends Controller
     }
 
     public function getDeclarationByYear($userId, $year)
-{
-    // Récupère la déclaration d'un utilisateur spécifique pour une année donnée
-    $declaration = Declaration::where('user_id', $userId)
-        ->where('annee', $year)
-        ->with(['rubriques.documents']) // Inclut les rubriques et documents associés
-        ->first();
+    {
+        // Récupère la déclaration d'un utilisateur spécifique pour une année donnée
+        $declaration = Declaration::where('user_id', $userId)
+            ->where('annee', $year)
+            ->with(['rubriques.documents']) // Inclut les rubriques et documents associés
+            ->first();
 
-    if (!$declaration) {
-        return response()->json(['message' => 'Déclaration non trouvée pour cette année.'], 404);
+        if (!$declaration) {
+            return response()->json(['message' => 'Déclaration non trouvée pour cette année.'], 404);
+        }
+
+        return response()->json($declaration);
     }
 
-    return response()->json($declaration);
-}
+    public function getUserDetails($id)
+    {
+        try {
+            // Récupérer l'utilisateur avec ses relations (entreprises, prives, déclarations, etc.)
+            $user = User::with(['entreprises', 'prives', 'declarations.rubriques.sousRubriques.documents'])
+                ->findOrFail($id);
+
+            // Retourner les détails de l'utilisateur
+            return response()->json([
+                'success' => true,
+                'data' => $user,
+            ], 200);
+        } catch (\Exception $e) {
+            // Gérer les erreurs (par exemple, utilisateur non trouvé)
+            return response()->json([
+                'success' => false,
+                'message' => 'Utilisateur non trouvé',
+                'error' => $e->getMessage(),
+            ], 404);
+        }
+    }
+
+    /**
+     * Récupère les données complètes d'un utilisateur avec ses déclarations et documents associés.
+     *
+     * @param int $id
+     * @return \Illuminate\Http\JsonResponse
+     */
+
+    public function getFullUserData($id)
+    {
+        try {
+            $user = User::with([
+                'declarations.rubriques.documents'
+            ])->findOrFail($id);
+
+            return response()->json([
+                'success' => true,
+                'data' => $user
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Utilisateur non trouvé ou erreur de chargement.',
+                'error' => $e->getMessage()
+            ], 404);
+        }
+    }
+
+    /**
+     * Récupère l'ID de l'administrateur connecté.
+     *
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getAdminId()
+    {
+        try {
+            // Vérifie si un utilisateur est authentifié
+            $user = Auth::user();
+
+            // Vérifie si l'utilisateur est un administrateur
+            if (!$user || $user->role !== 'admin') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Utilisateur non authentifié ou non administrateur.',
+                ], 403);
+            }
+
+                    // Trouve l'administrateur correspondant
+                $admin = Administrateur::where('user_id', $user->user_id)->first();
+                if (!$admin) {
+                    return response()->json([
+                        'test'=> $user,
+                        'success' => false,
+                        'message' => 'Administrateur non trouvé.',
+                    ], 404);
+                }
+        
+                return response()->json([
+                    'success' => true,
+                    'admin_id' => $admin->admin_id,
+                ], 200);
+        
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération de l\'ID administrateur.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

@@ -20,6 +20,13 @@ use Illuminate\Support\Facades\Crypt;
 // Routes pour les utilisateurs
 Route::apiResource('users', UserController::class);
 
+// Routes supplémentaires pour récupere les info d'un utilisateur par son id
+Route::get('/users/{id}/details', [UserController::class, 'getUserDetails']);
+
+// Routes supplémentaires pour récupérer les informations d'un utilisateur avec toutes ses relations
+Route::get('/users/{id}/full-data', [UserController::class, 'getFullUserData']);
+
+
 // Routes supplémentaires pour les utilisateurs qui ont un statur pending
 Route::get('/users/status/pending', [UserController::class, 'getPending']);
 
@@ -28,6 +35,9 @@ Route::get('/users/status/approved', [UserController::class, 'getApproved']);
 
 // Routes supplémentaires pour les utilisateurs afin de créer soit un privé soit une entreprise
 Route::post('/users/{id}/approve', [UserController::class, 'approveUser']);
+
+// Routes supplémentaires pour les utilisateurs afin de trouver l'id d'un admin
+Route::get('/admin', [UserController::class, 'getAdminId'])->middleware("auth:sanctum");
 
 
 // Routes pour les administrateurs

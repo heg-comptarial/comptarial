@@ -12,7 +12,10 @@ export default defineConfig({
     },
   },
   test: {
-    include: [...configDefaults.include, 'src/app/**/*.test.tsx'], // Inclut les fichiers de tests .test.tsx
+    include: [...configDefaults.include, 'src/app/**/*.test.tsx',
+      'src/app/page.test.tsx',        // Fichiers de test directement dans src/app
+
+    ], // Inclut les fichiers de tests .test.tsx
     environment: 'jsdom', // Utilise jsdom pour tester les composants React
     globals: true, // Active les globals comme `expect`, `it`, `describe`
     compilerOptions: {
