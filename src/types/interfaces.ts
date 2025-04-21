@@ -15,6 +15,7 @@ export interface Document {
   cheminFichier: string;
   statut: "pending" | "rejected" | "approved";
   sous_rubrique?: string | null;
+  commentaires?: Commentaire[];
   dateCreation: string;
 }
 
@@ -34,6 +35,35 @@ export interface Declaration {
   annee: string;
   dateCreation: string;
   rubriques: Rubrique[];
+}
+
+export interface Utilisateur {
+  user_id: number;
+  nom: string;
+  email: string;
+  localite: string;
+  adresse: string;
+  codePostal: string;
+  numeroTelephone: string;
+  role: string;
+  statut: string;
+  dateCreation: string;
+}
+
+export interface Administrateur {
+  admin_id: number;
+  user_id: number;
+  niveauAcces: string;
+  user?: Utilisateur;
+}
+
+export interface Commentaire {
+  commentaire_id: number;
+  document_id: number;
+  admin_id: number;
+  contenu: string;
+  dateCreation: string;
+  administrateur?: Administrateur;
 }
 
 export interface Prive {

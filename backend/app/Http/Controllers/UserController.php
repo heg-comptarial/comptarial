@@ -95,7 +95,7 @@ class UserController extends Controller
     // Récupère la déclaration spécifique d'un utilisateur avec ses relations
     $declaration = Declaration::where('user_id', $userId)
         ->where('declaration_id', $declarationId)
-        ->with(['rubriques.documents'])
+        ->with(['rubriques.documents.commentaires'])
         ->firstOrFail();
 
     return response()->json($declaration);

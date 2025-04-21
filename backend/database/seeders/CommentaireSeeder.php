@@ -28,6 +28,27 @@ class CommentaireSeeder extends Seeder
                 'contenu' => 'Encore un commentaire pour le document 1.',
                 'dateCreation' => now(),
             ],
+            // user 7, declaration 7
+            [
+                'document_id' => 3,
+                'admin_id' => 2,
+                'contenu' => 'Parfait.',
+                'dateCreation' => now(),
+            ],
+            // user 7, declaration 7
+            [
+                'document_id' => 3,
+                'admin_id' => 2,
+                'contenu' => 'Il manque une partie du document.',
+                'dateCreation' => now(),
+            ],
+            // user 7, declaration 7
+            [
+                'document_id' => 3,
+                'admin_id' => 1,
+                'contenu' => 'Il faut signer le document.',
+                'dateCreation' => now(),
+            ],
         ]);
     }
 }
