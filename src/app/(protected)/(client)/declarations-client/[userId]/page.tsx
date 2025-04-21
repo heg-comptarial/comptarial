@@ -379,6 +379,7 @@ export default function DeclarationsClientPage() {
     );
   }
     */
+   console.log(error);
 
   return (
     <ProtectedRoutePrive>

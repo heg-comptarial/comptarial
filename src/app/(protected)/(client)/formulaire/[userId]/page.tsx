@@ -45,6 +45,7 @@ export default function FormulaireDeclaration({
   const [step, setStep] = useState(1);
   const params = useParams()
   const userId = Number(params?.userId)
+  
 
   // Informations de base
   const [infoBase, setInfoBase] = useState({
@@ -279,6 +280,8 @@ export default function FormulaireDeclaration({
     ]);
   };
 
+  
+
   // Mettre à jour les informations d'un enfant
   const updateEnfant = (index: number, field: string, value: string) => {
     const updatedEnfants = [...enfants];
@@ -364,10 +367,11 @@ export default function FormulaireDeclaration({
     setError(null);
     setIsLoading(true);
 
+  
+
     try {
       const token = localStorage.getItem("auth_token");
-      const params = useParams()
-      const userId = Number(params?.userId)
+      
 
       if (!token || !userId) {
         router.push("/connexion");
@@ -486,7 +490,7 @@ export default function FormulaireDeclaration({
           });
 
           // Rediriger vers "Mes déclarations"
-          router.push("/declarations-client");
+          router.push(`/declarations-client/${userId}`);
         }
       } else {
         setError(

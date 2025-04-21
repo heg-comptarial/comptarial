@@ -157,7 +157,7 @@ export default function NouvelleDeclaration() {
         }
       );
 
-      router.push("/declarations-client");
+      router.push(`/declarations-client/${userId}`);
     } catch (error: unknown) {
       console.error("Erreur création déclaration:", error);
       if (axios.isAxiosError(error) && error.response?.status === 409) {
@@ -226,7 +226,7 @@ export default function NouvelleDeclaration() {
           </CardHeader>
           <CardContent>
             <p>{error}</p>
-            <Button className="mt-4" onClick={() => router.push("/dashboard")}>
+            <Button className="mt-4" onClick={() => router.push(`/dashboard/${userId}`)}>
               Retour au tableau de bord
             </Button>
           </CardContent>
@@ -357,7 +357,7 @@ export default function NouvelleDeclaration() {
         </CardHeader>
         <CardContent>
           <p>Une erreur inattendue s&apos;est produite. Veuillez réessayer.</p>
-          <Button className="mt-4" onClick={() => router.push("/dashboard")}>
+          <Button className="mt-4" onClick={() => router.push(`/dashboard/${userId}`)}>
             Retour au tableau de bord
           </Button>
         </CardContent>
