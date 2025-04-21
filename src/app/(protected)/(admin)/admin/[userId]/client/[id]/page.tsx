@@ -494,11 +494,11 @@ export default function ClientDetail() {
   // Effet pour récupérer l'ID administrateur depuis sessionStorage
   useEffect(() => {
     // Récupérer l'ID administrateur depuis les paramètres d'URL
-    const storedAdminId = params.adminId;
+    const storedAdminId = params.userId;
     if (storedAdminId) {
       setAdminId(Number(storedAdminId));
     }
-  }, [params.adminId]);
+  }, [params.userId]);
 
   const handleYearChange = (year: string) => {
     if (userDetails && userDetails.declarations) {
@@ -729,7 +729,7 @@ export default function ClientDetail() {
           <Button
             variant="outline"
             size="sm"
-            onClick={() => router.push(`/admin/${params.adminId}`)}
+            onClick={() => router.push(`/admin/${params.userId}`)}
           >
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
