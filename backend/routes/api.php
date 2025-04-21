@@ -59,7 +59,8 @@ Route::apiResource('rubriques', RubriqueController::class);
 // Routes pour les déclarations
 Route::apiResource('declarations', DeclarationController::class);
 
-// Mettre à jour le statut d'une déclaration et valider les documents associés
+// Mettre à jour le statut d'une déclaration
+Route::get('/declarations/{id}/check-documents', [DeclarationController::class, 'checkDocuments']);
 Route::patch('/declarations/{id}/validateDecEtDoc', [DeclarationController::class, 'validerDeclarationEtDocuments']);
 
 

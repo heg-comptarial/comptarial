@@ -58,7 +58,36 @@ class DeclarationController extends Controller
         $declaration->delete();
         return response()->json(null, 204);
     }
-    
+
+
+    public function checkDocuments($id)
+    {
+        // Récupérer la déclaration avec ses rubriques et documents
+        $declaration = Declaration::with(['rubriques.documents'])
+            ->where('declaration_id', $id)
+            ->firstOrFail();
+        
+        $documentsNonValides = [];
+        $allDocumentsApproved = true;
+        
+        // Parcourir toutes les rubriques et leurs documents
+        foreach ($declaration->rubriques as $rubrique) {
+            // Vérifier les documents de la rubrique
+            if ($rubrique->documents) {
+                foreach ($rubrique->documents as $doc) {
+                    if ($doc->statut !== 'approved') {
+                        $documentsNonValides[] = $doc->nom . ' (' . ($rubrique->nom ?? $rubrique->titre) . ')';
+                        $allDocumentsApproved = false;
+                    }
+                }
+            }
+        }
+        
+        return response()->json([
+            'all_documents_approved' => $allDocumentsApproved,
+            'documents_non_valides' => $documentsNonValides
+        ]);
+    }
 
     public function validerDeclarationEtDocuments($declarationId, Request $request)
     {
