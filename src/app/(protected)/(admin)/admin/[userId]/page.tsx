@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Edit, Search, UserPlus, Users } from "lucide-react";
+import { Search, UserPlus, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -16,7 +16,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin";
-import { useParams } from "next/navigation"
+import { useParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 
 interface User {
   user_id: number;
@@ -52,6 +53,7 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState("general");
   const params = useParams()
   const userId = Number(params?.userId)
+  const router = useRouter();
 
   const fetchPendingUsers = async () => {
     setLoading(true);
@@ -468,11 +470,11 @@ export default function Dashboard() {
                                 {getStatusLabel(user.statut)}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right">
-                              <Button variant="ghost" size="icon">
-                                <Edit className="h-4 w-4" />
-                              </Button>
-                            </TableCell>
+                            <TableCell className="text-right space-x-1">
+                            <Button variant="outline" size="sm" onClick={() => router.push(`/admin/client/${user.user_id}`)}>
+                              Voir détails
+                            </Button>
+                          </TableCell>
                           </TableRow>
                         ))
                       ) : (

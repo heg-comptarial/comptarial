@@ -20,6 +20,13 @@ use Illuminate\Support\Facades\Crypt;
 // Routes pour les utilisateurs
 Route::apiResource('users', UserController::class);
 
+// Routes supplémentaires pour récupere les info d'un utilisateur par son id
+Route::get('/users/{id}/details', [UserController::class, 'getUserDetails']);
+
+// Routes supplémentaires pour récupérer les informations d'un utilisateur avec toutes ses relations
+Route::get('/users/{id}/full-data', [UserController::class, 'getFullUserData']);
+
+
 // Routes supplémentaires pour les utilisateurs qui ont un statur pending
 Route::get('/users/status/pending', [UserController::class, 'getPending']);
 
@@ -30,11 +37,19 @@ Route::get('/users/status/approved', [UserController::class, 'getApproved']);
 Route::post('/users/{id}/approve', [UserController::class, 'approveUser']);
 
 
+// Routes supplémentaires pour les utilisateurs afin de trouver l'id d'un admin
+//Route::middleware('auth:api')->get('/admin', [UserController::class, 'getAdminId']);
+Route::get('/users/admin', [UserController::class, 'getAdminId']);
+
+
 // Routes pour les administrateurs
 Route::apiResource('administrateurs', AdministrateurController::class);
 
 // Routes pour les documents
 Route::apiResource('documents', DocumentController::class);
+
+// Mettre à jour le statut d'un document
+//Route::patch('/documents/{id}/status', [DocumentController::class, 'updateStatus']);
 
 // Routes pour les commentaires
 Route::apiResource('commentaires', CommentaireController::class);
@@ -44,6 +59,11 @@ Route::apiResource('rubriques', RubriqueController::class);
 
 // Routes pour les déclarations
 Route::apiResource('declarations', DeclarationController::class);
+
+// Mettre à jour le statut d'une déclaration
+Route::patch('/declarations/{id}/status', [DeclarationController::class, 'updateStatus']);
+Route::get('/declarations/{id}/check-documents', [DeclarationController::class, 'checkDocuments']);
+
 
 // Routes pour les notifications
 Route::apiResource('notifications', NotificationController::class);
