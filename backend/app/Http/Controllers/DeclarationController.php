@@ -138,5 +138,44 @@ class DeclarationController extends Controller
         ]);
     }
 
+    public function validerDeclarationEtDocuments($declarationId, Request $request)
+    {
+        try {
+            // Récupérer la déclaration
+            $declaration = Declaration::with('rubriques.documents')->findOrFail($declarationId);
+
+            // Vérifier si la déclaration est déjà validée
+            if ($declaration->statut === 'approved') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La déclaration est déjà validée.',
+                ], 400);
+            }
+
+            // Mettre à jour le statut de la déclaration
+            $declaration->statut = 'approved';
+            $declaration->save();
+
+            // Mettre à jour le statut des documents associés
+            foreach ($declaration->rubriques as $rubrique) {
+                foreach ($rubrique->documents as $document) {
+                    $document->statut = 'approved';
+                    $document->save();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Déclaration et documents validés avec succès.',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la validation de la déclaration.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
 }
