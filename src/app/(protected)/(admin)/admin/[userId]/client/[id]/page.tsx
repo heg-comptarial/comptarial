@@ -53,6 +53,7 @@ import {
 import { toast, Toaster } from "sonner";
 import axios from "axios";
 import AddRubriqueDialog from "@/components/adminPage/add-rubrique";
+import ConfirmationDialog from "@/components/confirmation-dialog";
 
 // Définition des types pour les modèles
 interface Entreprise {
@@ -159,6 +160,14 @@ export default function ClientDetail() {
 
   // État pour gérer l'ouverture de la boîte de dialogue d'ajout de rubrique
   const [isAddingRubrique, setIsAddingRubrique] = useState(false);
+  
+  // Ajouter un nouvel état pour gérer le dialogue de confirmation
+  const [confirmationDialogOpen, setConfirmationDialogOpen] = useState(false)
+  const [pendingDeclarationAction, setPendingDeclarationAction] = useState<{
+    declarationId: number
+    status: "approved" | "pending" | "rejected"
+  } | null>(null)
+  const [documentsNonValides, setDocumentsNonValides] = useState<string[]>([])
 
   // Fonction pour basculer l'état d'une sous-rubrique
   const toggleSousRubrique = (sousRubriqueId: number) => {
@@ -298,7 +307,7 @@ export default function ClientDetail() {
     newStatus: string
   ) => {
     try {
-      await axios.patch(`${API_URL}/documents/${documentId}/status`, {
+      await axios.patch(`${API_URL}/documents/${documentId}`, {
         statut: newStatus,
       });
 
@@ -318,25 +327,106 @@ export default function ClientDetail() {
   // Modifier la fonction handleDeclarationStatusChange pour recharger les données avec la nouvelle route
   const handleDeclarationStatusChange = async (
     declarationId: number,
-    newStatus: string
+    newStatus: "approved" | "pending" | "rejected",
   ) => {
-    try {
-      await axios.patch(`${API_URL}/declarations/${declarationId}/status`, {
-        statut: newStatus,
-      });
-
-      toast.success(`Statut de la déclaration mis à jour avec succès`);
-
-      // Mettre à jour l'état local en utilisant la nouvelle route
-      await refreshUserData();
-    } catch (error) {
-      console.error(
-        "Erreur lors de la mise à jour du statut de la déclaration:",
-        error
-      );
-      toast.error("Erreur lors de la mise à jour du statut de la déclaration");
+    // Si ce n'est pas une validation, on procède normalement
+    if (newStatus !== "approved") {
+      try {
+        const response = await fetch(`${API_URL}/declarations/${declarationId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ statut: newStatus }),
+        })
+ 
+        if (!response.ok) {
+          const errorData = await response.json()
+          toast.error(errorData.message || "Erreur lors de la mise à jour du statut")
+          return
+        }
+ 
+        toast.success("Statut de la déclaration mis à jour avec succès")
+ 
+        const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`)
+        if (fetchResponse.ok) {
+          const data = await fetchResponse.json()
+          if (data.success) {
+            setUserDetails(data.data)
+ 
+            const updated = data.data.declarations.find(
+              (d: Declaration) => d.id === declarationId || d.declaration_id === declarationId,
+            )
+            if (updated) {
+              setActiveDeclaration(updated)
+            }
+          }
+        }
+      } catch (error) {
+        console.error("Erreur lors de la mise à jour de la déclaration:", error)
+        toast.error("Erreur inattendue lors de la mise à jour")
+      }
+      return
     }
-  };
+ 
+    // Pour les validations, vérifier d'abord si tous les documents sont approuvés
+    try {
+      // Vérifier si tous les documents sont approuvés
+      const checkResponse = await fetch(`${API_URL}/declarations/${declarationId}/check-documents`)
+      const checkData = await checkResponse.json()
+ 
+      if (!checkResponse.ok) {
+        toast.error(checkData.message || "Erreur lors de la vérification des documents")
+        return
+      }
+ 
+      // Si tous les documents sont approuvés, procéder normalement
+      if (checkData.all_documents_approved) {
+        const response = await fetch(`${API_URL}/declarations/${declarationId}`, {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ statut: newStatus }),
+        })
+ 
+        if (!response.ok) {
+          const errorData = await response.json()
+          toast.error(errorData.message || "Erreur lors de la mise à jour du statut")
+          return
+        }
+ 
+        toast.success("Statut de la déclaration mis à jour avec succès")
+ 
+        // Rafraîchir les données
+        const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`)
+        if (fetchResponse.ok) {
+          const data = await fetchResponse.json()
+          if (data.success) {
+            setUserDetails(data.data)
+ 
+            const updated = data.data.declarations.find(
+              (d: Declaration) => d.id === declarationId || d.declaration_id === declarationId,
+            )
+            if (updated) {
+              setActiveDeclaration(updated)
+            }
+          }
+        }
+      } else {
+        // Si certains documents ne sont pas approuvés, ouvrir le dialogue de confirmation
+        setDocumentsNonValides(checkData.documents_non_valides || [])
+        setPendingDeclarationAction({
+          declarationId,
+          status: newStatus,
+        })
+        setConfirmationDialogOpen(true)
+      }
+    } catch (error) {
+      console.error("Erreur lors de la vérification des documents:", error)
+      toast.error("Erreur inattendue lors de la vérification des documents")
+    }
+  }
 
   // Modifier la fonction handleAddComment pour utiliser directement un ID administrateur par défaut
   const handleAddComment = async (documentId: number) => {
@@ -456,43 +546,17 @@ export default function ClientDetail() {
     switch (status?.toLowerCase()) {
       case "approved":
       case "validé":
-        return <Badge className="bg-green-100 text-green-800">Validé</Badge>;
+        return <Badge className="bg-green-100 text-green-800">Validé</Badge>
       case "pending":
       case "en_attente":
-        return (
-          <Badge className="bg-yellow-100 text-yellow-800">En attente</Badge>
-        );
+        return <Badge className="bg-yellow-100 text-yellow-800">En attente</Badge>
       case "rejected":
       case "refusé":
-        return <Badge className="bg-red-100 text-red-800">Refusé</Badge>;
+        return <Badge className="bg-red-100 text-red-800">Refusé</Badge>
       default:
-        return (
-          <Badge className="bg-gray-100 text-gray-800">
-            {status || "Inconnu"}
-          </Badge>
-        );
+        return <Badge className="bg-gray-100 text-gray-800">{status || "Inconnu"}</Badge>
     }
-  };
-
-  const handleDownloadDocument = (
-    documentPath: string,
-    documentName: string
-  ) => {
-    // Dans un environnement réel, vous devriez vérifier si le chemin est complet ou relatif
-    const downloadUrl = documentPath.startsWith("http")
-      ? documentPath
-      : `${API_URL}/documents/download?path=${encodeURIComponent(
-          documentPath
-        )}`;
-
-    // Créer un élément a temporaire pour déclencher le téléchargement
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.download = documentName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-  };
+  }
 
   const handleDeleteRubrique = async(id: string | number) => {
     // Petite confirmation avant suppression (optionnel)
@@ -511,6 +575,125 @@ export default function ClientDetail() {
   } 
 
   };
+
+  const handleDownloadDocument = (documentPath: string, documentName: string) => {
+    // Dans un environnement réel, vous devriez vérifier si le chemin est complet ou relatif
+    const downloadUrl = documentPath.startsWith("http")
+      ? documentPath
+      : `${API_URL}/documents/download?path=${encodeURIComponent(documentPath)}`
+
+    // Créer un élément a temporaire pour déclencher le téléchargement
+    const link = document.createElement("a")
+    link.href = downloadUrl
+    link.download = documentName
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+  }
+
+  // Fonction pour valider la déclaration sans les documents
+  const validateDeclarationOnly = async () => {
+    if (!pendingDeclarationAction) return
+
+    try {
+      const response = await fetch(`${API_URL}/declarations/${pendingDeclarationAction.declarationId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          statut: pendingDeclarationAction.status,
+          force_validation: true,
+        }),
+      })
+
+      if (!response.ok) {
+        const errorData = await response.json()
+        toast.error(errorData.message || "Erreur lors de la mise à jour du statut")
+        return
+      }
+
+      toast.success("Déclaration validée avec succès (sans les documents)")
+
+      // Rafraîchir les données
+      const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`)
+      if (fetchResponse.ok) {
+        const data = await fetchResponse.json()
+        if (data.success) {
+          setUserDetails(data.data)
+
+          const updated = data.data.declarations.find(
+            (d: Declaration) =>
+              d.id === pendingDeclarationAction.declarationId ||
+              d.declaration_id === pendingDeclarationAction.declarationId,
+          )
+          if (updated) {
+            setActiveDeclaration(updated)
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la validation de la déclaration:", error)
+      toast.error("Erreur inattendue lors de la validation")
+    } finally {
+      setConfirmationDialogOpen(false)
+      setPendingDeclarationAction(null)
+    }
+  }
+
+  // Fonction pour valider la déclaration et tous les documents
+  const validateDeclarationAndDocuments = async () => {
+    if (!pendingDeclarationAction) return;
+  
+    try {
+      // Envoi de la requête PATCH pour valider la déclaration et les documents
+      const response = await fetch(`${API_URL}/declarations/${pendingDeclarationAction.declarationId}`, {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          statut: pendingDeclarationAction.status,
+          approve_all_documents: true,  // Indiquer qu'on souhaite valider tous les documents
+        }),
+      });
+  
+      if (!response.ok) {
+        const errorData = await response.json();
+        toast.error(errorData.message || "Erreur lors de la mise à jour du statut");
+        return;
+      }
+  
+      toast.success("Déclaration et documents validés avec succès");
+  
+      // Rafraîchir les données de l'utilisateur
+      const fetchResponse = await fetch(`${API_URL}/users/${userId}/full-data`);
+      if (fetchResponse.ok) {
+        const data = await fetchResponse.json();
+        if (data.success) {
+          setUserDetails(data.data);
+  
+          // Trouver et mettre à jour la déclaration active si nécessaire
+          const updated = data.data.declarations.find(
+            (d: Declaration) =>
+              d.id === pendingDeclarationAction.declarationId ||
+              d.declaration_id === pendingDeclarationAction.declarationId
+          );
+          if (updated) {
+            setActiveDeclaration(updated);
+          }
+        }
+      }
+    } catch (error) {
+      console.error("Erreur lors de la validation de la déclaration et des documents:", error);
+      toast.error("Erreur inattendue lors de la validation");
+    } finally {
+      // Fermer le dialogue et réinitialiser l'action en attente
+      setConfirmationDialogOpen(false);
+      setPendingDeclarationAction(null);
+    }
+  };
+  
 
   if (loading || !userId) {
     return (
@@ -534,7 +717,7 @@ export default function ClientDetail() {
           </div>
         </div>
       </ProtectedRouteAdmin>
-    );
+    )
   }
 
   return (
@@ -846,10 +1029,8 @@ export default function ClientDetail() {
                                     className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
                                     onClick={() =>
                                       handleDeclarationStatusChange(
-                                        activeDeclaration.id ||
-                                          activeDeclaration.declaration_id ||
-                                          0,
-                                        "validé"
+                                        activeDeclaration.id || activeDeclaration.declaration_id || 0,
+                                        "approved",
                                       )
                                     }
                                   >
@@ -862,10 +1043,8 @@ export default function ClientDetail() {
                                     className="bg-yellow-50 text-yellow-700 hover:bg-yellow-100 border-yellow-200"
                                     onClick={() =>
                                       handleDeclarationStatusChange(
-                                        activeDeclaration.id ||
-                                          activeDeclaration.declaration_id ||
-                                          0,
-                                        "en_attente"
+                                        activeDeclaration.id || activeDeclaration.declaration_id || 0,
+                                        "pending",
                                       )
                                     }
                                   >
@@ -878,10 +1057,8 @@ export default function ClientDetail() {
                                     className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
                                     onClick={() =>
                                       handleDeclarationStatusChange(
-                                        activeDeclaration.id ||
-                                          activeDeclaration.declaration_id ||
-                                          0,
-                                        "refusé"
+                                        activeDeclaration.id || activeDeclaration.declaration_id || 0,
+                                        "rejected",
                                       )
                                     }
                                   >
@@ -935,160 +1112,99 @@ export default function ClientDetail() {
                                                 <TableHead>Nom</TableHead>
                                                 <TableHead>Statut</TableHead>
                                                 <TableHead>Date</TableHead>
-                                                <TableHead className="text-right">
-                                                  Actions
-                                                </TableHead>
+                                                <TableHead className="text-right">Actions</TableHead>
                                               </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                              {rubrique.documents.map(
-                                                (doc, index) => (
-                                                  <TableRow
-                                                    key={`rubrique-doc-${
-                                                      doc.doc_id || "unknown"
-                                                    }-${index}`}
-                                                  >
-                                                    <TableCell>
-                                                      {doc.nom}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                      {getStatusBadge(
-                                                        doc.statut
-                                                      )}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                      {new Date(
-                                                        doc.dateUpload
-                                                      ).toLocaleDateString()}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                      <div className="flex justify-end gap-1">
-                                                        <Button
-                                                          variant="ghost"
-                                                          size="icon"
-                                                          onClick={() =>
-                                                            handleDownloadDocument(
-                                                              doc.chemin,
-                                                              doc.nom
-                                                            )
-                                                          }
-                                                        >
-                                                          <Download className="h-4 w-4" />
-                                                        </Button>
+                                              {rubrique.documents.map((doc, index) => (
+                                                <TableRow key={`rubrique-doc-${doc.id || "unknown"}-${index}`}>
+                                                  <TableCell>{doc.nom}</TableCell>
+                                                  <TableCell>{getStatusBadge(doc.statut)}</TableCell>
+                                                  <TableCell>{new Date(doc.dateUpload).toLocaleDateString()}</TableCell>
+                                                  <TableCell className="text-right">
+                                                    <div className="flex justify-end gap-1">
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleDownloadDocument(doc.chemin, doc.nom)}
+                                                      >
+                                                        <Download className="h-4 w-4" />
+                                                      </Button>
 
-                                                        <Dialog>
-                                                          <DialogTrigger
-                                                            asChild
-                                                          >
+                                                      <Dialog>
+                                                        <DialogTrigger asChild>
+                                                          <Button variant="ghost" size="icon">
+                                                            <MessageSquare className="h-4 w-4" />
+                                                          </Button>
+                                                        </DialogTrigger>
+                                                        <DialogContent>
+                                                          <DialogHeader>
+                                                            <DialogTitle>Ajouter un commentaire</DialogTitle>
+                                                            <DialogDescription>Document: {doc.nom}</DialogDescription>
+                                                          </DialogHeader>
+                                                          <div className="py-4">
+                                                            {doc.commentaire && (
+                                                              <div className="mb-4 p-3 bg-muted rounded-md">
+                                                                <p className="text-sm font-medium mb-1">
+                                                                  Commentaire actuel:
+                                                                </p>
+                                                                <p className="text-sm">{doc.commentaire}</p>
+                                                              </div>
+                                                            )}
+                                                            <Textarea
+                                                              placeholder="Saisissez votre commentaire ici..."
+                                                              value={commentaire}
+                                                              onChange={(e) => setCommentaire(e.target.value)}
+                                                              className="min-h-[100px]"
+                                                            />
+                                                          </div>
+                                                          <DialogFooter>
                                                             <Button
-                                                              variant="ghost"
-                                                              size="icon"
+                                                              onClick={() => handleAddComment(doc.doc_id)}
+                                                              disabled={!commentaire.trim()}
                                                             >
-                                                              <MessageSquare className="h-4 w-4" />
+                                                              Enregistrer
                                                             </Button>
-                                                          </DialogTrigger>
-                                                          <DialogContent>
-                                                            <DialogHeader>
-                                                              <DialogTitle>
-                                                                Ajouter un
-                                                                commentaire
-                                                              </DialogTitle>
-                                                              <DialogDescription>
-                                                                Document:{" "}
-                                                                {doc.nom}
-                                                              </DialogDescription>
-                                                            </DialogHeader>
-                                                            <div className="py-4">
-                                                              {doc.commentaire && (
-                                                                <div className="mb-4 p-3 bg-muted rounded-md">
-                                                                  <p className="text-sm font-medium mb-1">
-                                                                    Commentaire
-                                                                    actuel:
-                                                                  </p>
-                                                                  <p className="text-sm">
-                                                                    {
-                                                                      doc.commentaire
-                                                                    }
-                                                                  </p>
-                                                                </div>
-                                                              )}
-                                                              <Textarea
-                                                                placeholder="Saisissez votre commentaire ici..."
-                                                                value={
-                                                                  commentaire
-                                                                }
-                                                                onChange={(e) =>
-                                                                  setCommentaire(
-                                                                    e.target
-                                                                      .value
-                                                                  )
-                                                                }
-                                                                className="min-h-[100px]"
-                                                              />
-                                                            </div>
-                                                            <DialogFooter>
-                                                              <Button
-                                                                onClick={() => {
-                                                                  handleAddComment(
-                                                                    doc.doc_id
-                                                                  );
-                                                                }}
-                                                                disabled={
-                                                                  !commentaire.trim()
-                                                                }
-                                                              >
-                                                                Enregistrer
-                                                              </Button>
-                                                            </DialogFooter>
-                                                          </DialogContent>
-                                                        </Dialog>
+                                                          </DialogFooter>
+                                                        </DialogContent>
+                                                      </Dialog>
 
-                                                        <Button
-                                                          variant="ghost"
-                                                          size="icon"
-                                                          onClick={() =>
-                                                            handleDocumentStatusChange(
-                                                              doc.doc_id,
-                                                              "validé"
-                                                            )
-                                                          }
-                                                          title="Valider le document"
-                                                        >
-                                                          <CheckCircle className="h-4 w-4" />
-                                                        </Button>
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                          handleDocumentStatusChange(doc.doc_id, "approved")
+                                                        }
+                                                        title="Valider le document"
+                                                      >
+                                                        <CheckCircle className="h-4 w-4" />
+                                                      </Button>
 
-                                                        <Button
-                                                          variant="ghost"
-                                                          size="icon"
-                                                          onClick={() =>
-                                                            handleDocumentStatusChange(
-                                                              doc.doc_id,
-                                                              "refusé"
-                                                            )
-                                                          }
-                                                          title="Refuser le document"
-                                                        >
-                                                          <XCircle className="h-4 w-4" />
-                                                        </Button>
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                          handleDocumentStatusChange(doc.doc_id, "rejected")
+                                                        }
+                                                        title="Refuser le document"
+                                                      >
+                                                        <XCircle className="h-4 w-4" />
+                                                      </Button>
 
-                                                        <Button
-                                                          variant="ghost"
-                                                          size="icon"
-                                                          onClick={() =>
-                                                            handleDocumentStatusChange(
-                                                              doc.doc_id,
-                                                              "en_attente"
-                                                            )
-                                                          }
-                                                          title="Mettre en attente"
-                                                        >
-                                                          <AlertTriangle className="h-4 w-4" />
-                                                        </Button>
-                                                      </div>
-                                                    </TableCell>
-                                                  </TableRow>
-                                                )
-                                              )}
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() =>
+                                                          handleDocumentStatusChange(doc.doc_id, "pending")
+                                                        }
+                                                        title="Mettre en attente"
+                                                      >
+                                                        <AlertTriangle className="h-4 w-4" />
+                                                      </Button>
+                                                    </div>
+                                                  </TableCell>
+                                                </TableRow>
+                                              ))}
                                             </TableBody>
                                           </Table>
                                         </div>
@@ -1101,227 +1217,142 @@ export default function ClientDetail() {
                                       )}
 
                                       {/* Sous-rubriques */}
-                                      {rubrique.sousRubriques &&
-                                        rubrique.sousRubriques.length > 0 && (
-                                          <div className="space-y-3 ml-4">
-                                            <h4 className="text-sm font-medium mb-2">
-                                              Sous-rubriques
-                                            </h4>
-                                            {rubrique.sousRubriques.map(
-                                              (sousRubrique) => (
-                                                <div
-                                                  key={sousRubrique.id}
-                                                  className="border rounded-md"
-                                                >
-                                                  <div
-                                                    className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted"
-                                                    onClick={() =>
-                                                      toggleSousRubrique(
-                                                        sousRubrique.id
-                                                      )
-                                                    }
-                                                  >
-                                                    <div className="flex items-center">
-                                                      {expandedSousRubriques[
-                                                        sousRubrique.id
-                                                      ] ? (
-                                                        <ChevronDown className="h-4 w-4 mr-2" />
-                                                      ) : (
-                                                        <ChevronRight className="h-4 w-4 mr-2" />
-                                                      )}
-                                                      <span className="font-medium">
-                                                        {sousRubrique.nom}
-                                                      </span>
-                                                    </div>
-                                                  </div>
-
-                                                  {expandedSousRubriques[
-                                                    sousRubrique.id
-                                                  ] &&
-                                                    sousRubrique.documents && (
-                                                      <div className="p-3 pt-0 border-t">
-                                                        <Table>
-                                                          <TableHeader>
-                                                            <TableRow>
-                                                              <TableHead>
-                                                                Nom
-                                                              </TableHead>
-                                                              <TableHead>
-                                                                Statut
-                                                              </TableHead>
-                                                              <TableHead>
-                                                                Date
-                                                              </TableHead>
-                                                              <TableHead className="text-right">
-                                                                Actions
-                                                              </TableHead>
-                                                            </TableRow>
-                                                          </TableHeader>
-                                                          <TableBody>
-                                                            {sousRubrique.documents.map(
-                                                              (doc, index) => (
-                                                                <TableRow
-                                                                  key={`sous-rubrique-doc-${
-                                                                    doc.doc_id ||
-                                                                    "unknown"
-                                                                  }-${index}`}
-                                                                >
-                                                                  <TableCell>
-                                                                    {doc.nom}
-                                                                  </TableCell>
-                                                                  <TableCell>
-                                                                    {getStatusBadge(
-                                                                      doc.statut
-                                                                    )}
-                                                                  </TableCell>
-                                                                  <TableCell>
-                                                                    {new Date(
-                                                                      doc.dateUpload
-                                                                    ).toLocaleDateString()}
-                                                                  </TableCell>
-                                                                  <TableCell className="text-right">
-                                                                    <div className="flex justify-end gap-1">
-                                                                      <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        onClick={() =>
-                                                                          handleDownloadDocument(
-                                                                            doc.chemin,
-                                                                            doc.nom
-                                                                          )
-                                                                        }
-                                                                      >
-                                                                        <Download className="h-4 w-4" />
-                                                                      </Button>
-
-                                                                      <Dialog>
-                                                                        <DialogTrigger
-                                                                          asChild
-                                                                        >
-                                                                          <Button
-                                                                            variant="ghost"
-                                                                            size="icon"
-                                                                          >
-                                                                            <MessageSquare className="h-4 w-4" />
-                                                                          </Button>
-                                                                        </DialogTrigger>
-                                                                        <DialogContent>
-                                                                          <DialogHeader>
-                                                                            <DialogTitle>
-                                                                              Ajouter
-                                                                              un
-                                                                              commentaire
-                                                                            </DialogTitle>
-                                                                            <DialogDescription>
-                                                                              Document:{" "}
-                                                                              {
-                                                                                doc.nom
-                                                                              }
-                                                                            </DialogDescription>
-                                                                          </DialogHeader>
-                                                                          <div className="py-4">
-                                                                            {doc.commentaire && (
-                                                                              <div className="mb-4 p-3 bg-muted rounded-md">
-                                                                                <p className="text-sm font-medium mb-1">
-                                                                                  Commentaire
-                                                                                  actuel:
-                                                                                </p>
-                                                                                <p className="text-sm">
-                                                                                  {
-                                                                                    doc.commentaire
-                                                                                  }
-                                                                                </p>
-                                                                              </div>
-                                                                            )}
-                                                                            <Textarea
-                                                                              placeholder="Saisissez votre commentaire ici..."
-                                                                              value={
-                                                                                commentaire
-                                                                              }
-                                                                              onChange={(
-                                                                                e
-                                                                              ) =>
-                                                                                setCommentaire(
-                                                                                  e
-                                                                                    .target
-                                                                                    .value
-                                                                                )
-                                                                              }
-                                                                              className="min-h-[100px]"
-                                                                            />
-                                                                          </div>
-                                                                          <DialogFooter>
-                                                                            <Button
-                                                                              onClick={() => {
-                                                                                handleAddComment(
-                                                                                  doc.doc_id
-                                                                                );
-                                                                              }}
-                                                                              disabled={
-                                                                                !commentaire.trim()
-                                                                              }
-                                                                            >
-                                                                              Enregistrer
-                                                                            </Button>
-                                                                          </DialogFooter>
-                                                                        </DialogContent>
-                                                                      </Dialog>
-
-                                                                      <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        onClick={() =>
-                                                                          handleDocumentStatusChange(
-                                                                            doc.doc_id,
-                                                                            "validé"
-                                                                          )
-                                                                        }
-                                                                        title="Valider le document"
-                                                                      >
-                                                                        <CheckCircle className="h-4 w-4" />
-                                                                      </Button>
-
-                                                                      <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        onClick={() =>
-                                                                          handleDocumentStatusChange(
-                                                                            doc.doc_id,
-                                                                            "refusé"
-                                                                          )
-                                                                        }
-                                                                        title="Refuser le document"
-                                                                      >
-                                                                        <XCircle className="h-4 w-4" />
-                                                                      </Button>
-
-                                                                      <Button
-                                                                        variant="ghost"
-                                                                        size="icon"
-                                                                        onClick={() =>
-                                                                          handleDocumentStatusChange(
-                                                                            doc.doc_id,
-                                                                            "en_attente"
-                                                                          )
-                                                                        }
-                                                                        title="Mettre en attente"
-                                                                      >
-                                                                        <AlertTriangle className="h-4 w-4" />
-                                                                      </Button>
-                                                                    </div>
-                                                                  </TableCell>
-                                                                </TableRow>
-                                                              )
-                                                            )}
-                                                          </TableBody>
-                                                        </Table>
-                                                      </div>
-                                                    )}
+                                      {rubrique.sousRubriques && rubrique.sousRubriques.length > 0 && (
+                                        <div className="space-y-3 ml-4">
+                                          <h4 className="text-sm font-medium mb-2">Sous-rubriques</h4>
+                                          {rubrique.sousRubriques.map((sousRubrique) => (
+                                            <div key={sousRubrique.id} className="border rounded-md">
+                                              <div
+                                                className="flex items-center justify-between p-3 cursor-pointer hover:bg-muted"
+                                                onClick={() => toggleSousRubrique(sousRubrique.id)}
+                                              >
+                                                <div className="flex items-center">
+                                                  {expandedSousRubriques[sousRubrique.id] ? (
+                                                    <ChevronDown className="h-4 w-4 mr-2" />
+                                                  ) : (
+                                                    <ChevronRight className="h-4 w-4 mr-2" />
+                                                  )}
+                                                  <span className="font-medium">{sousRubrique.nom}</span>
                                                 </div>
-                                              )
-                                            )}
-                                          </div>
-                                        )}
+                                              </div>
+
+                                              {expandedSousRubriques[sousRubrique.id] && sousRubrique.documents && (
+                                                <div className="p-3 pt-0 border-t">
+                                                  <Table>
+                                                    <TableHeader>
+                                                      <TableRow>
+                                                        <TableHead>Nom</TableHead>
+                                                        <TableHead>Statut</TableHead>
+                                                        <TableHead>Date</TableHead>
+                                                        <TableHead className="text-right">Actions</TableHead>
+                                                      </TableRow>
+                                                    </TableHeader>
+                                                    <TableBody>
+                                                      {sousRubrique.documents.map((doc, index) => (
+                                                        <TableRow
+                                                          key={`sous-rubrique-doc-${doc.doc_id || "unknown"}-${index}`}
+                                                        >
+                                                          <TableCell>{doc.nom}</TableCell>
+                                                          <TableCell>{getStatusBadge(doc.statut)}</TableCell>
+                                                          <TableCell>
+                                                            {new Date(doc.dateUpload).toLocaleDateString()}
+                                                          </TableCell>
+                                                          <TableCell className="text-right">
+                                                            <div className="flex justify-end gap-1">
+                                                              <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() =>
+                                                                  handleDownloadDocument(doc.chemin, doc.nom)
+                                                                }
+                                                              >
+                                                                <Download className="h-4 w-4" />
+                                                              </Button>
+
+                                                              <Dialog>
+                                                                <DialogTrigger asChild>
+                                                                  <Button variant="ghost" size="icon">
+                                                                    <MessageSquare className="h-4 w-4" />
+                                                                  </Button>
+                                                                </DialogTrigger>
+                                                                <DialogContent>
+                                                                  <DialogHeader>
+                                                                    <DialogTitle>Ajouter un commentaire</DialogTitle>
+                                                                    <DialogDescription>
+                                                                      Document: {doc.nom}
+                                                                    </DialogDescription>
+                                                                  </DialogHeader>
+                                                                  <div className="py-4">
+                                                                    {doc.commentaire && (
+                                                                      <div className="mb-4 p-3 bg-muted rounded-md">
+                                                                        <p className="text-sm font-medium mb-1">
+                                                                          Commentaire actuel:
+                                                                        </p>
+                                                                        <p className="text-sm">{doc.commentaire}</p>
+                                                                      </div>
+                                                                    )}
+                                                                    <Textarea
+                                                                      placeholder="Saisissez votre commentaire ici..."
+                                                                      value={commentaire}
+                                                                      onChange={(e) => setCommentaire(e.target.value)}
+                                                                      className="min-h-[100px]"
+                                                                    />
+                                                                  </div>
+                                                                  <DialogFooter>
+                                                                    <Button
+                                                                      onClick={() => handleAddComment(doc.doc_id)}
+                                                                      disabled={!commentaire.trim()}
+                                                                    >
+                                                                      Enregistrer
+                                                                    </Button>
+                                                                  </DialogFooter>
+                                                                </DialogContent>
+                                                              </Dialog>
+
+                                                              <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() =>
+                                                                  handleDocumentStatusChange(doc.doc_id, "approved")
+                                                                }
+                                                                title="Valider le document"
+                                                              >
+                                                                <CheckCircle className="h-4 w-4" />
+                                                              </Button>
+
+                                                              <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() =>
+                                                                  handleDocumentStatusChange(doc.doc_id, "rejected")
+                                                                }
+                                                                title="Refuser le document"
+                                                              >
+                                                                <XCircle className="h-4 w-4" />
+                                                              </Button>
+
+                                                              <Button
+                                                                variant="ghost"
+                                                                size="icon"
+                                                                onClick={() =>
+                                                                  handleDocumentStatusChange(doc.doc_id, "pending")
+                                                                }
+                                                                title="Mettre en attente"
+                                                              >
+                                                                <AlertTriangle className="h-4 w-4" />
+                                                              </Button>
+                                                            </div>
+                                                          </TableCell>
+                                                        </TableRow>
+                                                      ))}
+                                                    </TableBody>
+                                                  </Table>
+                                                </div>
+                                              )}
+                                            </div>
+                                          ))}
+                                        </div>
+                                      )}
                                     </div>
                                   </AccordionContent>
                                 </AccordionItem>
@@ -1465,7 +1496,7 @@ export default function ClientDetail() {
                                       onClick={() =>
                                         handleDocumentStatusChange(
                                           doc.doc_id,
-                                          "validé"
+                                          "approved"
                                         )
                                       }
                                       title="Valider le document"
@@ -1479,7 +1510,7 @@ export default function ClientDetail() {
                                       onClick={() =>
                                         handleDocumentStatusChange(
                                           doc.doc_id,
-                                          "refusé"
+                                          "rejected"
                                         )
                                       }
                                       title="Refuser le document"
@@ -1493,7 +1524,7 @@ export default function ClientDetail() {
                                       onClick={() =>
                                         handleDocumentStatusChange(
                                           doc.doc_id,
-                                          "en_attente"
+                                          "pending"
                                         )
                                       }
                                       title="Mettre en attente"
@@ -1527,6 +1558,15 @@ export default function ClientDetail() {
         onRubriqueAdded={refreshUserData}
         userId={userId}
       />
+      <ConfirmationDialog
+          open={confirmationDialogOpen}
+          setOpen={setConfirmationDialogOpen}
+          documentsNonValides={documentsNonValides}
+          validateDeclarationOnly={validateDeclarationOnly}
+          validateDeclarationAndDocuments={validateDeclarationAndDocuments}
+          setPendingDeclarationAction={setPendingDeclarationAction}
+        />
+
     </ProtectedRouteAdmin>
   );
 }
