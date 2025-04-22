@@ -1,7 +1,5 @@
 "use client";
 
-import type React from "react";
-import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -14,40 +12,12 @@ import {
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Upload, Trash2, Download } from "lucide-react";
-import { toast } from "sonner";
-import { formatFileSize } from "@/utils/format-file-size";
-import { allowedFileTypes } from "@/utils/allowedFileTypes";
+import { useFileUpload } from "@/hooks/useFileUpload";
+import { formatFileSize } from "@/utils/formatFileSize";
 import { getFileTypeIcon } from "@/utils/getFileTypeIcon";
+import type { DocumentUploadProps } from "@/types/interfaces";
 
-interface SelectedFile {
-  file: File;
-  id: string;
-}
-
-interface ExistingDocument {
-  doc_id: number;
-  nom: string;
-  type: string;
-  cheminFichier: string;
-  statut: string;
-  dateCreation: string;
-  fileSize?: number;
-}
-
-interface DocumentUploadProps {
-  userId: number;
-  year: string;
-  rubriqueId: number;
-  rubriqueName: string;
-  hideExistingList?: boolean;
-  existingDocuments?: ExistingDocument[];
-  onFilesSelected: (files: File[]) => void;
-  onFileRemoved: (fileId: string) => void;
-  onUploadCompleted?: () => void;
-  hideTitle?: boolean;
-}
-
-export function DocumentUpload({
+export default function DocumentUpload({
   rubriqueId,
   rubriqueName,
   existingDocuments = [],
@@ -56,50 +26,13 @@ export function DocumentUpload({
   hideExistingList = false,
   hideTitle = false,
 }: DocumentUploadProps) {
-  const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
+  const { selectedFiles, handleFileSelect, removeFile } = useFileUpload({
+    onFilesSelected,
+    onFileRemoved,
+  });
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (!e.target.files || e.target.files.length === 0) return;
-
-    const newFiles: SelectedFile[] = [];
-
-    Array.from(e.target.files).forEach((file) => {
-      if (!allowedFileTypes.includes(file.type)) {
-        toast.error(`Type de fichier non autorisé: ${file.name}`, {
-          description:
-            "Seuls les documents PDF, Word, Excel et les images sont autorisés.",
-        });
-        return;
-      }
-
-      if (
-        selectedFiles.some(
-          (f) => f.file.name === file.name && f.file.size === file.size
-        )
-      ) {
-        toast.warning(`Fichier déjà sélectionné: ${file.name}`);
-        return;
-      }
-
-      newFiles.push({
-        file,
-        id: crypto.randomUUID(),
-      });
-    });
-
-    setSelectedFiles([...selectedFiles, ...newFiles]);
-    onFilesSelected(newFiles.map((f) => f.file));
-    e.target.value = "";
-  };
-
-  const removeFile = (id: string) => {
-    setSelectedFiles(selectedFiles.filter((file) => file.id !== id));
-    onFileRemoved(id);
-  };
-
-  const getFileExtension = (fileName: string) => {
-    return fileName.split(".").pop()?.toLowerCase() || "";
-  };
+  const getFileExtension = (fileName: string) =>
+    fileName.split(".").pop()?.toLowerCase() || "";
 
   return (
     <Card className="w-full">
@@ -130,18 +63,17 @@ export function DocumentUpload({
             className="hidden"
             onChange={handleFileSelect}
             multiple
-            accept={allowedFileTypes.join(",")}
+            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
           />
         </div>
 
-        {/* Liste des fichiers sélectionnés */}
         {selectedFiles.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Fichiers à téléverser</h3>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40px]"></TableHead>
+                  <TableHead className="w-[40px]" />
                   <TableHead className="w-1/2">Nom</TableHead>
                   <TableHead className="w-1/6">Type</TableHead>
                   <TableHead className="w-1/6">Taille</TableHead>
@@ -151,18 +83,12 @@ export function DocumentUpload({
               <TableBody>
                 {selectedFiles.map((fileData) => (
                   <TableRow key={fileData.id}>
-                    <TableCell className="w-[40px]">
-                      {getFileTypeIcon(fileData.file.name)}
-                    </TableCell>
-                    <TableCell className="w-1/2 font-medium">
+                    <TableCell>{getFileTypeIcon(fileData.file.name)}</TableCell>
+                    <TableCell className="font-medium">
                       {fileData.file.name}
                     </TableCell>
-                    <TableCell className="w-1/6">
-                      {fileData.file.type.split("/").pop()}
-                    </TableCell>
-                    <TableCell className="w-1/6">
-                      {formatFileSize(fileData.file.size)}
-                    </TableCell>
+                    <TableCell>{fileData.file.type.split("/").pop()}</TableCell>
+                    <TableCell>{formatFileSize(fileData.file.size)}</TableCell>
                     <TableCell className="text-right">
                       <button
                         onClick={() => removeFile(fileData.id)}
@@ -178,14 +104,13 @@ export function DocumentUpload({
           </div>
         )}
 
-        {/* Liste des documents existants (affichée seulement si hideExistingList = false) */}
         {!hideExistingList && existingDocuments.length > 0 && (
           <div className="space-y-4 mt-6">
             <h3 className="text-sm font-medium">Documents existants</h3>
             <Table>
               <TableHeader>
                 <TableRow>
-                  <TableHead className="w-[40px]"></TableHead>
+                  <TableHead className="w-[40px]" />
                   <TableHead>Nom</TableHead>
                   <TableHead>Type</TableHead>
                   <TableHead>Statut</TableHead>
@@ -198,17 +123,7 @@ export function DocumentUpload({
                     <TableCell>{getFileTypeIcon(doc.nom)}</TableCell>
                     <TableCell className="font-medium">{doc.nom}</TableCell>
                     <TableCell>{getFileExtension(doc.nom)}</TableCell>
-                    <TableCell>
-                      {doc.statut === "approved" && (
-                        <span className="text-green-500">Approuvé</span>
-                      )}
-                      {doc.statut === "pending" && (
-                        <span className="text-yellow-500">En attente</span>
-                      )}
-                      {doc.statut === "rejected" && (
-                        <span className="text-red-500">Rejeté</span>
-                      )}
-                    </TableCell>
+                    <TableCell>{doc.statut}</TableCell>
                     <TableCell className="text-right">
                       <a
                         href={doc.cheminFichier}
