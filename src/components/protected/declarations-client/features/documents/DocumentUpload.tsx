@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { toast } from "sonner";
 import { Upload, Trash2, Download } from "lucide-react";
 import { useFileUpload } from "@/hooks/useFileUpload";
 import { formatFileSize } from "@/utils/formatFileSize";
@@ -28,11 +29,19 @@ export default function DocumentUpload({
 }: DocumentUploadProps) {
   const { selectedFiles, handleFileSelect, removeFile } = useFileUpload({
     onFilesSelected,
-    onFileRemoved,
+    onFileRemoved: () => {}, // évite les doublons directs ici
   });
 
   const getFileExtension = (fileName: string) =>
     fileName.split(".").pop()?.toLowerCase() || "";
+
+  const handleRemove = (id: string) => {
+    const file = selectedFiles.find((f) => f.id === id);
+    if (!file) return;
+    removeFile(id);
+    onFileRemoved(file.file.name + file.file.size);
+    toast.info(`Fichier supprimé : ${file.file.name}`);
+  };
 
   return (
     <Card className="w-full">
@@ -91,7 +100,7 @@ export default function DocumentUpload({
                     <TableCell>{formatFileSize(fileData.file.size)}</TableCell>
                     <TableCell className="text-right">
                       <button
-                        onClick={() => removeFile(fileData.id)}
+                        onClick={() => handleRemove(fileData.id)}
                         className="text-red-500 hover:text-red-700"
                       >
                         <Trash2 className="h-4 w-4" />
