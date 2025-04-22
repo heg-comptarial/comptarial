@@ -200,6 +200,7 @@ export function DocumentList({
             onFileRemoved={onFileRemoved}
             hideExistingList={true}
             onUploadCompleted={handleUploadCompleted}
+            hideTitle={true}
           />
         )}
 
@@ -234,7 +235,7 @@ export function DocumentList({
                       <Download className="h-4 w-4 inline" />
                     </button>
                     {declarationStatus === "pending" &&
-                      doc.statut === "pending" && (
+                      doc.statut !== "approved" && (
                         <button
                           onClick={() => handleDelete(doc)}
                           className="text-red-500 hover:text-red-700"

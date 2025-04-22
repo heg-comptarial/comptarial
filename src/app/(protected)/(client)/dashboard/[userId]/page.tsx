@@ -1,8 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { Button } from "@/components/ui/button";
-import { User, FileText, Edit, FormInput, PlusCircle, Settings } from "lucide-react";
+import { FileText, FormInput, PlusCircle, Settings } from "lucide-react";
 import Link from "next/link";
 import ProtectedRoutePending from "@/components/routes/ProtectedRoutePending";
 import { useParams } from "next/navigation";
@@ -18,7 +17,7 @@ interface UserDetails {
   statut: string;
 }
 
-async function fetchUser(userId: Number): Promise<UserDetails | null> {
+async function fetchUser(userId: number): Promise<UserDetails | null> {
   if (!userId) return null;
 
   const res = await fetch(`http://localhost:8000/api/users/${userId}`, {
@@ -62,7 +61,7 @@ export default function Dashboard() {
 
         {isPending && (
           <div className="mb-8 rounded-xl border border-yellow-300 bg-yellow-100 text-yellow-800 p-4 text-sm shadow-sm">
-            Votre demande est en cours de traitement. Vous n'avez pas encore accès à toutes les fonctionnalités du site.
+            Votre demande est en cours de traitement. Vous n&apos;avez pas encore accès à toutes les fonctionnalités du site.
             <br />
             Nous étudierons votre profil dans les plus brefs délais.
           </div>

@@ -13,11 +13,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProtectedRoutePending from "@/components/routes/ProtectedRoutePending";
-import { useParams } from "next/navigation";
+// import { useParams } from "next/navigation";
 
 export default function AccountPage() {
-  const params = useParams()
-  const userId = Number(params?.userId)
+  // const params = useParams()
+  // const userId = Number(params?.userId)
   
   return (
     <ProtectedRoutePending>

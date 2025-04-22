@@ -32,10 +32,9 @@ export default function DeclarationsClientPage() {
   >([]);
   const [isSaving, setIsSaving] = useState<boolean>(false);
   const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
-  const params = useParams()
-  const userId = Number(params?.userId)
+  const params = useParams();
+  const userId = Number(params?.userId);
 
-  // 🔄 Fetch user's declarations
   useEffect(() => {
     if (!userId) return;
 
@@ -68,7 +67,6 @@ export default function DeclarationsClientPage() {
     fetchDeclarations();
   }, [userId]);
 
-  // 🔁 On year selection update declaration
   useEffect(() => {
     if (selectedYear && userDeclarations.length > 0) {
       const selected = userDeclarations.find((d) => d.annee === selectedYear);
@@ -97,6 +95,12 @@ export default function DeclarationsClientPage() {
 
             const declarationData = await declarationResponse.json();
 
+            const existingRubriqueTitles = new Set(
+              (declarationData.rubriques || []).map((r: Rubrique) =>
+                r.titre.trim().toLowerCase()
+              )
+            );
+
             if (
               declarationData.rubriques &&
               declarationData.rubriques.length > 0
@@ -112,80 +116,84 @@ export default function DeclarationsClientPage() {
 
               setUploadedRubriques(alreadyUploaded);
               setLoading(false);
-            } else {
-              const priveResponse = await fetch(
-                `http://localhost:8000/api/prives`
-              );
-              const privesData: Prive[] = await priveResponse.json();
+              return;
+            }
 
-              const userPrive: Prive | undefined = privesData.find(
-                (prive) => prive.user_id === userId
-              );
+            const priveResponse = await fetch(
+              `http://localhost:8000/api/prives`
+            );
+            const privesData: Prive[] = await priveResponse.json();
 
-              if (!userPrive) {
-                setError("Données privées non trouvées pour cet utilisateur");
-                setLoading(false);
-                return;
-              }
+            const userPrive: Prive | undefined = privesData.find(
+              (prive) => prive.user_id === userId
+            );
 
-              const createdRubriques = [];
+            if (!userPrive) {
+              setError("Données privées non trouvées pour cet utilisateur");
+              setLoading(false);
+              return;
+            }
 
-              for (const [field, value] of Object.entries(userPrive)) {
-                if (
-                  field.startsWith("fo_") &&
-                  value === true &&
-                  foFields[field as keyof typeof foFields]
-                ) {
-                  const rubriqueInfo = foFields[field as keyof typeof foFields];
+            const createdRubriques = [];
 
-                  try {
-                    const createResponse = await fetch(
-                      `http://127.0.0.1:8000/api/rubriques`,
-                      {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({
-                          declaration_id: declarationData.declaration_id,
-                          titre: rubriqueInfo.titre,
-                          description: rubriqueInfo.description,
-                        }),
-                      }
-                    );
+            for (const [field, value] of Object.entries(userPrive)) {
+              if (
+                field.startsWith("fo_") &&
+                value === true &&
+                foFields[field as keyof typeof foFields]
+              ) {
+                const rubriqueInfo = foFields[field as keyof typeof foFields];
+                const titreNormalise = rubriqueInfo.titre.trim().toLowerCase();
 
-                    if (createResponse.ok) {
-                      const createdRubrique = await createResponse.json();
-                      createdRubriques.push(createdRubrique);
+                if (existingRubriqueTitles.has(titreNormalise)) continue;
+
+                try {
+                  const createResponse = await fetch(
+                    `http://127.0.0.1:8000/api/rubriques`,
+                    {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        declaration_id: declarationData.declaration_id,
+                        titre: rubriqueInfo.titre,
+                        description: rubriqueInfo.description,
+                      }),
                     }
-                  } catch (err) {
-                    console.error(`Error creating rubrique for ${field}:`, err);
+                  );
+
+                  if (createResponse.ok) {
+                    const createdRubrique = await createResponse.json();
+                    createdRubriques.push(createdRubrique);
                   }
+                } catch (err) {
+                  console.error(`Error creating rubrique for ${field}:`, err);
                 }
               }
-
-              const updatedDeclarationResponse = await fetch(
-                `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationData.declaration_id}`
-              );
-              if (updatedDeclarationResponse.ok) {
-                const updatedDeclarationData =
-                  await updatedDeclarationResponse.json();
-                setDeclaration(updatedDeclarationData);
-
-                const alreadyUploaded = updatedDeclarationData.rubriques
-                  .filter(
-                    (rubrique: Rubrique) =>
-                      rubrique.documents && rubrique.documents.length > 0
-                  )
-                  .map((r: Rubrique) => r.rubrique_id);
-                setUploadedRubriques(alreadyUploaded);
-              } else {
-                setDeclaration({
-                  ...declarationData,
-                  rubriques: createdRubriques,
-                });
-              }
-
-              setToastShown(true);
             }
+
+            const updatedDeclarationResponse = await fetch(
+              `http://127.0.0.1:8000/api/users/${userId}/declarations/${declarationData.declaration_id}`
+            );
+            if (updatedDeclarationResponse.ok) {
+              const updatedDeclarationData =
+                await updatedDeclarationResponse.json();
+              setDeclaration(updatedDeclarationData);
+
+              const alreadyUploaded = updatedDeclarationData.rubriques
+                .filter(
+                  (rubrique: Rubrique) =>
+                    rubrique.documents && rubrique.documents.length > 0
+                )
+                .map((r: Rubrique) => r.rubrique_id);
+              setUploadedRubriques(alreadyUploaded);
+            } else {
+              setDeclaration({
+                ...declarationData,
+                rubriques: createdRubriques,
+              });
+            }
+
+            setToastShown(true);
           } catch (err) {
             setError("Erreur lors de la récupération ou création des données");
             console.error(err);
@@ -259,12 +267,14 @@ export default function DeclarationsClientPage() {
           )?.titre || ""
         );
 
-        const response = await fetch("http://localhost:8000/api/upload", {
+        const response = await fetch("/api/upload", {
           method: "POST",
           body: formData,
         });
 
         if (!response.ok) {
+          const text = await response.text();
+          console.error("Réponse inattendue:", text);
           throw new Error(`Échec du téléversement : ${fileData.file.name}`);
         }
 
@@ -379,7 +389,7 @@ export default function DeclarationsClientPage() {
     );
   }
     */
-   console.log(error);
+  console.log(error);
 
   return (
     <ProtectedRoutePrive>

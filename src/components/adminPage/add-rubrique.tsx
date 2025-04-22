@@ -31,7 +31,6 @@ export default function AddRubriqueDialog({
   declarationId,
   declarationTitle,
   onRubriqueAdded,
-  userId,
 }: AddRubriqueDialogProps) {
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 

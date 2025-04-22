@@ -22,8 +22,19 @@ class RubriqueController extends Controller
             'titre' => 'required|string|max:255',
             'description' => 'required|string|max:500',
         ]);
-
-        // Crée une nouvelle rubrique
+    
+        // Vérifie s'il existe déjà une rubrique avec le même titre pour cette déclaration
+        $exists = Rubrique::where('declaration_id', $request->declaration_id)
+            ->whereRaw('LOWER(TRIM(titre)) = ?', [strtolower(trim($request->titre))])
+            ->exists();
+    
+        if ($exists) {
+            return response()->json([
+                'message' => 'Une rubrique avec ce titre existe déjà pour cette déclaration.'
+            ], 409); // Conflit
+        }
+    
+        // Crée la rubrique
         $rubrique = Rubrique::create($request->all());
         return response()->json($rubrique, 201);
     }

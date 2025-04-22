@@ -9,7 +9,7 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-async function fetchUserRole(userId: Number): Promise<string | null> {
+async function fetchUserRole(userId: number): Promise<string | null> {
   if (!userId) return null; // Retourne null si userId est invalide
 
   const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
@@ -31,7 +31,6 @@ async function fetchUserRole(userId: Number): Promise<string | null> {
 export default function ProtectedRouteAdmin({ children }: ProtectedRouteProps) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null); // État pour suivre l'authentification
   const [isAdmin, setIsAdmin] = useState<boolean | null>(null); // État pour vérifier si l'utilisateur est "admin"
-  const [errorMessage, setErrorMessage] = useState<string | null>(null); // Message d'erreur
   const router = useRouter();
   const params = useParams()
   const userId = Number(params?.userId)
@@ -42,7 +41,7 @@ export default function ProtectedRouteAdmin({ children }: ProtectedRouteProps) {
 
       if (!userId || !authToken) {
         setIsAuthenticated(false);
-        setErrorMessage("Vous n'êtes pas connecté. Veuillez vous connecter.");
+        console.error("Vous n'êtes pas connecté. Veuillez vous connecter.");
         router.push("/connexion"); // Redirection si non connecté
         return;
       }
@@ -55,13 +54,12 @@ export default function ProtectedRouteAdmin({ children }: ProtectedRouteProps) {
         } else {
           setIsAuthenticated(false);
           setIsAdmin(false);
-          setErrorMessage("Vous n'êtes pas autorisé à accéder à cette page.");
+          console.error("Vous n'êtes pas autorisé à accéder à cette page.");
         }
       } catch (error) {
         console.error("Erreur lors de la vérification de l'utilisateur :", error);
         setIsAuthenticated(false);
         setIsAdmin(false);
-        setErrorMessage("Une erreur est survenue. Veuillez réessayer.");
       }
     };
 

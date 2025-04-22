@@ -44,6 +44,7 @@ interface DocumentUploadProps {
   onFilesSelected: (files: File[]) => void;
   onFileRemoved: (fileId: string) => void;
   onUploadCompleted?: () => void;
+  hideTitle?: boolean;
 }
 
 export function DocumentUpload({
@@ -52,7 +53,8 @@ export function DocumentUpload({
   existingDocuments = [],
   onFilesSelected,
   onFileRemoved,
-  hideExistingList = false, // ✅ par défaut = false
+  hideExistingList = false,
+  hideTitle = false,
 }: DocumentUploadProps) {
   const [selectedFiles, setSelectedFiles] = useState<SelectedFile[]>([]);
 
@@ -101,9 +103,14 @@ export function DocumentUpload({
 
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle className="text-lg">Documents pour {rubriqueName}</CardTitle>
-      </CardHeader>
+      {!hideTitle && (
+        <CardHeader>
+          <CardTitle className="text-lg">
+            Documents pour {rubriqueName}
+          </CardTitle>
+        </CardHeader>
+      )}
+
       <CardContent className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor={`file-upload-${rubriqueId}`} className="block">

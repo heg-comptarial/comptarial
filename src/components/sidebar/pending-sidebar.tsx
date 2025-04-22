@@ -9,9 +9,7 @@ import {
   Map,
   PieChart,
   Shield,
-  FolderOpen,
   SquareUserRound,
-  FilePlus,
 } from "lucide-react";
 
 import { NavMain } from "@/components/sidebar/nav-main";
