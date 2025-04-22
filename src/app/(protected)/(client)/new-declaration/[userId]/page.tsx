@@ -113,29 +113,29 @@ export default function NouvelleDeclaration() {
   const createDeclaration = async (formData: FormDataType) => {
     try {
       const token = localStorage.getItem("auth_token");
-
+  
       if (!token || !userId) {
         throw new Error("Authentification requise");
       }
-
+  
       const currentYear = new Date().getFullYear().toString();
-
+  
       const existingResponse = await axios.get(
         `http://127.0.0.1:8000/api/users/${userId}/declarations`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+  
       const alreadyExists = existingResponse.data.some(
         (decl: Declaration) => decl.annee === currentYear
       );
-
+  
       if (alreadyExists) {
         setError(`Vous avez déjà une déclaration pour l'année ${currentYear}.`);
         return false;
       }
-
+  
       const declarationData = {
         ...formData,
         user_id: userId,
@@ -143,9 +143,8 @@ export default function NouvelleDeclaration() {
         statut: "pending",
         annee: currentYear,
         dateCreation: new Date().toISOString(),
-        
       };
-
+  
       await axios.post(
         "http://127.0.0.1:8000/api/declarations",
         declarationData,
@@ -156,7 +155,7 @@ export default function NouvelleDeclaration() {
           },
         }
       );
-
+  
       router.push(`/declarations-client/${userId}`);
     } catch (error: unknown) {
       console.error("Erreur création déclaration:", error);
@@ -167,11 +166,10 @@ export default function NouvelleDeclaration() {
       }
       return false;
     }
-
+  
     return true;
   };
 
-  // ✅ CORRECTION : Créer déclaration uniquement 1x
   useEffect(() => {
     const createNewDeclarationFromPrive = async () => {
       try {

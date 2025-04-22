@@ -4,6 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Models\Document;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
+
 
 class DocumentController extends Controller
 {
@@ -74,9 +76,20 @@ class DocumentController extends Controller
 
     public function destroy($id)
     {
+        Log::info("TRYING TO DELETE DOCUMENT ID: $id");
+
         // Supprime un document
         $document = Document::findOrFail($id);
+        if (!$document) {
+            Log::warning("Document not found: $id");
+            return response()->json(['error' => 'Document introuvable'], 404);
+        }
+
+        $document->commentaires()->delete(); // Supprime les commentaires associés
+
         $document->delete();
+        Log::info("Document deleted: $id");
+
         return response()->json(null, 204);
     }
 

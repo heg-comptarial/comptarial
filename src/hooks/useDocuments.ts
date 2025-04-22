@@ -32,22 +32,29 @@ export function useDocumentActions(
 
   const handleDelete = async (
     doc: Document,
-    setDocumentsCallback: (callback: (prev: Document[]) => Document[]) => void
+    setDocumentsCallback: React.Dispatch<React.SetStateAction<Document[]>>,
+    onUploadCompleted?: () => void
   ) => {
     const confirmed = window.confirm(`Supprimer ${doc.nom} ?`);
     if (!confirmed) return;
-
+  
     try {
       await deleteDocument(doc, rubriqueName);
       toast.success("Document supprimé avec succès");
+  
       setDocumentsCallback((prev) =>
         prev.filter((d) => d.doc_id !== doc.doc_id)
       );
+  
+      if (onUploadCompleted) {
+        onUploadCompleted();
+      }
     } catch (err) {
       console.error("Delete error:", err);
       toast.error("Échec de la suppression");
     }
   };
+  
 
   const fetchComments = useCallback(async (docId: number) => {
     if (fetchedDocsRef.current.has(docId)) return;

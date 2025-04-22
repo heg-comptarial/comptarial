@@ -1,5 +1,3 @@
-// Mise à jour de `page.tsx` pour utiliser `RubriqueAccordionItem`
-
 "use client";
 
 import { useEffect, useState } from "react";
@@ -61,6 +59,22 @@ export default function DeclarationsClientPage() {
         );
         if (!res.ok) throw new Error("Déclaration non trouvée");
         const data = await res.json();
+
+        if (data.rubriques && data.rubriques.length > 0) {
+          const fullRes = await fetch(
+            `http://localhost:8000/api/users/${userId}/declarations/${data.declaration_id}`
+          );
+          const fullData = await fullRes.json();
+          setDeclaration(fullData);
+
+          setUploadedRubriques(
+            fullData.rubriques
+              .filter((r: Rubrique) => (r.documents ?? []).length > 0)
+              .map((r: Rubrique) => r.rubrique_id)
+          );
+          setLoading(false);
+          return;
+        }
 
         const existingTitles = new Set(
           (data.rubriques || []).map((r: Rubrique) =>

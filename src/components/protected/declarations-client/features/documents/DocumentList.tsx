@@ -120,7 +120,7 @@ const DocumentList = ({
                     doc={doc}
                     declarationStatus={declarationStatus}
                     onDownload={() => handleDownload(doc)}
-                    onDelete={() => handleDelete(doc, setDocuments)}
+                    onDelete={() => handleDelete(doc, setDocuments, onUploadCompleted)}
                     comments={commentMap[doc.doc_id] ?? []}
                     onCommentsOpen={() => fetchComments(doc.doc_id)}
                   />
