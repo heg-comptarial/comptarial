@@ -28,6 +28,7 @@ const DocumentList = ({
 }: DocumentListProps) => {
   const [showUploader, setShowUploader] = useState(false);
   const cardRef = useRef<HTMLDivElement | null>(null);
+
   const {
     documents,
     setDocuments,
@@ -37,12 +38,14 @@ const DocumentList = ({
     handleDownload,
   } = useDocumentActions(initialDocuments, rubriqueName);
 
+  // 👇 Ajoute l’écoute de l’événement custom "closeUploader"
   useEffect(() => {
     const handler = () => setShowUploader(false);
     const el = cardRef.current;
     el?.addEventListener("closeUploader", handler as EventListener);
-    return () =>
+    return () => {
       el?.removeEventListener("closeUploader", handler as EventListener);
+    };
   }, []);
 
   useEffect(() => {
@@ -56,6 +59,8 @@ const DocumentList = ({
     const match = dateStr.match(/^\d{4}/);
     return match ? match[0] : new Date().getFullYear().toString();
   };
+
+  const defaultYear = getYearFromDate(documents[0]?.dateCreation);
 
   return (
     <Card className="w-full" data-hide-uploader ref={cardRef}>
@@ -79,10 +84,11 @@ const DocumentList = ({
       <CardContent>
         {showUploader && declarationStatus === "pending" && (
           <DocumentUpload
+            key={`uploader-${rubriqueId}`}
             rubriqueId={rubriqueId}
             rubriqueName={rubriqueName}
             userId={parseInt(localStorage.getItem("user_id") || "0")}
-            year={getYearFromDate(documents[0]?.dateCreation)}
+            year={defaultYear}
             existingDocuments={documents.map((doc) => ({
               ...doc,
               dateCreation: doc.dateCreation ?? new Date().toISOString(),

@@ -204,6 +204,9 @@ export default function DeclarationsClientPage() {
       if (!saveRes.ok) throw new Error(await saveRes.text());
       toast.success(`${documents.length} documents enregistrés.`);
       setSelectedFiles([]);
+      document
+        .querySelectorAll("[data-hide-uploader]")
+        .forEach((el) => el.dispatchEvent(new CustomEvent("closeUploader")));
       await refreshDeclaration();
     } catch {
       toast.error("Erreur lors de l'enregistrement");
