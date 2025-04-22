@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import axios from "axios";
 import { Declaration, Prive, Rubrique } from "@/types/interfaces";
 import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -32,13 +33,18 @@ export default function DeclarationsClientPage() {
     const fetchDeclarations = async () => {
       if (!userId) return;
       try {
-        const res = await fetch(`http://localhost:8000/api/users/${userId}`);
-        const data = await res.json();
+        const { data } = await axios.get(
+          `http://localhost:8000/api/users/${userId}`
+        );
         const declarations = data.declarations || [];
         setUserDeclarations(declarations);
+
         const years = declarations.map((d: Declaration) => d.annee);
         setDeclarationYears(years);
-        if (years.length > 0) setSelectedYear(years.sort().reverse()[0]);
+
+        if (years.length > 0) {
+          setSelectedYear(years.sort().reverse()[0]);
+        }
       } catch (err) {
         toast.error("Erreur lors du chargement des déclarations");
         console.error(err);
@@ -46,6 +52,7 @@ export default function DeclarationsClientPage() {
         setLoading(false);
       }
     };
+
     fetchDeclarations();
   }, [userId]);
 

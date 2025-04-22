@@ -29,7 +29,7 @@ export default function DocumentUpload({
 }: DocumentUploadProps) {
   const { selectedFiles, handleFileSelect, removeFile } = useFileUpload({
     onFilesSelected,
-    onFileRemoved: () => {}, // évite les doublons directs ici
+    onFileRemoved: () => {},
   });
 
   const getFileExtension = (fileName: string) =>
