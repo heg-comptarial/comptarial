@@ -18,6 +18,14 @@ class EntrepriseSeeder extends Seeder
                 'numeroFiscal' => 'FR123456789',
                 'nouvelleEntreprise' => true,
             ],
+            [
+                'user_id' => 8,
+                'raisonSociale' => 'Entreprise Bonjour',
+                'prestations' => 'Fisca',
+                'grandLivre' => '',
+                'numeroFiscal' => 'CH123456789',
+                'nouvelleEntreprise' => true,
+            ],
         ]);
     }
 }
