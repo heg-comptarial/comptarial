@@ -46,7 +46,7 @@ class Prive extends Model
 
 	protected $casts = [
 		'user_id' => 'int',
-		'dateNaissance' => 'datetime',
+		'dateNaissance' => 'date:Y-m-d',
 		'fo_banques' => 'bool',
 		'fo_dettes' => 'bool',
 		'fo_immobiliers' => 'bool',

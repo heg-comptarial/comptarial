@@ -694,7 +694,7 @@ export default function ClientDetail() {
 
       <div className="container mx-auto py-10 px-4">
         <div className="flex items-center gap-2 mb-6">
-          <Button variant="outline" size="sm" onClick={() => router.push(`/admin/${params.adminId}`)}>
+          <Button variant="outline" size="sm" onClick={() => router.push(`/admin/${adminId}`)}>
             <ArrowLeft className="h-4 w-4 mr-2" />
             Retour
           </Button>
