@@ -1,3 +1,4 @@
+import axios from "axios";
 import { Document } from "@/types/interfaces";
 
 export async function downloadDocument(doc: Document, rubriqueName: string) {
@@ -5,22 +6,32 @@ export async function downloadDocument(doc: Document, rubriqueName: string) {
     .getFullYear()
     .toString();
   const userId = localStorage.getItem("user_id")!;
+
   const params = new URLSearchParams({
     fileName: doc.nom,
     year,
     userId,
     rubriqueName,
   });
-  const res = await fetch(`/api/download?${params.toString()}`);
-  if (!res.ok) throw new Error("Download failed");
-  const blob = await res.blob();
-  const url = window.URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = doc.nom;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
+
+  try {
+    const response = await axios.get(`/api/download?${params.toString()}`, {
+      responseType: "blob",
+    });
+
+    const blob = new Blob([response.data]);
+    const url = window.URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = doc.nom;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  } catch (error) {
+    console.error("Download failed", error);
+    throw new Error("Download failed");
+  }
 }
 
 export async function deleteDocument(doc: Document, rubriqueName: string) {
@@ -29,28 +40,34 @@ export async function deleteDocument(doc: Document, rubriqueName: string) {
     .toString();
   const userId = localStorage.getItem("user_id")!;
   const docId = doc.doc_id;
+
   const params = new URLSearchParams({
     fileName: doc.nom,
     year,
     userId,
     rubriqueName,
   });
-  const s3Res = await fetch(`/api/delete?${params.toString()}`, {
-    method: "DELETE",
-  });
-  if (!s3Res.ok) throw new Error("Erreur S3");
-  const backendRes = await fetch(
-    `http://localhost:8000/api/documents/${docId}`,
-    { method: "DELETE" }
-  );
-  if (!backendRes.ok) throw new Error("Erreur API Laravel");
+
+  try {
+    // 🔁 Supprimer de S3
+    await axios.delete(`/api/delete?${params.toString()}`);
+
+    // 🔁 Supprimer de Laravel backend
+    await axios.delete(`http://localhost:8000/api/documents/${docId}`);
+  } catch (error) {
+    console.error("Erreur lors de la suppression :", error);
+    throw new Error("Erreur lors de la suppression du document");
+  }
 }
 
 export async function fetchCommentsByDocument(docId: number) {
-  const res = await fetch(
-    `http://localhost:8000/api/documents/${docId}/commentaires`
-  );
-  if (!res.ok)
+  try {
+    const { data } = await axios.get(
+      `http://localhost:8000/api/documents/${docId}/commentaires`
+    );
+    return data;
+  } catch (error) {
+    console.error("Erreur lors de la récupération des commentaires", error);
     throw new Error("Erreur lors de la récupération des commentaires");
-  return res.json();
+  }
 }
