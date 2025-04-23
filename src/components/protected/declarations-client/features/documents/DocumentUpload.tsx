@@ -10,7 +10,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { toast } from "sonner";
 import { Upload, Trash2, Download } from "lucide-react";
 import { useFileUpload } from "@/hooks/useFileUpload";
@@ -44,19 +43,17 @@ export default function DocumentUpload({
   };
 
   return (
-    <Card className="w-full">
+    <div className="w-full">
       {!hideTitle && (
-        <CardHeader>
-          <CardTitle className="text-lg">
-            Documents pour {rubriqueName}
-          </CardTitle>
-        </CardHeader>
+        <div className="mb-4">
+          <h3 className="text-lg font-medium">Documents pour {rubriqueName}</h3>
+        </div>
       )}
 
-      <CardContent className="space-y-4">
+      <div className="space-y-4">
         <div className="space-y-2">
           <Label htmlFor={`file-upload-${rubriqueId}`} className="block">
-            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors">
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors bg-white">
               <Upload className="mx-auto h-8 w-8 text-gray-400" />
               <p className="mt-2 text-sm font-medium">
                 Glissez et déposez des fichiers, ou cliquez pour sélectionner
@@ -79,77 +76,91 @@ export default function DocumentUpload({
         {selectedFiles.length > 0 && (
           <div className="space-y-4">
             <h3 className="text-sm font-medium">Fichiers à téléverser</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px]" />
-                  <TableHead className="w-1/2">Nom</TableHead>
-                  <TableHead className="w-1/6">Type</TableHead>
-                  <TableHead className="w-1/6">Taille</TableHead>
-                  <TableHead className="w-1/6 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {selectedFiles.map((fileData) => (
-                  <TableRow key={fileData.id}>
-                    <TableCell>{getFileTypeIcon(fileData.file.name)}</TableCell>
-                    <TableCell className="font-medium">
-                      {fileData.file.name}
-                    </TableCell>
-                    <TableCell>{fileData.file.type.split("/").pop()}</TableCell>
-                    <TableCell>{formatFileSize(fileData.file.size)}</TableCell>
-                    <TableCell className="text-right">
-                      <button
-                        onClick={() => handleRemove(fileData.id)}
-                        className="text-red-500 hover:text-red-700"
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </button>
-                    </TableCell>
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-[40px]" />
+                    <TableHead className="w-1/2 font-medium">Nom</TableHead>
+                    <TableHead className="w-1/6 font-medium">Type</TableHead>
+                    <TableHead className="w-1/6 font-medium">Taille</TableHead>
+                    <TableHead className="w-1/6 text-right font-medium">
+                      Actions
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {selectedFiles.map((fileData) => (
+                    <TableRow key={fileData.id}>
+                      <TableCell>
+                        {getFileTypeIcon(fileData.file.name)}
+                      </TableCell>
+                      <TableCell className="font-medium">
+                        {fileData.file.name}
+                      </TableCell>
+                      <TableCell>
+                        {fileData.file.type.split("/").pop()}
+                      </TableCell>
+                      <TableCell>
+                        {formatFileSize(fileData.file.size)}
+                      </TableCell>
+                      <TableCell className="text-right">
+                        <button
+                          onClick={() => handleRemove(fileData.id)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         )}
 
         {!hideExistingList && existingDocuments.length > 0 && (
           <div className="space-y-4 mt-6">
             <h3 className="text-sm font-medium">Documents existants</h3>
-            <Table>
-              <TableHeader>
-                <TableRow>
-                  <TableHead className="w-[40px]" />
-                  <TableHead>Nom</TableHead>
-                  <TableHead>Type</TableHead>
-                  <TableHead>Statut</TableHead>
-                  <TableHead className="text-right">Action</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {existingDocuments.map((doc) => (
-                  <TableRow key={doc.doc_id}>
-                    <TableCell>{getFileTypeIcon(doc.nom)}</TableCell>
-                    <TableCell className="font-medium">{doc.nom}</TableCell>
-                    <TableCell>{getFileExtension(doc.nom)}</TableCell>
-                    <TableCell>{doc.statut}</TableCell>
-                    <TableCell className="text-right">
-                      <a
-                        href={doc.cheminFichier}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-blue-500 hover:text-blue-700 mr-2"
-                      >
-                        <Download className="h-4 w-4 inline" />
-                      </a>
-                    </TableCell>
+            <div className="border rounded-md overflow-hidden">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="w-[40px]" />
+                    <TableHead className="font-medium">Nom</TableHead>
+                    <TableHead className="font-medium">Type</TableHead>
+                    <TableHead className="font-medium">Statut</TableHead>
+                    <TableHead className="text-right font-medium">
+                      Action
+                    </TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
+                </TableHeader>
+                <TableBody>
+                  {existingDocuments.map((doc) => (
+                    <TableRow key={doc.doc_id}>
+                      <TableCell>{getFileTypeIcon(doc.nom)}</TableCell>
+                      <TableCell className="font-medium">{doc.nom}</TableCell>
+                      <TableCell>{getFileExtension(doc.nom)}</TableCell>
+                      <TableCell>{doc.statut}</TableCell>
+                      <TableCell className="text-right">
+                        <a
+                          href={doc.cheminFichier}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-blue-500 hover:text-blue-700 mr-2"
+                        >
+                          <Download className="h-4 w-4 inline" />
+                        </a>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                </TableBody>
+              </Table>
+            </div>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 }

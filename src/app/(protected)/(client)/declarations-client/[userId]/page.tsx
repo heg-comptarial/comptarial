@@ -265,7 +265,14 @@ export default function DeclarationsClientPage() {
         </div>
 
         {declaration?.rubriques?.length ? (
-          <Accordion type="multiple" className="w-full">
+          <Accordion
+            type="multiple"
+            // to open all accordion items by default
+            defaultValue={declaration.rubriques.map(
+              (rubrique) => `rubrique-${rubrique.rubrique_id}`
+            )}
+            className="w-full"
+          >
             {declaration.rubriques.map((rubrique) => (
               <RubriqueAccordionItem
                 key={rubrique.rubrique_id}

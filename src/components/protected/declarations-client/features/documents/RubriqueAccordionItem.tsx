@@ -5,7 +5,7 @@ import {
 } from "@/components/ui/accordion";
 import DocumentList from "./DocumentList";
 import DocumentUpload from "./DocumentUpload";
-import { Rubrique, Document } from "@/types/interfaces";
+import type { Rubrique, Document } from "@/types/interfaces";
 
 interface Props {
   rubrique: Rubrique;
@@ -38,12 +38,13 @@ const RubriqueAccordionItem = ({
     <AccordionItem
       key={rubrique.rubrique_id}
       value={`rubrique-${rubrique.rubrique_id}`}
+      className="border rounded-md mb-4 overflow-hidden"
     >
-      <AccordionTrigger className="text-xl font-medium">
+      <AccordionTrigger className="text-xl font-medium px-4 py-3 hover:bg-gray-50">
         {rubrique.titre}
       </AccordionTrigger>
-      <AccordionContent>
-        <div className="space-y-6">
+      <AccordionContent className="pt-0 px-0 pb-0">
+        <div className="border-t">
           {hasDocuments ? (
             <DocumentList
               rubriqueId={rubrique.rubrique_id}
@@ -57,19 +58,21 @@ const RubriqueAccordionItem = ({
               onUploadCompleted={onUploadCompleted}
             />
           ) : declarationStatus === "pending" ? (
-            <DocumentUpload
-              userId={userId}
-              year={year}
-              rubriqueId={rubrique.rubrique_id}
-              rubriqueName={rubrique.titre}
-              existingDocuments={rubrique.documents || []}
-              onFilesSelected={(files) =>
-                onFilesSelected(rubrique.rubrique_id, files)
-              }
-              onFileRemoved={onFileRemoved}
-            />
+            <div className="p-4">
+              <DocumentUpload
+                userId={userId}
+                year={year}
+                rubriqueId={rubrique.rubrique_id}
+                rubriqueName={rubrique.titre}
+                existingDocuments={rubrique.documents || []}
+                onFilesSelected={(files) =>
+                  onFilesSelected(rubrique.rubrique_id, files)
+                }
+                onFileRemoved={onFileRemoved}
+              />
+            </div>
           ) : (
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-muted-foreground p-4">
               Cette déclaration est figée. Vous ne pouvez plus ajouter de
               documents.
             </p>

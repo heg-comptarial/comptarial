@@ -7,7 +7,6 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Plus } from "lucide-react";
 import { useState, useEffect, useRef } from "react";
@@ -27,7 +26,7 @@ const DocumentList = ({
   onUploadCompleted,
 }: DocumentListProps) => {
   const [showUploader, setShowUploader] = useState(false);
-  const cardRef = useRef<HTMLDivElement | null>(null);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   const {
     documents,
@@ -38,10 +37,10 @@ const DocumentList = ({
     handleDownload,
   } = useDocumentActions(initialDocuments, rubriqueName);
 
-  // 👇 Ajoute l’écoute de l’événement custom "closeUploader"
+  // 👇 Ajoute l'écoute de l'événement custom "closeUploader"
   useEffect(() => {
     const handler = () => setShowUploader(false);
-    const el = cardRef.current;
+    const el = containerRef.current;
     el?.addEventListener("closeUploader", handler as EventListener);
     return () => {
       el?.removeEventListener("closeUploader", handler as EventListener);
@@ -63,54 +62,63 @@ const DocumentList = ({
   const defaultYear = getYearFromDate(documents[0]?.dateCreation);
 
   return (
-    <Card className="w-full" data-hide-uploader ref={cardRef}>
-      <CardHeader>
+    <div
+      className="w-full rounded-md bg-white border border-gray-100 shadow-sm overflow-hidden"
+      data-hide-uploader
+      ref={containerRef}
+    >
+      <div className="p-4 border-b border-gray-100 bg-gray-50">
         <div className="flex justify-between items-center">
-          <CardTitle className="text-lg">
+          <h3 className="text-lg font-medium text-gray-800">
             Documents pour {rubriqueName}
-          </CardTitle>
+          </h3>
           {declarationStatus === "pending" && (
             <Button
               variant="outline"
               size="sm"
               onClick={() => setShowUploader((prev) => !prev)}
+              className="bg-white hover:bg-gray-50"
             >
               <Plus className="h-4 w-4 mr-2" /> Ajouter des documents
             </Button>
           )}
         </div>
-      </CardHeader>
+      </div>
 
-      <CardContent>
+      <div className="p-4">
         {showUploader && declarationStatus === "pending" && (
-          <DocumentUpload
-            key={`uploader-${rubriqueId}`}
-            rubriqueId={rubriqueId}
-            rubriqueName={rubriqueName}
-            userId={parseInt(localStorage.getItem("user_id") || "0")}
-            year={defaultYear}
-            existingDocuments={documents.map((doc) => ({
-              ...doc,
-              dateCreation: doc.dateCreation ?? new Date().toISOString(),
-            }))}
-            onFilesSelected={onFilesSelected}
-            onFileRemoved={onFileRemoved}
-            hideExistingList={true}
-            onUploadCompleted={onUploadCompleted}
-            hideTitle={true}
-          />
+          <div className="mb-6 bg-gray-50 rounded-md p-4">
+            <DocumentUpload
+              key={`uploader-${rubriqueId}`}
+              rubriqueId={rubriqueId}
+              rubriqueName={rubriqueName}
+              userId={Number.parseInt(localStorage.getItem("user_id") || "0")}
+              year={defaultYear}
+              existingDocuments={documents.map((doc) => ({
+                ...doc,
+                dateCreation: doc.dateCreation ?? new Date().toISOString(),
+              }))}
+              onFilesSelected={onFilesSelected}
+              onFileRemoved={onFileRemoved}
+              hideExistingList={true}
+              onUploadCompleted={onUploadCompleted}
+              hideTitle={true}
+            />
+          </div>
         )}
 
         {documents.length > 0 ? (
-          <div className="overflow-x-auto">
+          <div className="overflow-x-auto rounded-md border border-gray-100">
             <Table>
               <TableHeader>
-                <TableRow>
+                <TableRow className="bg-gray-50">
                   <TableHead className="w-[40px]" />
-                  <TableHead className="w-1/2">Nom</TableHead>
-                  <TableHead className="w-1/6">Type</TableHead>
-                  <TableHead className="w-1/6">Statut</TableHead>
-                  <TableHead className="w-1/6 text-right">Actions</TableHead>
+                  <TableHead className="w-1/2 font-medium">Nom</TableHead>
+                  <TableHead className="w-1/6 font-medium">Type</TableHead>
+                  <TableHead className="w-1/6 font-medium">Statut</TableHead>
+                  <TableHead className="w-1/6 text-right font-medium">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -120,7 +128,9 @@ const DocumentList = ({
                     doc={doc}
                     declarationStatus={declarationStatus}
                     onDownload={() => handleDownload(doc)}
-                    onDelete={() => handleDelete(doc, setDocuments, onUploadCompleted)}
+                    onDelete={() =>
+                      handleDelete(doc, setDocuments, onUploadCompleted)
+                    }
                     comments={commentMap[doc.doc_id] ?? []}
                     onCommentsOpen={() => fetchComments(doc.doc_id)}
                   />
@@ -129,12 +139,12 @@ const DocumentList = ({
             </Table>
           </div>
         ) : (
-          <div className="text-center py-8 text-gray-500">
+          <div className="text-center py-8 text-gray-500 bg-gray-50 rounded-md">
             Aucun document trouvé pour cette rubrique
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </div>
   );
 };
 
