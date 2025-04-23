@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-async function fetchUserDetails(userId: Number): Promise<{ role: string | null; status: string | null }> {
+async function fetchUserDetails(userId: number): Promise<{ role: string | null; status: string | null }> {
   if (!userId) return { role: null, status: null };
 
   const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
@@ -66,7 +66,7 @@ export default function ProtectedRoutePrive({ children }: ProtectedRouteProps) {
   if (status === "pending") {
     return (
       <div className="flex items-center justify-center h-screen">
-        <p>Votre compte est en attente d'approbation. Veuillez réessayer plus tard.</p>
+        <p>Votre compte est en attente d&apos;approbation. Veuillez réessayer plus tard.</p>
       </div>
     );
   }

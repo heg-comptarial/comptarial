@@ -125,3 +125,26 @@ export interface FormDataType {
   conjoint: Conjoint | null;
   enfants: Enfant[];
 }
+
+export interface DocumentListProps {
+  rubriqueId: number;
+  rubriqueName: string;
+  declarationStatus: string;
+  documents: Document[];
+  onFilesSelected: (files: File[]) => void;
+  onFileRemoved: (fileId: string) => void;
+  onUploadCompleted?: () => void;
+}
+
+export interface DocumentUploadProps {
+  userId: number;
+  year: string;
+  rubriqueId: number;
+  rubriqueName: string;
+  hideExistingList?: boolean;
+  existingDocuments?: Document[];
+  onFilesSelected: (files: File[]) => void;
+  onFileRemoved: (fileId: string) => void;
+  onUploadCompleted?: () => void;
+  hideTitle?: boolean;
+}

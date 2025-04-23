@@ -8,7 +8,7 @@ interface ProtectedRouteProps {
   children: React.ReactNode;
 }
 
-async function fetchUserDetails(userId: Number): Promise<{ role: string | null; status: string | null }> {
+async function fetchUserDetails(userId: number): Promise<{ role: string | null; status: string | null }> {
   if (!userId) return { role: null, status: null };
 
   const response = await fetch(`http://localhost:8000/api/users/${userId}`, {
