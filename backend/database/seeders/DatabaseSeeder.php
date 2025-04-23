@@ -22,5 +22,16 @@ class DatabaseSeeder extends Seeder
         $this->call(RubriqueSeeder::class);
         $this->call(DocumentSeeder::class);
         $this->call(CommentaireSeeder::class);
+        $this->call(PensionAlimentaireSeeder::class);
+        $this->call(AutrePersonneAChargeSeeder::class);
+        $this->call(RevenuSeeder::class);
+        $this->call(RentierSeeder::class);
+        $this->call(BanqueSeeder::class);
+        $this->call(TitreSeeder::class);
+        $this->call(ImmobilierSeeder::class);
+        $this->call(InteretDettesSeeder::class);
+        $this->call(DeductionSeeder::class);
+        $this->call(AutreInformationsSeeder::class);
+        $this->call(IndemniteAssuranceSeeder::class);
     }
 }

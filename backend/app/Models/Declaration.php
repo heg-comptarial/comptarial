@@ -28,31 +28,41 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  */
 class Declaration extends Model
 {
-	use HasFactory;
-	protected $table = 'declaration';
-	protected $primaryKey = 'declaration_id';
-	public $timestamps = false;
+    use HasFactory;
 
-	protected $casts = [
-		'user_id' => 'int',
-		'dateCreation' => 'datetime'
-	];
+    // Nom de la table associée
+    protected $table = 'declaration';
 
-	protected $fillable = [
-		'user_id',
-		'titre',
-		'statut',
-		'annee',
-		'dateCreation'
-	];
+    // Clé primaire
+    protected $primaryKey = 'declaration_id';
 
-	public function user()
-	{
-		return $this->belongsTo(User::class, 'user_id');
-	}
+    // Désactiver les timestamps automatiques
+    public $timestamps = false;
 
-	public function rubriques()
-	{
-		return $this->hasMany(Rubrique::class, 'declaration_id');
-	}
+    // Cast des colonnes
+    protected $casts = [
+        'user_id' => 'int',
+        'dateCreation' => 'datetime',
+    ];
+
+    // Attributs pouvant être remplis en masse
+    protected $fillable = [
+        'user_id',
+        'titre',
+        'statut',
+        'annee',
+        'dateCreation',
+    ];
+
+    // Relation avec le modèle User
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
+
+    // Relation avec le modèle Rubrique
+    public function rubriques()
+    {
+        return $this->hasMany(Rubrique::class, 'declaration_id');
+    }
 }

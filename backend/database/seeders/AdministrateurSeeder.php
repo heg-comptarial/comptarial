@@ -11,12 +11,10 @@ class AdministrateurSeeder extends Seeder
     {
         Administrateur::create([
             'user_id' => 1,
-            'niveauAcces' => 'admin',
         ]);
 
         Administrateur::create([
             'user_id' => 2,
-            'niveauAcces' => 'super_admin',
         ]);
 
         // Add more seed data as needed

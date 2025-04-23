@@ -16,7 +16,7 @@ class DocumentSeeder extends Seeder
                 'type' => 'pdf',
                 'cheminFichier' => 'documents/document1.pdf',
                 'statut' => 'approved',
-                'sous_rubrique' => null,
+                'sous_rubrique' => 'test',
                 'dateCreation' => now(),
             ],
             [
@@ -25,7 +25,7 @@ class DocumentSeeder extends Seeder
                 'type' => 'doc',
                 'cheminFichier' => 'documents/document2.doc',
                 'statut' => 'pending',
-                'sous_rubrique' => null,
+                'sous_rubrique' => 'test',
                 'dateCreation' => now(),
             ],
             [
@@ -34,7 +34,7 @@ class DocumentSeeder extends Seeder
                 'type' => 'jpg',
                 'cheminFichier' => 'documents/image1.png',
                 'statut' => 'rejected',
-                'sous_rubrique' => null,
+                'sous_rubrique' => 'test',
                 'dateCreation' => now(),
             ],
         ]);

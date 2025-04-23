@@ -1,6 +1,13 @@
 <?php
 
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\AutreInformationsController;
+use App\Http\Controllers\BanqueController;
+use App\Http\Controllers\InteretDettesController;
+use App\Http\Controllers\PensionAlimentaireController;
+use App\Http\Controllers\RentierController;
+use App\Http\Controllers\RevenuController;
+use App\Models\AutrePersonneACharge;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\UserController;
@@ -14,6 +21,11 @@ use App\Http\Controllers\PriveController;
 use App\Http\Controllers\ConjointController;
 use App\Http\Controllers\EnfantController;
 use App\Http\Controllers\EntrepriseController;
+use App\Http\Controllers\ImmobilierController;
+use App\Http\Controllers\AutrePersonneAChargeController;
+use App\Http\Controllers\IndemniteAssuranceController;
+use App\Http\Controllers\TitreController;
+use App\Http\Controllers\DeductionController;
 use Illuminate\Support\Facades\Crypt;
 
 
@@ -78,6 +90,40 @@ Route::apiResource('enfants', EnfantController::class);
 
 // Routes pour les entreprises
 Route::apiResource('entreprises', EntrepriseController::class);
+
+// Route pour autreinformations
+Route::apiResource('autreinformations', AutreInformationsController::class);
+
+// Route pour autre personne a charge
+Route::apiResource('autrepersonneacharge', AutrePersonneAChargeController::class);
+
+// Route pour les banques
+Route::apiResource('/banques', BanqueController::class);
+
+// Route pour les deductions
+Route::apiResource('/deductions', DeductionController::class);
+
+// Route pour les immobiliers
+Route::apiResource('/immobiliers', ImmobilierController::class);
+
+// Route pour les indemnites d'assurance
+Route::apiResource('/indemnitesassurances', IndemniteAssuranceController::class);
+
+// Route pour les interets dettes 
+Route::apiResource('/interetsdettes', InteretDettesController::class);
+
+// Route pour les pensions alimentaires
+Route::apiResource('/pensionsalimentaires', PensionAlimentaireController::class);
+
+// Route pour les rentiers
+Route::apiResource('/rentiers', RentierController::class);
+
+// Route pour les revenus
+Route::apiResource('/revenus', RevenuController::class);
+
+// Route pour les titres
+Route::apiResource('/titres', TitreController::class);
+
 
 // Route pour obtenir tous les documents d'un user
 Route::get('users/{userId}/documents', [DocumentController::class, 'getDocumentsByUser']);

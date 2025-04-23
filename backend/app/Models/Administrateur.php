@@ -34,7 +34,6 @@ class Administrateur extends Model
 
 	protected $fillable = [
 		'user_id',
-		'niveauAcces'
 	];
 
 	public function user()

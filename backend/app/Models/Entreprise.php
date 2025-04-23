@@ -33,16 +33,10 @@ class Entreprise extends Model
 
 	protected $casts = [
 		'user_id' => 'int',
-		'nouvelleEntreprise' => 'bool'
 	];
 
 	protected $fillable = [
 		'user_id',
-		'raisonSociale',
-		'prestations',
-		'grandLivre',
-		'numeroFiscal',
-		'nouvelleEntreprise'
 	];
 
 	public function user()
