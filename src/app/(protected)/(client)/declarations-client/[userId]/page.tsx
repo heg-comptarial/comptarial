@@ -267,10 +267,10 @@ export default function DeclarationsClientPage() {
         {declaration?.rubriques?.length ? (
           <Accordion
             type="multiple"
-            // to open all accordion items by default
-            defaultValue={declaration.rubriques.map(
-              (rubrique) => `rubrique-${rubrique.rubrique_id}`
-            )}
+            // to open accordions items with documents
+            defaultValue={declaration.rubriques
+              .filter((rubrique) => (rubrique.documents ?? []).length > 0)
+              .map((rubrique) => `rubrique-${rubrique.rubrique_id}`)}
             className="w-full"
           >
             {declaration.rubriques.map((rubrique) => (
