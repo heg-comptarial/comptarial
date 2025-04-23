@@ -62,7 +62,6 @@ export default function DashboardLayout({
 
   useEffect(() => {
     const checkUserStatus = async () => {
-      const userId = localStorage.getItem("user_id");
       if (!userId) {
         setRole(null);
         setStatus(null);

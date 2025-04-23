@@ -39,7 +39,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
     navMain: [
       {
         title: "Mon compte",
-        url: `/account/${userId}`,
+        url: `/account-admin/${userId}`,
         icon: SquareUserRound,
         items: [
           {

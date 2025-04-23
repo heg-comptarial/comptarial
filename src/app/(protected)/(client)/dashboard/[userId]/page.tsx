@@ -6,6 +6,11 @@ import Link from "next/link";
 import ProtectedRoutePending from "@/components/routes/ProtectedRoutePending";
 import { useParams } from "next/navigation";
 
+interface EntrepriseDetails {
+  grandLivre: string | null;
+  // autres champs si besoin...
+}
+
 interface UserDetails {
   nom: string;
   adresse: string;
@@ -15,6 +20,7 @@ interface UserDetails {
   numeroTelephone: string;
   role: string;
   statut: string;
+  entreprises?: EntrepriseDetails | null;
 }
 
 async function fetchUser(userId: number): Promise<UserDetails | null> {
@@ -33,7 +39,7 @@ async function fetchUser(userId: number): Promise<UserDetails | null> {
 
 export default function Dashboard() {
   const [user, setUser] = useState<UserDetails | null>(null);
-  const params = useParams()
+  const params = useParams();
   const userId = Number(params?.userId);
 
   useEffect(() => {
@@ -44,12 +50,14 @@ export default function Dashboard() {
     return <div className="text-center py-20">Chargement des informations utilisateur...</div>;
   }
 
-  const { nom, adresse, localite, codePostal, role, statut } = user;
+  const { nom, adresse, localite, codePostal, role, statut, entreprises } = user;
 
   const isPending = statut === "pending";
   const isApproved = statut === "approved";
   const isPrive = role === "prive";
   const isEntreprise = role === "entreprise";
+
+  const hasNoGrandLivre = isEntreprise && (!entreprises || !entreprises.grandLivre);
 
   return (
     <ProtectedRoutePending>
@@ -64,6 +72,14 @@ export default function Dashboard() {
             Votre demande est en cours de traitement. Vous n&apos;avez pas encore accès à toutes les fonctionnalités du site.
             <br />
             Nous étudierons votre profil dans les plus brefs délais.
+          </div>
+        )}
+
+        {hasNoGrandLivre && (
+          <div className="mb-8 rounded-xl border border-red-300 bg-red-100 text-red-800 p-4 text-sm shadow-sm">
+            ⚠️ Veuillez déposer votre Grand Livre pour pouvoir accéder aux fonctionnalités.
+            <br />
+            Sans ce document, certaines opérations seront bloquées.
           </div>
         )}
 

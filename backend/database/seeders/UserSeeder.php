@@ -94,7 +94,31 @@ class UserSeeder extends Seeder
                 'role' => 'prive',
                 'statut' => 'approved',
                 'dateCreation' => now(),
-            ]
+            ],
+            [
+                'nom' => 'Société Bonjour SA',
+                'email' => 'entreprise2@example.com',
+                'motDePasse' => Hash::make('password'),
+                'localite' => 'Carouge',
+                'adresse' => 'Chemin des Ports 12',
+                'codePostal' => '1227',
+                'numeroTelephone' => '0222222222',
+                'role' => 'entreprise',
+                'statut' => 'approved',
+                'dateCreation' => now(),
+            ],
+            [
+                'nom' => 'Société Hello SA',
+                'email' => 'entreprise3@example.com',
+                'motDePasse' => Hash::make('password'),
+                'localite' => 'Lyon',
+                'adresse' => 'Rue de la République 50',
+                'codePostal' => '69001',
+                'numeroTelephone' => '0472123456',
+                'role' => 'entreprise',
+                'statut' => 'pending',
+                'dateCreation' => now(),
+            ],
         ]);
     }
 }
