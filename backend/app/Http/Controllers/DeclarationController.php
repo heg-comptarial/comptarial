@@ -59,55 +59,6 @@ class DeclarationController extends Controller
         return response()->json(null, 204);
     }
 
-    public function updateStatus(Request $request, $id)
-    {
-        $request->validate([
-            'statut' => 'required|in:approved,pending,rejected',
-        ]);
-
-        $declaration = Declaration::with('rubriques.documents')
-            ->where('declaration_id', $id)
-            ->firstOrFail();
-
-        if ($request->statut === 'approved') {
-            $documentsNonValidés = [];
-
-            foreach ($declaration->rubriques as $rubrique) {
-                foreach ($rubrique->documents as $doc) {
-                    if ($doc->statut !== 'validé') {
-                        $documentsNonValidés[] = $doc->nom ?? 'Document sans nom';
-                    }
-                }
-
-                if ($rubrique->relationLoaded('sousRubriques')) {
-                    foreach ($rubrique->sousRubriques as $sousRubrique) {
-                        foreach ($sousRubrique->documents as $doc) {
-                            if ($doc->statut !== 'validé') {
-                                $documentsNonValidés[] = $doc->nom ?? 'Document SR sans nom';
-                            }
-                        }
-                    }
-                }
-            }
-
-            if (count($documentsNonValidés) > 0) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Impossible de valider la déclaration. Certains documents ne sont pas validés.',
-                    'documents_non_valides' => $documentsNonValidés,
-                ], 422);
-            }
-        }
-
-        $declaration->statut = $request->statut;
-        $declaration->save();
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Statut de la déclaration mis à jour avec succès.',
-            'declaration' => $declaration,
-        ]);
-    }
 
     public function checkDocuments($id)
     {
@@ -136,6 +87,45 @@ class DeclarationController extends Controller
             'all_documents_approved' => $allDocumentsApproved,
             'documents_non_valides' => $documentsNonValides
         ]);
+    }
+
+    public function validerDeclarationEtDocuments($declarationId, Request $request)
+    {
+        try {
+            // Récupérer la déclaration
+            $declaration = Declaration::with('rubriques.documents')->findOrFail($declarationId);
+
+            // Vérifier si la déclaration est déjà validée
+            if ($declaration->statut === 'approved') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'La déclaration est déjà validée.',
+                ], 400);
+            }
+
+            // Mettre à jour le statut de la déclaration
+            $declaration->statut = 'approved';
+            $declaration->save();
+
+            // Mettre à jour le statut des documents associés
+            foreach ($declaration->rubriques as $rubrique) {
+                foreach ($rubrique->documents as $document) {
+                    $document->statut = 'approved';
+                    $document->save();
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Déclaration et documents validés avec succès.',
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la validation de la déclaration.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
     }
 
 

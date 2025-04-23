@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Search, UserPlus, Users } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -254,6 +255,12 @@ export default function Dashboard() {
     }
   };
 
+  // Charger les demandes au montage de la page
+  useEffect(() => {
+    fetchPendingUsers();
+  }, []); // Le tableau vide [] signifie que cet effet s'exécute uniquement au montage
+
+
   return (
     <ProtectedRouteAdmin>
       <div className="container mx-auto py-10 px-4 max-w-full">
@@ -262,12 +269,11 @@ export default function Dashboard() {
         </h1>
 
         <Tabs
-          defaultValue="general"
+          defaultValue="demandes"
           className="w-full"
           onValueChange={handleTabChange}
         >
           <TabsList className="mb-6">
-            <TabsTrigger value="general">Infos générales</TabsTrigger>
             <TabsTrigger value="demandes">
               <UserPlus className="h-4 w-4 mr-2" />
               Mes Demandes
@@ -277,14 +283,6 @@ export default function Dashboard() {
               Mes Clients
             </TabsTrigger>
           </TabsList>
-
-          <TabsContent value="general">
-            <Card>
-              <CardContent className="pt-6">
-                <p>Contenu des informations générales</p>
-              </CardContent>
-            </Card>
-          </TabsContent>
 
           <TabsContent value="demandes">
             <Card>

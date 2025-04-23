@@ -612,27 +612,25 @@ export default function ClientDetail() {
     }
   }
 
-  // Fonction pour valider la déclaration et tous les documents
   const validateDeclarationAndDocuments = async () => {
     if (!pendingDeclarationAction) return
 
     try {
       // Envoi de la requête PATCH pour valider la déclaration et les documents
-      const response = await fetch(`${API_URL}/declarations/${pendingDeclarationAction.declarationId}`, {
+      const response = await fetch(`${API_URL}/declarations/${pendingDeclarationAction.declarationId}/validateDecEtDoc`, {
         method: "PATCH",
         headers: {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          statut: pendingDeclarationAction.status,
           approve_all_documents: true, // Indiquer qu'on souhaite valider tous les documents
         }),
       })
 
       if (!response.ok) {
-        const errorData = await response.json()
-        toast.error(errorData.message || "Erreur lors de la mise à jour du statut")
-        return
+        const errorData = await response.json();
+        toast.error(errorData.message || "Erreur lors de la validation de la déclaration et des documents");
+        return;
       }
 
       toast.success("Déclaration et documents validés avec succès")
@@ -968,7 +966,7 @@ export default function ClientDetail() {
                                     <AlertTriangle className="h-4 w-4 mr-1" />
                                     En attente
                                   </Button>
-                                  <Button
+                                  {/*<Button
                                     variant="outline"
                                     size="sm"
                                     className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
@@ -981,7 +979,7 @@ export default function ClientDetail() {
                                   >
                                     <XCircle className="h-4 w-4 mr-1" />
                                     Refuser
-                                  </Button>
+                                  </Button>*/}
                                 </div>
                               </div>
                             </div>
