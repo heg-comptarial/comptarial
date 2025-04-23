@@ -1049,7 +1049,7 @@ export default function ClientDetail() {
                                     <AlertTriangle className="h-4 w-4 mr-1" />
                                     En attente
                                   </Button>
-                                  <Button
+                                  {/*<Button
                                     variant="outline"
                                     size="sm"
                                     className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
@@ -1062,7 +1062,7 @@ export default function ClientDetail() {
                                   >
                                     <XCircle className="h-4 w-4 mr-1" />
                                     Refuser
-                                  </Button>
+                                  </Button>*/}
                                 </div>
                               </div>
                             </div>
