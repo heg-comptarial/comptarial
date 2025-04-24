@@ -13,6 +13,7 @@ class DeclarationSeeder extends Seeder
             [
                 // prive4@example.com
                 'user_id' => 4,
+                'impots' => '2000 CHF',
                 'titre' => 'Déclaration',
                 'statut' => 'approved',
                 'annee' => '2025',
@@ -21,6 +22,7 @@ class DeclarationSeeder extends Seeder
             [
                 // prive4@example.com
                 'user_id' => 4,
+                'impots' => null,
                 'titre' => 'Déclaration',
                 'statut' => 'pending',
                 'annee' => '2024',
@@ -29,14 +31,16 @@ class DeclarationSeeder extends Seeder
             [
                 // prive@example.com
                 'user_id' => 4,
+                'impots' => null,
                 'titre' => 'Déclaration',
-                'statut' => 'rejected',
+                'statut' => 'pending',
                 'annee' => '2023',
                 'dateCreation' => now(),
             ],
             [
                 // prive2@example.com
                 'user_id' => 5,
+                'impots' => '1500 CHF',
                 'titre' => 'Déclaration',
                 'statut' => 'approved',
                 'annee' => '2025',
@@ -45,6 +49,7 @@ class DeclarationSeeder extends Seeder
             [
                 // prive3@example.com
                 'user_id' => 6,
+                'impots' => null,
                 'titre' => 'Déclaration',
                 'statut' => 'pending',
                 'annee' => '2024',
@@ -53,14 +58,16 @@ class DeclarationSeeder extends Seeder
             [
                 // prive4@example.com
                 'user_id' => 7,
+                'impots' => null,
                 'titre' => 'Déclaration',
-                'statut' => 'rejected',
+                'statut' => 'pending',
                 'annee' => '2023',
                 'dateCreation' => now(),
             ],
             [
                 // prive4@example.com
                 'user_id' => 7,
+                'impots' => '2500 CHF',
                 'titre' => 'Déclaration',
                 'statut' => 'approved',
                 'annee' => '2024',
@@ -69,6 +76,7 @@ class DeclarationSeeder extends Seeder
             [
                 // prive4@example.com
                 'user_id' => 8,
+                'impots' => null,
                 'titre' => 'Comptabilité',
                 'statut' => 'pending',
                 'annee' => '2024',

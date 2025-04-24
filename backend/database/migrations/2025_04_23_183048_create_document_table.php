@@ -14,11 +14,11 @@ return new class extends Migration
         Schema::create('document', function (Blueprint $table) {
             $table->bigIncrements('doc_id');
             $table->unsignedBigInteger('rubrique_id')->index('rubrique_id');
-            $table->string('nom');
-            $table->enum('type', ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpeg', 'jpg', 'png', 'other']);
-            $table->string('cheminFichier');
-            $table->enum('statut', ['pending', 'approved', 'rejected']);
-            $table->string('sous_rubrique')->default('');
+            $table->string('nom')->nullable();
+            $table->enum('type', ['pdf', 'doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx', 'jpeg', 'jpg', 'png', 'other'])->nullable();
+            $table->string('cheminFichier')->nullable();
+            $table->enum('statut', ['pending', 'approved', 'rejected'])->nullable();
+            $table->string('sous_rubrique');
             $table->dateTime('dateCreation')->useCurrent();
         });
     }

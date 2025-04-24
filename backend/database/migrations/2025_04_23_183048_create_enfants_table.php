@@ -22,8 +22,8 @@ return new class extends Migration
             $table->string('localite');
             $table->string('noAVS');
             $table->string('noContribuable');
-            $table->decimal('revenuBrut', 10);
-            $table->decimal('fortuneNet', 10);
+            $table->decimal('revenuBrut', 10)->nullable();
+            $table->decimal('fortuneNet', 10)->nullable();
             $table->boolean('avantAgeScolaire')->default(false);
             $table->boolean('handicap')->default(false);
             $table->boolean('domicileAvecParents')->default(false);

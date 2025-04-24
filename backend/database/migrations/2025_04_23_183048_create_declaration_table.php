@@ -14,6 +14,7 @@ return new class extends Migration
         Schema::create('declaration', function (Blueprint $table) {
             $table->bigIncrements('declaration_id');
             $table->unsignedBigInteger('user_id')->index('user_id');
+            $table->string('impots')->nullable();
             $table->enum('titre', ['Declaration', 'Comptabilité', 'TVA', 'Salaires', 'Administration', 'Fiscalité', 'Divers']);
             $table->enum('statut', ['pending', 'approved', 'rejected']);
             $table->year('annee');

@@ -20,9 +20,9 @@ return new class extends Migration
             $table->enum('degreParente', ['parents', 'enfant', 'grands-parents', 'frere-soeur', 'oncle-tante', 'neuveu-niece', 'autre']);
             $table->integer('nbPersonneParticipation')->comment('Nombre de personnes participant à entretenir la personne à charge');
             $table->boolean('vieAvecPersonneCharge')->default(false);
-            $table->decimal('revenusBrutPersonneACharge', 10);
-            $table->decimal('fortuneNetPersonneACharge', 10);
-            $table->decimal('montantVerseAPersonneACharge', 10);
+            $table->decimal('revenusBrutPersonneACharge', 10)->nullable();
+            $table->decimal('fortuneNetPersonneACharge', 10)->nullable();
+            $table->decimal('montantVerseAPersonneACharge', 10)->nullable();
             $table->boolean('fo_preuveVersementEffectue')->default(false);
         });
     }

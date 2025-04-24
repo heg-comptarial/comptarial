@@ -32,7 +32,7 @@ class DocumentSeeder extends Seeder
                 'rubrique_id' => 3,
                 'nom' => 'Document 3',
                 'type' => 'jpg',
-                'cheminFichier' => 'documents/image1.png',
+                'cheminFichier' => null,
                 'statut' => 'rejected',
                 'sous_rubrique' => 'test',
                 'dateCreation' => now(),

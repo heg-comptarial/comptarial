@@ -16,11 +16,11 @@ return new class extends Migration
             $table->unsignedBigInteger('prive_id')->index('prive_id');
             $table->string('nom');
             $table->string('prenom');
-            $table->string('email', 254)->unique('email');
+            $table->string('email', 254)->unique('email')->nullable();
             $table->string('localite');
             $table->string('adresse');
             $table->string('codePostal', 10);
-            $table->string('numeroTelephone', 25);
+            $table->string('numeroTelephone', 25)->nullable();
             $table->enum('etatCivil', ['Célibataire', 'Marié-e', 'Séparé-e', 'Divorcé-e', 'Veuf-Veuve', 'Partenariat', 'Partenariat séparé', 'Partenariat dissous', 'Partenariat veuf']);
             $table->date('dateNaissance');
             $table->string('nationalite');

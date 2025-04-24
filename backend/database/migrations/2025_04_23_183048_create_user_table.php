@@ -21,7 +21,7 @@ return new class extends Migration
             $table->string('codePostal', 10);
             $table->string('numeroTelephone', 25);
             $table->enum('role', ['admin', 'prive', 'entreprise']);
-            $table->enum('statut', ['approved', 'rejected', 'pending']);
+            $table->enum('statut', ['approved', 'rejected', 'pending', 'archived']);
             $table->dateTime('dateCreation')->useCurrent();
         });
     }

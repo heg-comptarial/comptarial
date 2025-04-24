@@ -8,7 +8,7 @@ CREATE TABLE `User`(
     `codePostal` VARCHAR(10) NOT NULL,
     `numeroTelephone` VARCHAR(25) NOT NULL,
     `role` ENUM('admin', 'prive', 'entreprise') NOT NULL,
-    `statut` ENUM('approved', 'rejected', 'pending') NOT NULL,
+    `statut` ENUM('approved', 'rejected', 'pending', 'archived') NOT NULL,
     `dateCreation` DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
  
@@ -32,7 +32,6 @@ CREATE TABLE `Rubrique`(
     `rubrique_id` BIGINT UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
     `declaration_id` BIGINT UNSIGNED NOT NULL,
     `titre` VARCHAR(255) NOT NULL,
-    `description` VARCHAR(255) NOT NULL,
     FOREIGN KEY (`declaration_id`) REFERENCES `Declaration`(`declaration_id`) ON DELETE CASCADE
 );
 

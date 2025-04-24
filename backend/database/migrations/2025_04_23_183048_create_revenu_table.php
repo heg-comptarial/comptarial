@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('revenu', function (Blueprint $table) {
             $table->bigIncrements('revenu_id');
             $table->unsignedBigInteger('prive_id')->index('prive_id');
-            $table->boolean('indemnites')->default(false)->comment('Indemnités de chômage, maladie, accident, maternité');
+            $table->boolean('indemnites')->default(false)->comment('Indemnités de chômage, maladie, accident, maternité')->nullable();
             $table->boolean('interruptionsTravailNonPayees')->default(false);
             $table->date('interuptionsTravailNonPayeesDebut')->nullable();
             $table->date('interuptionsTravailNonPayeesFin')->nullable();

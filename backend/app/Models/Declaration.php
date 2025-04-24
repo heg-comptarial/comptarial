@@ -48,6 +48,7 @@ class Declaration extends Model
     // Attributs pouvant être remplis en masse
     protected $fillable = [
         'user_id',
+        'impots',
         'titre',
         'statut',
         'annee',
