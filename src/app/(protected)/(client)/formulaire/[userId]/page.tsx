@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -28,6 +28,19 @@ import axios from "axios";
 import { Enfant, FormDataType } from "@/types/interfaces";
 import ProtectedPrive from "@/components/routes/ProtectedRouteApprovedPrive";
 import { useParams } from "next/navigation";
+import AutrePersonne from "@/components/formulaires/autrePersonne";
+import Revenu from "@/components/formulaires/revenu";
+import Independants from "@/components/formulaires/independant";
+import IndemnitesAssurance from "@/components/formulaires/indemnites";
+import Rentier from "@/components/formulaires/rentier";
+import AutresRevenus from "@/components/formulaires/autresRevenus";
+import Banques from "@/components/formulaires/banques";
+import Titres from "@/components/formulaires/titres";
+import Immobiliers from "@/components/formulaires/immobiliers";
+import Dettes from "@/components/formulaires/dettes";
+import Assurances from "@/components/formulaires/assurances";
+import AutresDeductions from "@/components/formulaires/autresDeductions";
+import AutresInformations from "@/components/formulaires/autresInformations";
 
 interface FormulaireDeclarationProps {
   onSubmitSuccess?: (formData: FormDataType) => Promise<boolean>;
@@ -45,7 +58,21 @@ export default function FormulaireDeclaration({
   const [step, setStep] = useState(1);
   const params = useParams()
   const userId = Number(params?.userId)
-  
+  const [autrePersonneData, setAutrePersonneData] = useState(null);
+  const [revenuData, setRevenuData] = useState(null);
+  const [independantsData, setIndependantsData] = useState(null);
+  const [indemnitesAssuranceData, setIndemnitesAssuranceData] = useState(null);
+  const [rentierData, setRentierData] = useState(null);
+  const [autresRevenusData, setAutresRevenusData] = useState(null);
+  const [banquesData, setBanquesData] = useState(null);
+  const [titresData, setTitresData] = useState(null);
+  const [immobiliersData, setImmobiliersData] = useState(null);
+  const [dettesData, setDettesData] = useState(null);
+  const [assurancesData, setAssurancesData] = useState(null);
+  const [autresDeductionsData, setAutresDeductionsData] = useState(null);
+  const [autresInformationsData, setAutresInformationsData] = useState(null);
+
+    
 
   // Informations de base
   const [infoBase, setInfoBase] = useState({
@@ -932,9 +959,166 @@ export default function FormulaireDeclaration({
       </ProtectedPrive>
     );
   };
+  // Rendu de l'étape 4: Autres personnes à charge
 
-  // Rendu de l'étape 4: Sélection des rubriques
-  const renderStep4 = () => (
+
+const renderStep4 = () => (
+  <ProtectedPrive>
+    <AutrePersonne 
+      data={autrePersonneData}
+      onUpdate={(newData) => setAutrePersonneData(newData)}
+      onNext={nextStep}
+      onPrev={prevStep}
+    />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 5: Revenu
+const renderStep5 = () => (
+  <ProtectedPrive>
+  <Revenu 
+    data={revenuData}
+    onUpdate={(newData) => setRevenuData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 6: Indépendant
+const renderStep6 = () => (
+  <ProtectedPrive>
+  <Independants 
+    data={independantsData}
+    onUpdate={(newData) => setIndependantsData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 7: Indemnités assurance
+const renderStep7 = () => (
+  <ProtectedPrive>
+  <IndemnitesAssurance 
+    data={indemnitesAssuranceData}
+    onUpdate={(newData) => setIndemnitesAssuranceData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 8: Rentier
+const renderStep8 = () => (
+  <ProtectedPrive>
+  <Rentier 
+    data={rentierData}
+    onUpdate={(newData) => setRentierData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 9: Autres revenus
+const renderStep9 = () => (
+  <ProtectedPrive>
+  <AutresRevenus 
+    data={autresRevenusData}
+    onUpdate={(newData) => setAutresRevenusData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 10: Banques
+const renderStep10 = () => (
+  <ProtectedPrive>
+  <Banques 
+    data={banquesData}
+    onUpdate={(newData) => setBanquesData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 11: Titres
+const renderStep11 = () => (
+  <ProtectedPrive>
+  <Titres 
+    data={titresData}
+    onUpdate={(newData) => setTitresData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 12: Immobiliers
+const renderStep12 = () => (
+  <ProtectedPrive>
+  <Immobiliers 
+    data={immobiliersData}
+    onUpdate={(newData) => setImmobiliersData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 13: Dettes
+const renderStep13 = () => (
+  <ProtectedPrive>
+  <Dettes 
+    data={dettesData}
+    onUpdate={(newData) => setDettesData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 14: Assurances
+const renderStep14 = () => (
+  <ProtectedPrive>
+  <Assurances 
+    data={assurancesData}
+    onUpdate={(newData) => setAssurancesData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 15: Autres déductions
+const renderStep15 = () => (
+  <ProtectedPrive>
+  <AutresDeductions 
+    data={autresDeductionsData}
+    onUpdate={(newData) => setAutresDeductionsData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+// Rendu de l'étape 16: Autres informations
+const renderStep16 = () => (
+  <ProtectedPrive>
+  <AutresInformations 
+    data={autresInformationsData}
+    onUpdate={(newData) => setAutresInformationsData(newData)}
+    onNext={nextStep}
+    onPrev={prevStep}
+  />
+  </ProtectedPrive>
+);
+
+  // Rendu de l'étape 17: Sélection des rubriques
+  const renderStep17 = () => (
     <ProtectedPrive>
     <div className="space-y-6">
       <h3 className="text-lg font-medium">
@@ -1096,8 +1280,8 @@ export default function FormulaireDeclaration({
     </ProtectedPrive>
   );
 
-  // Rendu de l'étape 5: Récapitulatif et confirmation
-  const renderStep5 = () => (
+  // Rendu de l'étape 18: Récapitulatif et confirmation
+  const renderStep18 = () => (
     <ProtectedPrive>
     <div className="space-y-6">
       <h3 className="text-lg font-medium">
@@ -1286,26 +1470,53 @@ export default function FormulaireDeclaration({
     </ProtectedPrive>
   );
 
-  // Rendu du formulaire en fonction de l'étape actuelle
-  const renderForm = () => {
-    switch (step) {
-      case 1:
-        return renderStep1();
-      case 2:
-        return renderStep2();
-      case 3:
-        return renderStep3();
-      case 4:
-        return renderStep4();
-      case 5:
-        return renderStep5();
-      default:
-        return renderStep1();
-    }
-  };
+// Rendu du formulaire en fonction de l'étape actuelle
+const renderForm = () => {
+  switch (step) {
+    case 1:
+      return renderStep1();
+    case 2:
+      return renderStep2();
+    case 3:
+      return renderStep3();
+    case 4:
+      return renderStep4();
+    case 5:
+      return renderStep5();
+    case 6:
+      return renderStep6();
+    case 7:
+      return renderStep7();
+    case 8:
+      return renderStep8();
+    case 9:
+      return renderStep9();
+    case 10:
+      return renderStep10();
+    case 11:
+      return renderStep11();
+    case 12:
+      return renderStep12();
+    case 13:
+      return renderStep13();
+    case 14:
+      return renderStep14();
+    case 15:
+      return renderStep15();
+    case 16:
+      return renderStep16();
+    case 17:
+      return renderStep17();
+    case 18:
+      return renderStep18();
+    default:
+      return renderStep1();
+  }
+};
 
-  return (
-    <ProtectedPrive>
+
+return (
+  <ProtectedPrive>
     <div className="container max-w-3xl py-8">
       <Card>
         <CardHeader>
@@ -1316,47 +1527,44 @@ export default function FormulaireDeclaration({
         <CardContent>
           {/* Indicateur d'étape */}
           <div className="mb-8">
-            <div className="flex justify-between mb-2">
-              <span
-                className={`font-medium ${
-                  step >= 1 ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                Informations personnelles
-              </span>
-              <span
-                className={`font-medium ${
-                  step >= 2 ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                Conjoint
-              </span>
-              <span
-                className={`font-medium ${
-                  step >= 3 ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                Enfants
-              </span>
-              <span
-                className={`font-medium ${
-                  step >= 4 ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                Rubriques
-              </span>
-              <span
-                className={`font-medium ${
-                  step >= 5 ? "text-primary" : "text-muted-foreground"
-                }`}
-              >
-                Confirmation
-              </span>
+            <div className="relative mb-2">
+              <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
+                {[
+                  {step: 1, label: "Informations"},
+                  {step: 2, label: "Conjoint"},
+                  {step: 3, label: "Enfants"},
+                  {step: 4, label: "Autres personnes"},
+                  {step: 5, label: "Revenu"},
+                  {step: 6, label: "Indépendant"},
+                  {step: 7, label: "Indemnités"},
+                  {step: 8, label: "Rentier"},
+                  {step: 9, label: "Autres revenus"},
+                  {step: 10, label: "Banques"},
+                  {step: 11, label: "Titres"},
+                  {step: 12, label: "Immobiliers"},
+                  {step: 13, label: "Dettes"},
+                  {step: 14, label: "Assurances"},
+                  {step: 15, label: "Autres déductions"},
+                  {step: 16, label: "Autres informations"},
+                  {step: 17, label: "Rubriques"},
+                  {step: 18, label: "Confirmation"},
+                ].map((item) => (
+                  <button
+                    key={item.step}
+                    onClick={() => setStep(item.step)}
+                    className={`text-sm font-medium whitespace-nowrap ${
+                      step >= item.step ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
+              </div>
             </div>
             <div className="w-full bg-muted rounded-full h-2.5">
               <div
                 className="bg-primary h-2.5 rounded-full transition-all duration-300"
-                style={{ width: `${(step / 5) * 100}%` }}
+                style={{ width: `${(step / 18) * 100}%` }}
               ></div>
             </div>
           </div>
@@ -1365,6 +1573,6 @@ export default function FormulaireDeclaration({
         </CardContent>
       </Card>
     </div>
-    </ProtectedPrive>
-  );
+  </ProtectedPrive>
+);
 }
