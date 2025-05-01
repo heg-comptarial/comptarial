@@ -2,7 +2,7 @@
 
 import type React from "react";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -130,6 +130,45 @@ export default function FormulaireDeclaration({
     fo_autreInformations: false,
   });
 
+  const etapesMap: { [key: string]: number } = {
+    'base': 1,  // Informations de base
+    'conjoint': 2,  // Conjoint
+    'fo_enfants': 3,  // Enfants
+    'fo_autrePersonneCharge': 4,    // AutrePersonneCharge
+    'fo_salarie': 5,                // Revenu
+    'fo_independant': 6,            // Indépendants
+    'fo_assurance': 7,              // Assurance
+    'fo_rentier': 8,                // Rentier
+    'fo_autreRevenu': 9,            // Autres Revenu
+    'fo_banques': 10,               // Banques
+    'fo_titres': 11,                // Titres
+    'fo_immobiliers': 12,           // Immobiliers
+    'fo_dettes': 13,                // Dettes
+    'fo_autreDeduction': 14,        // Autres Deductions
+    'fo_autreInformations': 15,     // Autres Informations
+    'confirmation': 18              // Confirmation
+  };
+
+  const etapeLabelFromKey = (key: string): string => {
+    const map: { [key: string]: string } = {
+      fo_enfants: "Enfants",
+      fo_autrePersonneCharge: "Autres personnes",
+      fo_salarie: "Revenu",
+      fo_independant: "Indépendant",
+      fo_assurance: "Indemnités",
+      fo_rentier: "Rentier",
+      fo_autreRevenu: "Autres revenus",
+      fo_banques: "Banques",
+      fo_titres: "Titres",
+      fo_immobiliers: "Immobiliers",
+      fo_dettes: "Dettes",
+      fo_autreDeduction: "Autres déductions",
+      fo_autreInformations: "Autres informations",
+    };
+    return map[key] || key;
+  };
+
+
   // Fonction pour formater une date au format YYYY-MM-DD
   const formatDate = (dateString: string): string => {
     if (!dateString) return "";
@@ -165,6 +204,8 @@ export default function FormulaireDeclaration({
  
     return `${day}.${month}.${year}`;
   };
+
+
 
   // Récupérer les données de l'utilisateur et les données du privé si disponibles
   useEffect(() => {
@@ -281,6 +322,29 @@ export default function FormulaireDeclaration({
     fetchData();
   }, [router, priveId]);
 
+    // Construction dynamique des étapes à afficher
+const etapesAffichees = useMemo(() => {
+  const baseEtapes = [
+    { step: 1, label: "Informations" },
+    { step: 18, label: "Confirmation" },
+  ];
+
+  const dynEtapes = Object.entries(formSections)
+    .filter(([_, value]) => value) // uniquement les cases cochées
+    .map(([key]) => ({
+      step: etapesMap[key],
+      label: etapeLabelFromKey(key), // fonction utilitaire (ci-dessous)
+    }));
+
+  if (infoBase.etatCivil === "marie") {
+    dynEtapes.unshift({ step: etapesMap["conjoint"], label: "Conjoint" });
+  }
+
+  return [...baseEtapes.slice(0, 1), ...dynEtapes.sort((a, b) => a.step - b.step), baseEtapes[1]];
+}, [formSections, infoBase]);
+
+
+
   // Gestion des changements dans les informations de base
   const handleInfoBaseChange = (name: string, value: string) => {
     setInfoBase((prev) => ({ ...prev, [name]: value }));
@@ -326,24 +390,6 @@ export default function FormulaireDeclaration({
     setEnfants(updatedEnfants);
 
 
-  };
-  const etapesMap: { [key: string]: number } = {
-    'base': 1,  // Informations de base
-    'conjoint': 2,  // Conjoint
-    'fo_enfants': 3,  // Enfants
-    'fo_autrePersonneCharge': 4,    // AutrePersonneCharge
-    'fo_salarie': 5,                // Revenu
-    'fo_independant': 6,            // Indépendants
-    'fo_assurance': 7,              // Assurance
-    'fo_rentier': 8,                // Rentier
-    'fo_autreRevenu': 9,            // Autres Revenu
-    'fo_banques': 10,               // Banques
-    'fo_titres': 11,                // Titres
-    'fo_immobiliers': 12,           // Immobiliers
-    'fo_dettes': 13,                // Dettes
-    'fo_autreDeduction': 14,        // Autres Deductions
-    'fo_autreInformations': 15,     // Autres Informations
-    'confirmation': 18              // Confirmation
   };
 
   // Passer à l'étape suivante
@@ -1520,6 +1566,8 @@ const renderForm = () => {
 };
 
 
+
+
 return (
   <ProtectedPrive>
     <div className="container max-w-3xl py-8">
@@ -1534,35 +1582,16 @@ return (
           <div className="mb-8">
             <div className="relative mb-2">
               <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
-                {[
-                  {step: 1, label: "Informations"},
-                  {step: 2, label: "Conjoint"},
-                  {step: 3, label: "Enfants"},
-                  {step: 4, label: "Autres personnes"},
-                  {step: 5, label: "Revenu"},
-                  {step: 6, label: "Indépendant"},
-                  {step: 7, label: "Indemnités"},
-                  {step: 8, label: "Rentier"},
-                  {step: 9, label: "Autres revenus"},
-                  {step: 10, label: "Banques"},
-                  {step: 11, label: "Titres"},
-                  {step: 12, label: "Immobiliers"},
-                  {step: 13, label: "Dettes"},
-                  {step: 14, label: "Assurances"},
-                  {step: 15, label: "Autres déductions"},
-                  {step: 16, label: "Autres informations"},
-                  {step: 17, label: "Rubriques"},
-                  {step: 18, label: "Confirmation"},
-                ].map((item) => (
-                  <button
-                    key={item.step}
-                    onClick={() => setStep(item.step)}
-                    className={`text-sm font-medium whitespace-nowrap ${
-                      step >= item.step ? "text-primary" : "text-muted-foreground"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
+              {etapesAffichees.map((item) => (
+    <button
+      key={item.step}
+      onClick={() => setStep(item.step)}
+      className={`text-sm font-medium whitespace-nowrap ${
+        step === item.step ? "text-primary" : "text-muted-foreground"
+      }`}
+    >
+      {item.label}
+    </button>
                 ))}
               </div>
             </div>
