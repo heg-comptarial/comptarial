@@ -425,6 +425,14 @@ export default function Dashboard() {
                     >
                       {loading ? "Chargement..." : "Tous les clients"}
                     </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={fetchApprovedUsers}
+                      disabled={loading}
+                    >
+                      {loading ? "Chargement..." : "Declarations en attente"}
+                    </Button>
                   </div>
                 </div>
 
