@@ -124,6 +124,9 @@ Route::apiResource('/revenus', RevenuController::class);
 // Route pour les titres
 Route::apiResource('/titres', TitreController::class);
 
+// Route pour les autres personnes à charge
+Route::apiResource('/autrepersonnesacharges', AutrePersonneAChargeController::class);
+
 
 // Route pour obtenir tous les documents d'un user
 Route::get('users/{userId}/documents', [DocumentController::class, 'getDocumentsByUser']);

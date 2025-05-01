@@ -13,7 +13,7 @@ import {
   SquareUserRound,
 } from "lucide-react";
 
-import { NavMain } from "@/components/sidebar/nav-main";
+import { NavDeclarations } from "@/components/sidebar/nav-declarations";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
 import { NavUser } from "@/components/sidebar/nav-user";
 import {
@@ -119,7 +119,7 @@ export function EntrepriseSidebar(props: React.ComponentProps<typeof Sidebar>) {
       </SidebarHeader>
 
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavDeclarations userId={userId} />
         <NavSecondary items={data.navSecondary} className="mt-auto" />
       </SidebarContent>
 
