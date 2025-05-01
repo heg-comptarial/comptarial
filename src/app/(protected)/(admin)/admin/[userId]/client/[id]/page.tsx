@@ -522,8 +522,11 @@ export default function ClientDetail() {
       case "rejected":
       case "refusé":
         return <Badge className="bg-red-100 text-red-800">Refusé</Badge>
+      case "archived":
+      case "archivé":
+        return <Badge className="bg-blue-100 text-blue-800">Archivé</Badge>
       default:
-        return <Badge className="bg-gray-100 text-gray-800">{status || "Inconnu"}</Badge>
+        return <Badge className="bg-grey-100 text-grey-800">{status || "Inconnu"}</Badge>
     }
   }
 
@@ -771,12 +774,12 @@ export default function ClientDetail() {
                         name="statut"
                         value={editedUser?.statut || ""}
                         onChange={handleInputChange}
-                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-700 sm:text-sm h-10"
                       >
-                        <option value="approved">validé</option>
-                        <option value="pending">en attente</option>
-                        <option value="refused">refusé</option>
-                        <option value="archieved">archivé</option>
+                        <option value="approved">Validé</option>
+                        <option value="pending">En attente</option>
+                        <option value="rejected">Refusé</option>
+                        <option value="archived">Archivé</option>
                       </select>
                     
                     </div>
@@ -892,6 +895,7 @@ export default function ClientDetail() {
               <TabsList className="mb-6">
                 <TabsTrigger value="declarations">Déclarations</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger value="formilaire">Formulaire</TabsTrigger>
               </TabsList>
 
               <TabsContent value="declarations">
