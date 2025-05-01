@@ -55,7 +55,7 @@ export default function FormulaireDeclaration({
   const [isLoading, setIsLoading] = useState(false);
   const [isDataLoading, setIsDataLoading] = useState(!!priveId);
   const [error, setError] = useState<string | null>(null);
-  const [step, setStep] = useState(1);
+  const [step, setStep] = useState(Number(1));
   const params = useParams()
   const userId = Number(params?.userId)
   const [autrePersonneData, setAutrePersonneData] = useState(null);
@@ -71,6 +71,8 @@ export default function FormulaireDeclaration({
   const [assurancesData, setAssurancesData] = useState(null);
   const [autresDeductionsData, setAutresDeductionsData] = useState(null);
   const [autresInformationsData, setAutresInformationsData] = useState(null);
+  const [etapesActives, setEtapesActives] = useState<number[]>([]);
+
 
     
 
@@ -114,6 +116,7 @@ export default function FormulaireDeclaration({
   const [formSections, setFormSections] = useState<{
     [key: string]: boolean;
   }>({
+    fo_enfants:false,
     fo_banques: false,
     fo_dettes: false,
     fo_immobiliers: false,
@@ -321,70 +324,87 @@ export default function FormulaireDeclaration({
     const updatedEnfants = [...enfants];
     updatedEnfants.splice(index, 1);
     setEnfants(updatedEnfants);
+
+
+  };
+  const etapesMap: { [key: string]: number } = {
+    'base': 1,  // Informations de base
+    'conjoint': 2,  // Conjoint
+    'fo_enfants': 3,  // Enfants
+    'fo_autrePersonneCharge': 4,    // AutrePersonneCharge
+    'fo_salarie': 5,                // Revenu
+    'fo_independant': 6,            // Indépendants
+    'fo_assurance': 7,              // Assurance
+    'fo_rentier': 8,                // Rentier
+    'fo_autreRevenu': 9,            // Autres Revenu
+    'fo_banques': 10,               // Banques
+    'fo_titres': 11,                // Titres
+    'fo_immobiliers': 12,           // Immobiliers
+    'fo_dettes': 13,                // Dettes
+    'fo_autreDeduction': 14,        // Autres Deductions
+    'fo_autreInformations': 15,     // Autres Informations
+    'confirmation': 18              // Confirmation
   };
 
   // Passer à l'étape suivante
   const nextStep = () => {
-    const { dateNaissance, nationalite, etatCivil } = infoBase;
- 
-    let verifCocheRempli = false;
- 
-    if(step === 4){
-      for (const key in formSections) {
-        // Si la valeur est false
-        if (formSections[key] === true) {
-          verifCocheRempli = true;
-        }
-      }
-      if(!verifCocheRempli){
-        alert("Merci de verifier vos réponse, aucune n'a été choisi.");
+    if (step === 1) {
+      // Créer une association des noms de sections aux numéros d'étape
+
+  
+      // Récupérer les étapes cochées et les convertir en numéros d'étape
+      let etapesCochees = Object.entries(formSections)
+        .filter(([key, value]) => value === true)  // Garde uniquement les étapes cochées
+        .map(([key]) => etapesMap[key])            // Utilise etapesMap pour obtenir le numéro d'étape
+        .filter((numKey) => !isNaN(numKey))        // Filtrer les valeurs NaN (si une clé n'est pas valide)
+        .sort((a, b) => a - b);                    // Trier les étapes dans l'ordre croissant
+          // Ajouter l'étape 2 (conjoint) si l'utilisateur est marié
+      if (infoBase.etatCivil === "marie") {
+      etapesCochees.unshift(etapesMap["conjoint"]);
+  }
+    // Ajouter toujours la confirmation finale (étape 18)
+    etapesCochees.push(etapesMap["confirmation"]);
+
+  
+      // Si aucune étape n'est cochée, afficher un message d'erreur
+      if (etapesCochees.length === 0) {
+        alert("Merci de vérifier vos réponses, aucune n'a été choisie.");
         return;
       }
-    }
-    if (!dateNaissance || !nationalite.trim() || !etatCivil) {
-      alert("Merci de remplir tous les champs obligatoires.");
+  
+      // Stocker les étapes activées et passer à la première étape cochée
+      setEtapesActives(etapesCochees);
+      setStep(etapesCochees[0]);  // Passer à la première étape cochée
       return;
     }
-    setStep(step + 1);
+  
+    // Navigation dans les étapes cochées
+    const currentIndex = etapesActives.indexOf(step);
+    const nextIndex = currentIndex + 1;
+  
+    // Si l'étape suivante existe, passer à l'étape suivante
+    if (nextIndex < etapesActives.length) {
+      setStep(etapesActives[nextIndex]);
+    } else {
+      setStep(18);  // Si aucune autre étape n'existe, passer à l'étape 18 (confirmation)
+    }
   };
 
   // Revenir à l'étape précédente
   const prevStep = () => {
-    // Si on est à l'étape 4 (rubriques)
-    if (step === 4) {
-      // Si l'utilisateur a des enfants, revenir à l'étape 3 (enfants)
-      if (hasEnfants) {
-        setStep(3);
-      }
-      // Si l'utilisateur est marié ou pacsé mais n'a pas d'enfants, revenir à l'étape 2 (conjoint)
-      else if (
-        infoBase.etatCivil === "marie" ||
-        infoBase.etatCivil === "pacse"
-      ) {
-        setStep(2);
-      }
-      // Si l'utilisateur est célibataire et n'a pas d'enfants, revenir à l'étape 1 (infos de base)
-      else {
-        setStep(1);
-      }
+    if (step === 1) {
+      return;  // Si nous sommes déjà à l'étape 1, on ne peut pas aller plus en arrière
     }
-    // Si on est à l'étape 3 (enfants)
-    else if (step === 3) {
-      // Revenir à l'étape 2 (conjoint) si marié ou pacsé, sinon à l'étape 1
-      if (infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse") {
-        setStep(2);
-      } else {
-        setStep(1);
-      }
-    }
-    // Si on est à l'étape 5 (récapitulatif)
-    else if (step === 5) {
-      // Toujours revenir à l'étape 4 (rubriques)
-      setStep(4);
-    }
-    // Pour les autres cas, simplement décrémenter l'étape
-    else {
-      setStep(step - 1);
+  
+    // Navigation dans les étapes cochées
+    const currentIndex = etapesActives.indexOf(step);
+    const prevIndex = currentIndex - 1;
+  
+    // Si l'étape précédente existe, on retourne à cette étape
+    if (prevIndex >= 0) {
+      setStep(etapesActives[prevIndex]);
+    } else {
+      setStep(1);  // Si aucune autre étape précédente n'existe, revenir à l'étape 1
     }
   };
 
@@ -625,12 +645,159 @@ export default function FormulaireDeclaration({
         <div className="flex items-center space-x-2">
           <Checkbox
             id="hasEnfants"
-            checked={hasEnfants}
+            checked={hasEnfants || formSections.fo_enfants}
             onCheckedChange={(checked) => setHasEnfants(checked as boolean)}
           />
           <Label htmlFor="hasEnfants">Avez-vous des enfants à charge?</Label>
         </div>
       </div>
+
+      <h3 className="text-lg font-medium">Rubriques à remplir</h3>
+      <div className="space-y-4">
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="fo_salarie"
+            checked={formSections.fo_salarie}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_salarie", checked as boolean)
+            }
+          />
+          <Label htmlFor="fo_salarie" className="font-medium">
+            Êtes-vous salarié?
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="fo_independant"
+            checked={formSections.fo_independant}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_independant", checked as boolean)
+            }
+          />
+          <Label htmlFor="fo_independant" className="font-medium">
+            Êtes-vous indépendant?
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="fo_rentier"
+            checked={formSections.fo_rentier}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_rentier", checked as boolean)
+            }
+          />
+          <Label htmlFor="fo_rentier" className="font-medium">
+            Êtes-vous rentier?
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="fo_autreRevenu"
+            checked={formSections.fo_autreRevenu}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_autreRevenu", checked as boolean)
+            }
+          />
+          <Label htmlFor="fo_autreRevenu" className="font-medium">
+            Avez-vous d&apos;autres revenus?
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="fo_banques"
+            checked={formSections.fo_banques}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_banques", checked as boolean)
+            }
+          />
+          <Label htmlFor="fo_banques" className="font-medium">
+            Avez-vous des comptes bancaires?
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="fo_immobiliers"
+            checked={formSections.fo_immobiliers}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_immobiliers", checked as boolean)
+            }
+          />
+          <Label htmlFor="fo_immobiliers" className="font-medium">
+            Possédez-vous des biens immobiliers?
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="fo_dettes"
+            checked={formSections.fo_dettes}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_dettes", checked as boolean)
+            }
+          />
+          <Label htmlFor="fo_dettes" className="font-medium">
+            Avez-vous des dettes?
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="fo_assurance"
+            checked={formSections.fo_assurance}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_assurance", checked as boolean)
+            }
+          />
+          <Label htmlFor="fo_assurance" className="font-medium">
+            Avez-vous des assurances?
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="fo_autrePersonneCharge"
+            checked={formSections.fo_autrePersonneCharge}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_autrePersonneCharge", checked as boolean)
+            }
+          />
+          <Label htmlFor="fo_autrePersonneCharge" className="font-medium">
+            Avez-vous d&apos;autres personnes à charge?
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="fo_autreDeduction"
+            checked={formSections.fo_autreDeduction}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_autreDeduction", checked as boolean)
+            }
+          />
+          <Label htmlFor="fo_autreDeduction" className="font-medium">
+            Avez-vous d&apos;autres déductions?
+          </Label>
+        </div>
+
+        <div className="flex items-center space-x-2">
+          <Checkbox
+            id="fo_autreInformations"
+            checked={formSections.fo_autreInformations}
+            onCheckedChange={(checked) =>
+              handleSectionChange("fo_autreInformations", checked as boolean)
+            }
+          />
+          <Label htmlFor="fo_autreInformations" className="font-medium">
+            Avez-vous d&apos;autres informations à communiquer?
+          </Label>
+        </div>
+      </div>
+
 
       <Button onClick={nextStep} className="w-full">
         Continuer
@@ -1117,168 +1284,6 @@ const renderStep16 = () => (
   </ProtectedPrive>
 );
 
-  // Rendu de l'étape 17: Sélection des rubriques
-  const renderStep17 = () => (
-    <ProtectedPrive>
-    <div className="space-y-6">
-      <h3 className="text-lg font-medium">
-        Sélectionnez les rubriques qui vous concernent
-      </h3>
-
-      <div className="space-y-4">
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="fo_salarie"
-            checked={formSections.fo_salarie}
-            onCheckedChange={(checked) =>
-              handleSectionChange("fo_salarie", checked as boolean)
-            }
-          />
-          <Label htmlFor="fo_salarie" className="font-medium">
-            Êtes-vous salarié?
-          </Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="fo_independant"
-            checked={formSections.fo_independant}
-            onCheckedChange={(checked) =>
-              handleSectionChange("fo_independant", checked as boolean)
-            }
-          />
-          <Label htmlFor="fo_independant" className="font-medium">
-            Êtes-vous indépendant?
-          </Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="fo_rentier"
-            checked={formSections.fo_rentier}
-            onCheckedChange={(checked) =>
-              handleSectionChange("fo_rentier", checked as boolean)
-            }
-          />
-          <Label htmlFor="fo_rentier" className="font-medium">
-            Êtes-vous rentier?
-          </Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="fo_autreRevenu"
-            checked={formSections.fo_autreRevenu}
-            onCheckedChange={(checked) =>
-              handleSectionChange("fo_autreRevenu", checked as boolean)
-            }
-          />
-          <Label htmlFor="fo_autreRevenu" className="font-medium">
-            Avez-vous d&apos;autres revenus?
-          </Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="fo_banques"
-            checked={formSections.fo_banques}
-            onCheckedChange={(checked) =>
-              handleSectionChange("fo_banques", checked as boolean)
-            }
-          />
-          <Label htmlFor="fo_banques" className="font-medium">
-            Avez-vous des comptes bancaires?
-          </Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="fo_immobiliers"
-            checked={formSections.fo_immobiliers}
-            onCheckedChange={(checked) =>
-              handleSectionChange("fo_immobiliers", checked as boolean)
-            }
-          />
-          <Label htmlFor="fo_immobiliers" className="font-medium">
-            Possédez-vous des biens immobiliers?
-          </Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="fo_dettes"
-            checked={formSections.fo_dettes}
-            onCheckedChange={(checked) =>
-              handleSectionChange("fo_dettes", checked as boolean)
-            }
-          />
-          <Label htmlFor="fo_dettes" className="font-medium">
-            Avez-vous des dettes?
-          </Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="fo_assurance"
-            checked={formSections.fo_assurance}
-            onCheckedChange={(checked) =>
-              handleSectionChange("fo_assurance", checked as boolean)
-            }
-          />
-          <Label htmlFor="fo_assurance" className="font-medium">
-            Avez-vous des assurances?
-          </Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="fo_autrePersonneCharge"
-            checked={formSections.fo_autrePersonneCharge}
-            onCheckedChange={(checked) =>
-              handleSectionChange("fo_autrePersonneCharge", checked as boolean)
-            }
-          />
-          <Label htmlFor="fo_autrePersonneCharge" className="font-medium">
-            Avez-vous d&apos;autres personnes à charge?
-          </Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="fo_autreDeduction"
-            checked={formSections.fo_autreDeduction}
-            onCheckedChange={(checked) =>
-              handleSectionChange("fo_autreDeduction", checked as boolean)
-            }
-          />
-          <Label htmlFor="fo_autreDeduction" className="font-medium">
-            Avez-vous d&apos;autres déductions?
-          </Label>
-        </div>
-
-        <div className="flex items-center space-x-2">
-          <Checkbox
-            id="fo_autreInformations"
-            checked={formSections.fo_autreInformations}
-            onCheckedChange={(checked) =>
-              handleSectionChange("fo_autreInformations", checked as boolean)
-            }
-          />
-          <Label htmlFor="fo_autreInformations" className="font-medium">
-            Avez-vous d&apos;autres informations à communiquer?
-          </Label>
-        </div>
-      </div>
-
-      <div className="flex justify-between">
-        <Button variant="outline" onClick={prevStep}>
-          Retour
-        </Button>
-        <Button onClick={nextStep}>Continuer</Button>
-      </div>
-    </div>
-    </ProtectedPrive>
-  );
 
   // Rendu de l'étape 18: Récapitulatif et confirmation
   const renderStep18 = () => (
