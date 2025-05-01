@@ -765,6 +765,21 @@ export default function ClientDetail() {
                         className="mt-1"
                       />
                     </div>
+                    <div>
+                      <label className="text-sm font-medium">Statut</label>
+                      <select
+                        name="statut"
+                        value={editedUser?.statut || ""}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
+                      >
+                        <option value="approved">validé</option>
+                        <option value="pending">en attente</option>
+                        <option value="refused">refusé</option>
+                        <option value="archieved">archivé</option>
+                      </select>
+                    
+                    </div>
                     <Button onClick={handleUserUpdate} disabled={isSaving} className="w-full">
                       {isSaving ? (
                         <>
