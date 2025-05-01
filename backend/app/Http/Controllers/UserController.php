@@ -288,4 +288,22 @@ class UserController extends Controller
         }
     }
 
+    /**
+     * Retourne les utilisateurs avec au moins une déclaration "pending"
+     */
+    public function usersWithPendingDeclarations()
+    {
+        $users = User::whereHas('declarations', function ($query) {
+            $query->where('statut', 'pending');
+        })->with(['declarations' => function ($query) {
+            $query->where('statut', 'pending');
+        }])->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $users
+        ]);
+    }
+
+
 }

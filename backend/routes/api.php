@@ -48,6 +48,9 @@ Route::get('/users/status/approved', [UserController::class, 'getApproved']);
 // Routes supplémentaires pour les utilisateurs afin de créer soit un privé soit une entreprise
 Route::post('/users/{id}/approve', [UserController::class, 'approveUser']);
 
+// Routes supplémentaires pour les utilisateurs afin de charger les user avec des déclarations en attente
+Route::get('/users-with-pending-declarations', [UserController::class, 'usersWithPendingDeclarations']);
+
 
 // Routes supplémentaires pour les utilisateurs afin de trouver l'id d'un admin
 Route::get('/admin', [UserController::class, 'getAdminId'])->middleware("auth:sanctum");
