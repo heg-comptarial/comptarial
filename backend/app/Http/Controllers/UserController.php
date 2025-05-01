@@ -293,17 +293,21 @@ class UserController extends Controller
      */
     public function usersWithPendingDeclarations()
     {
-        $users = User::whereHas('declarations', function ($query) {
-            $query->where('statut', 'pending');
-        })->with(['declarations' => function ($query) {
-            $query->where('statut', 'pending');
-        }])->get();
+        $users = User::where('statut', 'approved') // filtre sur le statut utilisateur
+            ->whereHas('declarations', function ($query) {
+                $query->where('statut', 'pending');
+            })
+            ->with(['declarations' => function ($query) {
+                $query->where('statut', 'pending');
+            }])
+            ->get();
 
         return response()->json([
             'status' => 'success',
             'data' => $users
         ]);
     }
+
 
 
 }

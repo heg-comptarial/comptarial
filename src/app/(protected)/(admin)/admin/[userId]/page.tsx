@@ -116,6 +116,26 @@ export default function Dashboard() {
     }
   };
 
+  const fetchUsersWithPendingDeclarations = async () => {
+    setLoading(true);
+    try {
+      const response = await fetch(
+        `${API_URL}/users-with-pending-declarations`,
+        fetchConfig
+      );
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
+  
+      const json = await response.json();
+      setUsers(json.data); // on suppose que tu veux stocker uniquement la propriété "data"
+    } catch (error) {
+      console.error("Erreur lors du chargement des utilisateurs avec déclarations pending:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+
   const searchUsers = async () => {
     if (!searchTerm.trim()) {
       // Si la recherche est vide, on recharge les utilisateurs selon l'onglet actif
@@ -428,7 +448,7 @@ export default function Dashboard() {
                     <Button
                       size="sm"
                       variant="outline"
-                      onClick={fetchApprovedUsers}
+                      onClick={fetchUsersWithPendingDeclarations}
                       disabled={loading}
                     >
                       {loading ? "Chargement..." : "Declarations en attente"}
