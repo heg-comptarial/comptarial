@@ -288,4 +288,64 @@ class UserController extends Controller
         }
     }
 
+    public function getAllDeclarationTitlesByUser($userId)
+    {
+        try {
+            // Récupère tous les titres des déclarations d'un utilisateur
+            $titles = Declaration::where('user_id', $userId)
+                ->pluck('titre'); // Récupère uniquement les titres
+
+            // Vérifie si des titres ont été trouvés
+            if ($titles->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Aucun titre de déclaration trouvé pour cet utilisateur.',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'titles' => $titles,
+            ], 200);
+        } catch (\Exception $e) {
+            // Gère les erreurs
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des titres des déclarations.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getUserDeclarationsWithDetailsByTitreDeclaration($userId, $titre)
+    {
+        try {
+            // Récupère les déclarations d'un utilisateur avec le titre spécifié
+            $declarations = Declaration::where('user_id', $userId)
+                ->where('titre', $titre)
+                ->with(['rubriques.sousRubriques.documents.commentaires']) // Inclut les relations nécessaires
+                ->get();
+
+            // Vérifie si des déclarations ont été trouvées
+            if ($declarations->isEmpty()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Aucune déclaration trouvée avec ce titre pour cet utilisateur.',
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $declarations,
+            ], 200);
+        } catch (\Exception $e) {
+            // Gère les erreurs
+            return response()->json([
+                'success' => false,
+                'message' => 'Erreur lors de la récupération des déclarations.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
 }

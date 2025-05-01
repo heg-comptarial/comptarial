@@ -25,30 +25,40 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 
-const POSSIBLE_TITLES = ["Comptabilité", "TVA", "Salaires", "Administration", "Fiscalité", "Divers"];
-
-type Declaration = {
-  titre: string;
-};
-
 export function NavDeclarations({ userId }: { userId: number }) {
   const [tabs, setTabs] = useState<string[]>([]);
 
   useEffect(() => {
     const fetchDeclarations = async () => {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/users/${userId}`);
+        const res = await fetch(
+          `http://127.0.0.1:8000/api/users/${userId}/titres-declarations`
+        );
         if (!res.ok) return;
 
-        const data: { declarations: Declaration[] } = await res.json();
+        const data: { success: boolean; titles: string[] } = await res.json();
 
-        const uniqueTitles = Array.from(
-          new Set(data.declarations.map((d: Declaration) => d.titre))
-        ).filter((titre) => POSSIBLE_TITLES.includes(titre));
+        if (data.success) {
+          // Utilisation de Set pour garantir l'unicité des titres
+          const uniqueTitles = Array.from(new Set(data.titles));
 
-        setTabs(uniqueTitles);
+          // Tri des titres dans l'ordre souhaité
+          const orderedTitles = [
+            "Comptabilité",
+            "TVA",
+            "Salaires",
+            "Administration",
+            "Fiscalité",
+            "Divers",
+          ].filter((title) => uniqueTitles.includes(title));
+
+          setTabs(orderedTitles);
+        }
       } catch (error) {
-        console.error("Erreur lors du fetch des déclarations :", error);
+        console.error(
+          "Erreur lors du fetch des titres des déclarations :",
+          error
+        );
       }
     };
 
@@ -59,7 +69,7 @@ export function NavDeclarations({ userId }: { userId: number }) {
     <SidebarGroup>
       <SidebarMenu>
         {/* Onglet "Mon compte" avec sous-menus */}
-        <Collapsible defaultOpen>
+        <Collapsible defaultOpen={false}>
           <SidebarMenuItem>
             <SidebarMenuButton asChild tooltip="Mon compte">
               <Link href={`/account/${userId}`}>
@@ -101,7 +111,11 @@ export function NavDeclarations({ userId }: { userId: number }) {
         {tabs.map((titre) => (
           <SidebarMenuItem key={titre}>
             <SidebarMenuButton asChild tooltip={titre}>
-              <Link href={`/declarations-client/${userId}?type=${encodeURIComponent(titre)}`}>
+              <Link
+                href={`/declarations-client/${userId}?type=${encodeURIComponent(
+                  titre
+                )}`}
+              >
                 <FolderOpen />
                 <span>{titre}</span>
               </Link>

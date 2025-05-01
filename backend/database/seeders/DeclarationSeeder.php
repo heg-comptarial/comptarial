@@ -77,6 +77,33 @@ class DeclarationSeeder extends Seeder
                 // prive4@example.com
                 'user_id' => 8,
                 'impots' => null,
+                'titre' => 'TVA',
+                'statut' => 'pending',
+                'annee' => '2023',
+                'dateCreation' => now(),
+            ],
+            [
+                // prive4@example.com
+                'user_id' => 8,
+                'impots' => null,
+                'titre' => 'TVA',
+                'statut' => 'pending',
+                'annee' => '2022',
+                'dateCreation' => now(),
+            ],
+            [
+                // prive4@example.com
+                'user_id' => 8,
+                'impots' => null,
+                'titre' => 'Comptabilité',
+                'statut' => 'pending',
+                'annee' => '2022',
+                'dateCreation' => now(),
+            ],
+            [
+                // prive4@example.com
+                'user_id' => 8,
+                'impots' => null,
                 'titre' => 'Comptabilité',
                 'statut' => 'pending',
                 'annee' => '2024',
