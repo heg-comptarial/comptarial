@@ -72,6 +72,8 @@ export default function FormulaireDeclaration({
   const [autresDeductionsData, setAutresDeductionsData] = useState(null);
   const [autresInformationsData, setAutresInformationsData] = useState(null);
   const [etapesActives, setEtapesActives] = useState<number[]>([]);
+  const stepRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({});
+
 
 
     
@@ -205,7 +207,16 @@ export default function FormulaireDeclaration({
     return `${day}.${month}.${year}`;
   };
 
-
+  useEffect(() => {
+    const currentRef = stepRefs.current[step];
+    if (currentRef) {
+      currentRef.scrollIntoView({
+        behavior: "smooth",
+        inline: "center", // scroll horizontal centré
+        block: "nearest",
+      });
+    }
+  }, [step]);
 
   // Récupérer les données de l'utilisateur et les données du privé si disponibles
   useEffect(() => {
@@ -1586,6 +1597,9 @@ return (
     <button
       key={item.step}
       onClick={() => setStep(item.step)}
+      ref={(el) => {
+        stepRefs.current[item.step] = el;
+      }}
       className={`text-sm font-medium whitespace-nowrap ${
         step === item.step ? "text-primary" : "text-muted-foreground"
       }`}
