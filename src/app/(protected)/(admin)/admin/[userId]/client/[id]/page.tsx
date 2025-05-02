@@ -40,6 +40,7 @@ import { toast, Toaster } from "sonner"
 import axios from "axios"
 import AddRubriqueDialog from "@/components/adminPage/add-rubrique"
 import ConfirmationDialog from "@/components/confirmation-dialog"
+import { downloadDocument } from "@/services/documentService"
 
 // Définition des types pour les modèles
 interface Entreprise {
@@ -66,7 +67,7 @@ interface Document {
   doc_id: number
   rubrique_id: number
   nom: string
-  type: string
+  type: "pdf" | "doc" | "xls" | "xlsx" | "ppt" | "jpeg" | "jpg" | "png" | "other"
   cheminFichier: string
   statut: "pending" | "rejected" | "approved"
   sous_rubrique?: string | null
@@ -426,60 +427,58 @@ export default function ClientDetail() {
   }
 
   const fetchAdminID = async () => {
-    const token = localStorage.getItem("auth_token");
-  
+    const token = localStorage.getItem("auth_token")
+
     if (!token) {
-      console.error("Token manquant !");
-      return null;
+      console.error("Token manquant !")
+      return null
     }
-  
+
     try {
       const response = await axios.get(`${API_URL}/admin`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
-      });
+      })
       return response.data.admin_id
     } catch (error) {
-      console.error("Erreur lors de la récupération de l'admin :", error);
+      console.error("Erreur lors de la récupération de l'admin :", error)
     }
-  };
+  }
 
   // Effet pour récupérer l'ID administrateur depuis les paramètres d'URL
   useEffect(() => {
     fetchAdminID()
       .then((id) => {
         if (id !== null) {
-          setAdminId(Number(id));
+          setAdminId(Number(id))
         }
       })
       .catch((err) => {
-        console.error("Impossible de récupérer l'admin_id :", err);
-      });
-  }, []);
+        console.error("Impossible de récupérer l'admin_id :", err)
+      })
+  }, [])
 
   // Remplacer la fonction handleYearChange par celle-ci pour corriger le problème de sélection des années
   const handleYearChange = (year: string) => {
     if (userDetails?.declarations) {
       const selected = userDetails.declarations.find((d) => {
-        const dYear =
-          d.annee?.toString() ??
-          new Date(d.dateCreation || d.dateSoumission || "").getFullYear().toString();
-        return dYear === year;
-      });
-  
+        const dYear = d.annee?.toString() ?? new Date(d.dateCreation || d.dateSoumission || "").getFullYear().toString()
+        return dYear === year
+      })
+
       if (selected) {
-        setActiveDeclaration(selected);
+        setActiveDeclaration(selected)
       }
     }
-  };
+  }
 
-  const getYearOfDeclaration = (d:Declaration) => {
+  const getYearOfDeclaration = (d: Declaration) => {
     if (d.annee != null) {
-      return d.annee.toString();
+      return d.annee.toString()
     }
-    const date = d.dateCreation || d.dateSoumission;
-    return date ? new Date(date).getFullYear().toString() : "";
+    const date = d.dateCreation || d.dateSoumission
+    return date ? new Date(date).getFullYear().toString() : ""
   }
 
   const handleUserUpdate = async () => {
@@ -544,25 +543,35 @@ export default function ClientDetail() {
     }
   }
 
-    // Remplacer la fonction handleModifierRubrique par celle-ci
-    const handleModifierRubrique = (id: string | number) => {
-      setCurrentRubriqueId(id)
-      setIsEditingRubrique(true)
+  // Remplacer la fonction handleModifierRubrique par celle-ci
+  const handleModifierRubrique = (id: string | number) => {
+    setCurrentRubriqueId(id)
+    setIsEditingRubrique(true)
+  }
+
+  // Fonction pour télécharger un document
+  const handleDownloadDocument = async (doc: Document) => {
+    try {
+      // Trouver la rubrique correspondante au document
+      let rubriqueName = "Document"
+
+      if (activeDeclaration?.rubriques) {
+        const rubrique = activeDeclaration.rubriques.find(
+          (r) => r.rubrique_id === doc.rubrique_id || r.id === doc.rubrique_id,
+        )
+        if (rubrique) {
+          rubriqueName = rubrique.titre || rubrique.nom || "Document"
+        }
+      } else if (doc.rubriqueNom) {
+        rubriqueName = doc.rubriqueNom
+      }
+
+      await downloadDocument(doc, rubriqueName)
+      toast.success(`Téléchargement de ${doc.nom} démarré`)
+    } catch (err) {
+      console.error("Erreur lors du téléchargement:", err)
+      toast.error("Erreur lors du téléchargement du document")
     }
-
-  const handleDownloadDocument = (documentPath: string, documentName: string) => {
-    // Dans un environnement réel, vous devriez vérifier si le chemin est complet ou relatif
-    const downloadUrl = documentPath.startsWith("http")
-      ? documentPath
-      : `${API_URL}/documents/download?path=${encodeURIComponent(documentPath)}`
-
-    // Créer un élément a temporaire pour déclencher le téléchargement
-    const link = document.createElement("a")
-    link.href = downloadUrl
-    link.download = documentName
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
   }
 
   // Fonction pour valider la déclaration sans les documents
@@ -620,20 +629,23 @@ export default function ClientDetail() {
 
     try {
       // Envoi de la requête PATCH pour valider la déclaration et les documents
-      const response = await fetch(`${API_URL}/declarations/${pendingDeclarationAction.declarationId}/validateDecEtDoc`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
+      const response = await fetch(
+        `${API_URL}/declarations/${pendingDeclarationAction.declarationId}/validateDecEtDoc`,
+        {
+          method: "PATCH",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            approve_all_documents: true, // Indiquer qu'on souhaite valider tous les documents
+          }),
         },
-        body: JSON.stringify({
-          approve_all_documents: true, // Indiquer qu'on souhaite valider tous les documents
-        }),
-      })
+      )
 
       if (!response.ok) {
-        const errorData = await response.json();
-        toast.error(errorData.message || "Erreur lors de la validation de la déclaration et des documents");
-        return;
+        const errorData = await response.json()
+        toast.error(errorData.message || "Erreur lors de la validation de la déclaration et des documents")
+        return
       }
 
       toast.success("Déclaration et documents validés avec succès")
@@ -664,6 +676,13 @@ export default function ClientDetail() {
       setConfirmationDialogOpen(false)
       setPendingDeclarationAction(null)
     }
+  }
+
+  // Fonction pour gérer la soumission réussie du formulaire
+  const handleFormSubmitSuccess = async (formData: any) => {
+    toast.success("Formulaire soumis avec succès")
+    await refreshUserData()
+    return true
   }
 
   if (loading || !userId) {
@@ -781,7 +800,6 @@ export default function ClientDetail() {
                         <option value="rejected">Refusé</option>
                         <option value="archived">Archivé</option>
                       </select>
-                    
                     </div>
                     <Button onClick={handleUserUpdate} disabled={isSaving} className="w-full">
                       {isSaving ? (
@@ -925,9 +943,7 @@ export default function ClientDetail() {
                         <div className="flex flex-wrap gap-2">
                           {declarationYears.map((year) => {
                             // Déterminer si ce bouton correspond à l'année active
-                            const isActive =
-                            activeDeclaration &&
-                            getYearOfDeclaration(activeDeclaration) === year;
+                            const isActive = activeDeclaration && getYearOfDeclaration(activeDeclaration) === year
 
                             return (
                               <Button
@@ -985,20 +1001,6 @@ export default function ClientDetail() {
                                     <AlertTriangle className="h-4 w-4 mr-1" />
                                     En attente
                                   </Button>
-                                  {/*<Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
-                                    onClick={() =>
-                                      handleDeclarationStatusChange(
-                                        activeDeclaration.declaration_id || activeDeclaration.id || 0,
-                                        "rejected",
-                                      )
-                                    }
-                                  >
-                                    <XCircle className="h-4 w-4 mr-1" />
-                                    Refuser
-                                  </Button>*/}
                                 </div>
                               </div>
                             </div>
@@ -1064,12 +1066,7 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() =>
-                                                          handleDownloadDocument(
-                                                            doc.cheminFichier || doc.chemin || "",
-                                                            doc.nom,
-                                                          )
-                                                        }
+                                                        onClick={() => handleDownloadDocument(doc)}
                                                       >
                                                         <Download className="h-4 w-4" />
                                                       </Button>
@@ -1216,13 +1213,7 @@ export default function ClientDetail() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                   <div className="flex justify-end gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() =>
-                                        handleDownloadDocument(doc.cheminFichier || doc.chemin || "", doc.nom)
-                                      }
-                                    >
+                                    <Button variant="ghost" size="icon" onClick={() => handleDownloadDocument(doc)}>
                                       <Download className="h-4 w-4" />
                                     </Button>
 
@@ -1301,6 +1292,26 @@ export default function ClientDetail() {
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              <TabsContent value="formilaire">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Formulaire de déclaration</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {userDetails.prives ? (
+                      <FormulaireDeclaration
+                        priveId={userDetails.prives.id}
+                        onSubmitSuccess={handleFormSubmitSuccess}
+                      />
+                    ) : (
+                      <div className="text-center py-8">
+                        <p>Ce client n'a pas de profil privé associé.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </Tabs>
           </div>
         </div>
@@ -1330,6 +1341,4 @@ export default function ClientDetail() {
       />
     </ProtectedRouteAdmin>
   )
-
-
 }
