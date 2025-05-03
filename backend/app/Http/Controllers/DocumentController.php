@@ -128,4 +128,13 @@ class DocumentController extends Controller
         return response()->json($document->commentaires);
     }
 
+    public function getDocumentsWithRubrique()
+    {
+        // Récupère tous les documents et inclut la relation 'rubrique'
+        $documents = Document::with('rubrique')->get();
+
+        return response()->json($documents);
+    }
+
+
 }

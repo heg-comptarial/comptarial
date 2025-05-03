@@ -2,8 +2,8 @@
 
 import type React from "react"
 
+import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
-import { useParams, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -40,7 +40,6 @@ import { toast, Toaster } from "sonner"
 import axios from "axios"
 import AddRubriqueDialog from "@/components/adminPage/add-rubrique"
 import ConfirmationDialog from "@/components/confirmation-dialog"
-import { downloadDocument } from "@/services/documentService"
 
 // Définition des types pour les modèles
 interface Entreprise {
@@ -76,8 +75,7 @@ interface Document {
   chemin?: string // Alias pour cheminFichier
   dateUpload?: string // Alias pour dateCreation
   commentaire?: string // Ajouté pour les commentaires
-  taille?: number // Conservé pour la compatibilité
-  // Propriétés calculées pour l'affichage
+  taille?: number 
   rubriqueNom?: string
   annee?: number | string
 }
@@ -549,30 +547,64 @@ export default function ClientDetail() {
     setIsEditingRubrique(true)
   }
 
-  // Fonction pour télécharger un document
-  const handleDownloadDocument = async (doc: Document) => {
+
+  const handleDownloadDocument = async (doc: Document, rubriqueName: string) => {
     try {
-      // Trouver la rubrique correspondante au document
-      let rubriqueName = "Document"
-
-      if (activeDeclaration?.rubriques) {
-        const rubrique = activeDeclaration.rubriques.find(
-          (r) => r.rubrique_id === doc.rubrique_id || r.id === doc.rubrique_id,
-        )
-        if (rubrique) {
-          rubriqueName = rubrique.titre || rubrique.nom || "Document"
-        }
-      } else if (doc.rubriqueNom) {
-        rubriqueName = doc.rubriqueNom
+      // Vérifie que le document a un nom valide
+      const fileName = doc.nom || "document_inconnu"; // Valeur par défaut si doc.nom est absent
+      const rubriqueNom = doc.rubriqueNom || rubriqueName || "rubrique_unknown"; // Valeur par défaut si rubriqueNom est undefined
+  
+      const year = new Date(doc.dateCreation ?? new Date()).getFullYear().toString();
+      const userId = localStorage.getItem("user_id");
+      if (!userId) {
+        console.error("Utilisateur non connecté");
+        alert("Utilisateur non connecté. Impossible de télécharger le fichier.");
+        return;
       }
-
-      await downloadDocument(doc, rubriqueName)
-      toast.success(`Téléchargement de ${doc.nom} démarré`)
-    } catch (err) {
-      console.error("Erreur lors du téléchargement:", err)
-      toast.error("Erreur lors du téléchargement du document")
+  
+      // Prépare les paramètres pour l'API
+      const params = new URLSearchParams({
+        fileName,
+        year,
+        userId,
+        rubriqueName: rubriqueNom,
+      });
+  
+      console.log("Paramètres envoyés à l'API pour le téléchargement :", params.toString());
+  
+      // Envoie la requête pour télécharger le fichier
+      const response = await axios.get(`/api/download?${params.toString()}`, {
+        responseType: "blob", // Indique que la réponse est un fichier binaire
+      });
+  
+      // Crée un objet Blob pour le fichier téléchargé
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+  
+      // Crée un lien temporaire pour déclencher le téléchargement
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName; // Utilise le nom du fichier
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+  
+      // Libère l'URL créée
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Erreur lors du téléchargement :", error);
+  
+      // Gestion des erreurs spécifiques
+      if (axios.isAxiosError(error) && error.response) {
+        const errorMessage = error.response.data.message || "Erreur lors du téléchargement du fichier.";
+        alert(errorMessage);
+      } else {
+        alert("Le téléchargement a échoué. Veuillez réessayer.");
+      }
     }
-  }
+  };
+  
+  
 
   // Fonction pour valider la déclaration sans les documents
   const validateDeclarationOnly = async () => {
@@ -709,6 +741,7 @@ export default function ClientDetail() {
       </ProtectedRouteAdmin>
     )
   }
+
 
   return (
     <ProtectedRouteAdmin>
@@ -1066,7 +1099,7 @@ export default function ClientDetail() {
                                                       <Button
                                                         variant="ghost"
                                                         size="icon"
-                                                        onClick={() => handleDownloadDocument(doc)}
+                                                        onClick={() => handleDownloadDocument(doc, rubrique.titre)}
                                                       >
                                                         <Download className="h-4 w-4" />
                                                       </Button>
@@ -1213,7 +1246,7 @@ export default function ClientDetail() {
                                 </TableCell>
                                 <TableCell className="text-right">
                                   <div className="flex justify-end gap-1">
-                                    <Button variant="ghost" size="icon" onClick={() => handleDownloadDocument(doc)}>
+                                    <Button variant="ghost" size="icon" onClick={() => handleDownloadDocument(doc, doc.rubriqueNom || "rubrique_unknown")}>
                                       <Download className="h-4 w-4" />
                                     </Button>
 

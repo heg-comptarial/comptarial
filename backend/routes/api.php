@@ -65,6 +65,9 @@ Route::apiResource('documents', DocumentController::class);
 // Mettre à jour le statut d'un document
 //Route::patch('/documents/{id}/status', [DocumentController::class, 'updateStatus']);
 
+// getDocumentsWithRubrique 
+Route::get('/documents/rubriques', [DocumentController::class, 'getDocumentsWithRubrique']);
+
 // Routes pour les commentaires
 Route::apiResource('commentaires', CommentaireController::class);
 
