@@ -88,6 +88,10 @@ Route::apiResource('notifications', NotificationController::class);
 // Routes pour les entités privées
 Route::apiResource('prives', PriveController::class);
 
+// Routes pour les formulaires privés
+Route::get('/prives/complet/{userId}', [PriveController::class, 'getFormulairesPrive']);
+
+
 // Routes pour les conjoints
 Route::apiResource('conjoints', ConjointController::class);
 
