@@ -19,8 +19,7 @@ class RubriqueController extends Controller
         // Valide les données
         $request->validate([
             'declaration_id' => 'required|exists:declaration,declaration_id',
-            'titre' => 'required|string|max:255',
-            'description' => 'required|string|max:500',
+            'titre' => 'required|string|max:255'
         ]);
     
         // Vérifie s'il existe déjà une rubrique avec le même titre pour cette déclaration
@@ -50,8 +49,7 @@ class RubriqueController extends Controller
     {
         // Valide les données
         $request->validate([
-            'titre' => 'string|max:255',
-            'description' => 'string|max:500',
+            'titre' => 'string|max:255'
         ]);
 
         // Met à jour une rubrique

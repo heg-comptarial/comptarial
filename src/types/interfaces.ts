@@ -23,7 +23,6 @@ export interface Rubrique {
   rubrique_id: number;
   declaration_id: number;
   titre: string;
-  description: string;
   documents?: Document[];
 }
 
@@ -31,6 +30,7 @@ export interface Declaration {
   declaration_id: number;
   user_id: number;
   titre: string;
+  impots: string;
   statut: "pending" | "rejected" | "approved";
   annee: string;
   dateCreation: string;

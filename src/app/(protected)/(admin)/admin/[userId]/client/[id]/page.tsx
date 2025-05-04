@@ -21,6 +21,7 @@ import {
   Save,
   Loader2,
   Plus,
+  Trash2,
 } from "lucide-react"
 import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin"
 import { Separator } from "@/components/ui/separator"
@@ -40,6 +41,8 @@ import { toast, Toaster } from "sonner"
 import axios from "axios"
 import AddRubriqueDialog from "@/components/adminPage/add-rubrique"
 import ConfirmationDialog from "@/components/confirmation-dialog"
+import CreateDeclarationDialog from "@/components/adminPage/declaration-dialog"
+import { set } from "date-fns"
 
 // Définition des types pour les modèles
 interface Entreprise {
@@ -86,7 +89,6 @@ interface Rubrique {
   rubrique_id: number
   declaration_id: number
   titre: string
-  description: string
   // Propriétés supplémentaires pour la compatibilité avec le code existant
   id?: number // Alias pour rubrique_id
   nom?: string // Alias pour titre
@@ -101,6 +103,7 @@ interface Declaration {
   statut: "pending" | "approved"
   annee: number | string
   dateCreation: string
+  impots:string
   // Propriétés supplémentaires pour la compatibilité avec le code existant
   id?: number // Alias pour declaration_id
   dateSoumission?: string // Alias pour dateCreation
@@ -125,6 +128,10 @@ interface UserDetails {
 }
 
 export default function ClientDetail() {
+  const [openCreateDialog, setOpenCreateDialog] = useState(false)
+  const [titre, setTitre] = useState("")
+  const [annee, setAnnee] = useState("")
+
   const params = useParams()
   const router = useRouter()
   const userId = params.id as string
@@ -157,61 +164,121 @@ export default function ClientDetail() {
   // Ajouter ces états pour gérer la modification de rubrique
   const [isEditingRubrique, setIsEditingRubrique] = useState(false)
   const [currentRubriqueId, setCurrentRubriqueId] = useState<number | string | null>(null)
+  const [isCreatingDeclaration, setIsCreatingDeclaration] = useState(false)
+  const [isEditingImpots, setIsEditingImpots] = useState(false);
+const [editedImpots, setEditedImpots] = useState(activeDeclaration?.impots || "");
+const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
+
+  // Liste des titres possibles pour une déclaration
+  const TITLES = ["Déclaration, Comptabilité", "TVA", "Salaires", "Administration", "Fiscalité", "Divers"]
+
+
+  const handleUpdateImpots = async (declarationId: number, newImpots: string) => {
+    try {
+      const response = await axios.patch(`${API_URL}/declarations/${declarationId}`, {
+        impots: newImpots,
+      });
+  
+      if (response.status === 200) {
+        toast.success("Montant des impôts mis à jour avec succès !");
+        await refreshUserData(); // Rafraîchir les données utilisateur
+      } else {
+        toast.error("Erreur lors de la mise à jour des impôts.");
+      }
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour des impôts :", error);
+      toast.error("Erreur lors de la mise à jour des impôts.");
+    }
+  };
 
   // Fonction pour rafraîchir les données utilisateur
   const refreshUserData = async () => {
     try {
-      const response = await axios.get(`${API_URL}/users/${userId}/full-data`)
-      const data = response.data
+      console.log("Données utilisateur sans màj:", userDetails);
+
+      // Conserver l'année active avant le rafraîchissement
+      const activeYear = activeDeclaration ? getYearOfDeclaration(activeDeclaration) : null;
+
+      // Récupérer les données utilisateur depuis l'API
+      const response = await axios.get(`${API_URL}/users/${userId}/full-data`);
+      const data = response.data;
 
       if (data.success) {
-        setUserDetails(data.data)
+        console.log("Données utilisateur mises à jour avec succès:", data.data);
 
-        // Mettre à jour la déclaration active si nécessaire
-        if (activeDeclaration && data.data.declarations) {
-          const updatedActiveDeclaration = data.data.declarations.find(
-            (d: Declaration) => d.id === activeDeclaration.id || d.declaration_id === activeDeclaration.declaration_id,
-          )
+        // Trier les déclarations par année (du plus grand au plus petit)
+        const sortedDeclarations = data.data.declarations.sort(
+          (a: Declaration, b: Declaration) => Number(b.annee) - Number(a.annee)
+        );
+
+        // Mettre à jour les données utilisateur avec les déclarations triées
+        setUserDetails({ ...data.data, declarations: sortedDeclarations });
+
+        console.log("Données utilisateur avec màj:", userDetails);
+
+        // Rétablir la déclaration active en fonction de l'année
+        if (activeYear && sortedDeclarations) {
+          const updatedActiveDeclaration = sortedDeclarations.find(
+            (d: Declaration) => getYearOfDeclaration(d) === activeYear
+          );
           if (updatedActiveDeclaration) {
-            setActiveDeclaration(updatedActiveDeclaration)
+            setActiveDeclaration(updatedActiveDeclaration);
           }
         }
       } else {
-        toast.error(data.message || "Erreur lors du rechargement des données")
+        toast.error(data.message || "Erreur lors du rechargement des données");
       }
+
+      if (data.data.declarations && data.data.declarations.length > 0) {
+        const years = data.data.declarations.map((d: Declaration) =>
+          d.annee ? d.annee.toString() : new Date(d.dateCreation || d.dateSoumission || "").getFullYear().toString(),
+        )
+      
+        const uniqueSortedYears = Array.from(new Set(years) as Set<string>).sort((a, b) => parseInt(b) - parseInt(a))
+      
+        setDeclarationYears(uniqueSortedYears)
+      } 
     } catch (error) {
-      console.error("Erreur lors de la récupération des données:", error)
-      toast.error("Erreur lors du rechargement des données utilisateur")
+      console.error("Erreur lors de la récupération des données:", error);
+      toast.error("Erreur lors du rechargement des données utilisateur");
     }
   }
 
   useEffect(() => {
     const fetchUserDetails = async () => {
       try {
-        setLoading(true)
-        const response = await axios.get(`${API_URL}/users/${userId}/full-data`)
-
-        const data = response.data
+        setLoading(true);
+        const response = await axios.get(`${API_URL}/users/${userId}/full-data`);
+    
+        const data = response.data;
         if (!data.success) {
-          throw new Error(data.message || "Erreur lors de la récupération des données")
+          throw new Error(data.message || "Erreur lors de la récupération des données");
         }
-
-        setUserDetails(data.data)
-        setEditedUser(data.data)
-
-        // Extraire les années des déclarations
+    
+        setUserDetails(data.data);
+        setEditedUser(data.data);
+    
+        // Extraire les années des déclarations et définir la déclaration active
         if (data.data.declarations && data.data.declarations.length > 0) {
-          const years = data.data.declarations.map((d: Declaration) =>
-            d.annee ? d.annee.toString() : new Date(d.dateCreation || d.dateSoumission || "").getFullYear().toString(),
-          )
-          setDeclarationYears(Array.from(new Set(years))) // Éliminer les doublons
-          setActiveDeclaration(data.data.declarations[0])
+          const sortedDeclarations = data.data.declarations.sort(
+            (a: Declaration, b: Declaration) => Number(b.annee) - Number(a.annee)
+          );
+    
+          const years = sortedDeclarations.map((d: Declaration) =>
+            d.annee ? d.annee.toString() : new Date(d.dateCreation || d.dateSoumission || "").getFullYear().toString()
+          );
+    
+          const uniqueSortedYears = Array.from(new Set(years) as Set<string>);
+          setDeclarationYears(uniqueSortedYears);
+    
+          // Définir la déclaration avec l'année la plus grande comme active
+          setActiveDeclaration(sortedDeclarations[0]);
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des détails de l'utilisateur :", error)
-        toast.error("Erreur lors du chargement des données utilisateur")
+        console.error("Erreur lors de la récupération des détails de l'utilisateur :", error);
+        toast.error("Erreur lors du chargement des données utilisateur");
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
     }
 
@@ -663,6 +730,46 @@ export default function ClientDetail() {
     }
   }
 
+  // Fonction pour créer une nouvelle déclaration
+  const handleCreateDeclaration = async (titre: string, annee: string) => {
+    setIsCreatingDeclaration(true)
+    try {
+      const response = await axios.post(`http://127.0.0.1:8000/api/declarations`, {
+        user_id: userId,
+        titre,
+        statut: "pending",
+        annee,
+      })
+
+      if (response.status === 201) {
+        toast.success(`Déclaration "${titre}" créée avec succès !`)
+        await refreshUserData()
+      } else {
+        toast.error("Erreur lors de la création de la déclaration.")
+      }
+    } catch (error) {
+      console.error("Erreur lors de la création de la déclaration:", error)
+      toast.error("Erreur lors de la création de la déclaration.")
+    } finally {
+      setIsCreatingDeclaration(false)
+    }
+  }
+
+  // Fonction pour supprimer une déclaration
+  const handleDeleteDeclaration = async (declarationId: number) => {
+    const confirmed = window.confirm("Voulez-vous vraiment supprimer cette déclaration ?")
+    if (!confirmed) return
+
+    try {
+      await axios.delete(`${API_URL}/declarations/${declarationId}`)
+      toast.success("Déclaration supprimée avec succès !")
+      await refreshUserData()
+    } catch (error) {
+      console.error("Erreur lors de la suppression de la déclaration:", error)
+      toast.error("Erreur lors de la suppression de la déclaration.")
+    }
+  }
+
   if (loading || !userId) {
     return (
       <ProtectedRouteAdmin>
@@ -687,6 +794,10 @@ export default function ClientDetail() {
       </ProtectedRouteAdmin>
     )
   }
+
+  // Déterminer les titres disponibles pour la création
+  const existingTitles = userDetails.declarations?.map((d) => d.titre) || []
+  const availableTitles = TITLES.filter((title) => !existingTitles.includes(title))
 
   return (
     <ProtectedRouteAdmin>
@@ -878,22 +989,54 @@ export default function ClientDetail() {
                 <TabsTrigger value="declarations">Déclarations</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
               </TabsList>
+              <Button
+                  variant="outline"
+                  size="sm"
+                  className="flex items-center gap-1"
+                  onClick={() => setOpenCreateDialog(true)}
+                >
+                  <Plus className="h-4 w-4" />
+                  Créer une nouvelle déclaration
+                </Button>
+
+              <CreateDeclarationDialog
+                isOpen={openCreateDialog}
+                onClose={() => setOpenCreateDialog(false)}
+                onDeclarationAdded={refreshUserData}
+                userId={userId}
+              />
 
               <TabsContent value="declarations">
                 <Card>
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-lg">Déclarations</CardTitle>
                     {activeDeclaration && (
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setIsAddingRubrique(true)}
-                        className="flex items-center gap-1"
-                      >
-                        <Plus className="h-4 w-4" />
-                        Ajouter une rubrique
-                      </Button>
-                    )}
+        <div className="flex gap-2">
+          <Button
+        variant="outline"
+        size="sm"
+        className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
+        onClick={async () => {
+            await handleDeleteDeclaration(activeDeclaration.declaration_id || activeDeclaration.id || 0);
+            await refreshUserData();
+            setActiveDeclaration(null);
+        }}
+      >
+        <Trash2 className="h-4 w-4" />
+        Supprimer
+      </Button>
+          
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setIsAddingRubrique(true)}
+            className="flex items-center gap-1"
+          >
+            <Plus className="h-4 w-4" />
+            Ajouter une rubrique
+          </Button>
+        </div>
+      )}
                   </CardHeader>
                   <CardContent>
                     {!userDetails.declarations || userDetails.declarations.length === 0 ? (
@@ -922,6 +1065,67 @@ export default function ClientDetail() {
                             )
                           })}
                         </div>
+
+                        <Dialog open={isImpotsDialogOpen} onOpenChange={setIsImpotsDialogOpen}></Dialog>
+{/* Affichage ou modification des impôts */}
+{activeDeclaration && (
+  <div className="text-lg font-semibold text-primary flex items-center gap-2">
+    <p>
+      Montant des impôts :{" "}
+      <span className="font-bold">{activeDeclaration.impots || "Non renseigné"}</span>
+    </p>
+    <Button
+      variant="outline"
+      size="sm"
+      onClick={() => {
+        setIsImpotsDialogOpen(true);
+        setEditedImpots(activeDeclaration?.impots || "");
+      }}
+    >
+      Modifier
+    </Button>
+  </div>
+)}
+
+{/* Dialogue pour modifier les impôts */}
+<Dialog open={isImpotsDialogOpen} onOpenChange={setIsImpotsDialogOpen}>
+  <DialogContent>
+    <DialogHeader>
+      <DialogTitle>Modifier le montant des impôts</DialogTitle>
+      <DialogDescription>
+        Saisissez le nouveau montant des impôts pour cette déclaration.
+      </DialogDescription>
+    </DialogHeader>
+    <div className="py-4">
+      <Input
+        type="text"
+        value={editedImpots}
+        onChange={(e) => setEditedImpots(e.target.value)}
+        placeholder="Entrez le montant des impôts"
+        className="w-full"
+      />
+    </div>
+    <DialogFooter>
+      <Button
+        variant="outline"
+        onClick={() => {
+          setIsImpotsDialogOpen(false);
+          setEditedImpots(activeDeclaration?.impots || "");
+        }}
+      >
+        Annuler
+      </Button>
+      <Button
+        onClick={async () => {
+          await handleUpdateImpots(activeDeclaration?.declaration_id || 0, editedImpots);
+          setIsImpotsDialogOpen(false);
+        }}
+      >
+        Enregistrer
+      </Button>
+    </DialogFooter>
+  </DialogContent>
+</Dialog>
 
                         {activeDeclaration && (
                           <div className="space-y-4">
@@ -1009,7 +1213,9 @@ export default function ClientDetail() {
                                         className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
                                         variant="outline"
                                         size="sm"
-                                        onClick={() => handleDeleteRubrique(rubrique.rubrique_id)}
+                                        onClick={() => {
+                                          handleDeleteRubrique(rubrique.rubrique_id);
+                                        }}
                                       >
                                         Supprimer
                                       </Button>
@@ -1061,6 +1267,7 @@ export default function ClientDetail() {
                                                             <MessageSquare className="h-4 w-4" />
                                                           </Button>
                                                         </DialogTrigger>
+
                                                         <DialogContent>
                                                           <DialogHeader>
                                                             <DialogTitle>Ajouter un commentaire</DialogTitle>

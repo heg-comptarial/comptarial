@@ -97,7 +97,7 @@ class DeclarationSeeder extends Seeder
                 'impots' => null,
                 'titre' => 'Comptabilité',
                 'statut' => 'pending',
-                'annee' => '2022',
+                'annee' => '2021',
                 'dateCreation' => now(),
             ],
             [

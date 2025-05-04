@@ -45,6 +45,8 @@ export default function DeclarationsClientPage() {
             ? declarations.filter((d: Declaration) => d.titre === typeFromUrl)
             : declarations;
 
+            console.log("Filtered Declarations: ", filteredDeclarations);
+
         setUserDeclarations(filteredDeclarations);
 
         const years = filteredDeclarations.map((d: Declaration) => d.annee);
@@ -275,6 +277,13 @@ export default function DeclarationsClientPage() {
           <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
           {declaration?.statut && getStatusBadge(declaration.statut)}
         </div>
+
+        {/* Affichage du montant des impôts */}
+        {declaration?.impots && (
+          <p className="text-lg text-muted-foreground">
+            Montant des impôts : <span className="font-semibold">{declaration.impots}</span>
+          </p>
+        )}
 
         {declaration?.rubriques?.length ? (
           <Accordion
