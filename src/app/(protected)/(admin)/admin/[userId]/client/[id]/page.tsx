@@ -40,6 +40,8 @@ import { toast, Toaster } from "sonner"
 import axios from "axios"
 import AddRubriqueDialog from "@/components/adminPage/add-rubrique"
 import ConfirmationDialog from "@/components/confirmation-dialog"
+import FormulairePrive from "@/components/adminPage/formulaire-prive"
+
 
 // Définition des types pour les modèles
 interface Entreprise {
@@ -1327,14 +1329,14 @@ export default function ClientDetail() {
               </TabsContent>
 
               <TabsContent value="formilaire">
-                <Card>
+              <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Formulaire de déclaration</CardTitle>
+                    <CardTitle className="text-lg">Formulaire de {userDetails.nom}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {userDetails.prives ? (
-                      <FormulaireDeclaration
-                        priveId={userDetails.prives.id}
+                    {userDetails.user_id ? (
+                      <FormulairePrive
+                        userId={userDetails.user_id}
                         onSubmitSuccess={handleFormSubmitSuccess}
                       />
                     ) : (
