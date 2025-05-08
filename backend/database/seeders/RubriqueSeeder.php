@@ -34,6 +34,14 @@ class RubriqueSeeder extends Seeder
                 'declaration_id' => 7,
                 'titre' => 'Salariés',
             ],
+            [
+                'declaration_id' => 8,
+                'titre' => 'Immobiliers',
+            ],
+            [
+                'declaration_id' => 8,
+                'titre' => 'Salariés',
+            ],
         ]);
     }
 }
