@@ -31,29 +31,42 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 class Conjoint extends Model
 {
 	use HasFactory;
-	protected $table = 'conjoint';
-	protected $primaryKey = 'conjoint_id';
-	public $timestamps = false;
 
-	protected $casts = [
-		'prive_id' => 'int',
-		'dateNaissance' => 'datetime'
-	];
+    // Nom de la table associée
+    protected $table = 'conjoint';
 
-	protected $fillable = [
-		'prive_id',
-		'nom',
-		'prenom',
-		'nationalite',
-		'dateNaissance',
-		'localite',
-		'adresse',
-		'codePostal',
-		'situationProfessionnelle'
-	];
+    // Clé primaire
+    protected $primaryKey = 'conjoint_id';
 
-	public function prive()
-	{
-		return $this->belongsTo(Prive::class, 'prive_id');
-	}
+    // Désactiver les timestamps automatiques
+    public $timestamps = false;
+
+    // Cast des colonnes
+    protected $casts = [
+        'prive_id' => 'int',
+        'dateNaissance' => 'datetime',
+    ];
+
+    // Attributs pouvant être remplis en masse
+    protected $fillable = [
+        'prive_id',
+        'nom',
+        'prenom',
+        'email',
+        'localite',
+        'adresse',
+        'codePostal',
+        'numeroTelephone',
+        'etatCivil',
+        'dateNaissance',
+        'nationalite',
+        'professionExercee',
+        'contributionReligieuse',
+    ];
+
+    // Relation avec le modèle Prive
+    public function prive()
+    {
+        return $this->belongsTo(Prive::class, 'prive_id');
+    }
 }

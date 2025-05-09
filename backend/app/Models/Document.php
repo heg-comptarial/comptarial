@@ -29,33 +29,43 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  */
 class Document extends Model
 {
-	use HasFactory;
-	protected $table = 'document';
-	protected $primaryKey = 'doc_id';
-	public $timestamps = false;
+    use HasFactory;
 
-	protected $casts = [
-		'rubrique_id' => 'int',
-		'dateCreation' => 'datetime'
-	];
+    // Nom de la table associée
+    protected $table = 'document';
 
-	protected $fillable = [
-		'rubrique_id',
-		'nom',
-		'type',
-		'cheminFichier',
-		'statut',
-		'sous_rubrique',
-		'dateCreation'
-	];
+    // Clé primaire
+    protected $primaryKey = 'doc_id';
 
-	public function rubrique()
-	{
-		return $this->belongsTo(Rubrique::class, 'rubrique_id');
-	}
+    // Désactiver les timestamps automatiques
+    public $timestamps = false;
 
-	public function commentaires()
-	{
-		return $this->hasMany(Commentaire::class, 'document_id');
-	}
+    // Cast des colonnes
+    protected $casts = [
+        'rubrique_id' => 'int',
+        'dateCreation' => 'datetime',
+    ];
+
+    // Attributs pouvant être remplis en masse
+    protected $fillable = [
+        'rubrique_id',
+        'nom',
+        'type',
+        'cheminFichier',
+        'statut',
+        'sous_rubrique',
+        'dateCreation',
+    ];
+
+    // Relation avec le modèle Rubrique
+    public function rubrique()
+    {
+        return $this->belongsTo(Rubrique::class, 'rubrique_id');
+    }
+
+    // Relation avec le modèle Commentaire
+    public function commentaires()
+    {
+        return $this->hasMany(Commentaire::class, 'document_id');
+    }
 }

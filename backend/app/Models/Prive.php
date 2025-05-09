@@ -24,7 +24,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property bool $fo_immobiliers
  * @property bool $fo_salarie
  * @property bool $fo_autrePersonneCharge
- * @property bool $fo_independant
  * @property bool $fo_rentier
  * @property bool $fo_autreRevenu
  * @property bool $fo_assurance
@@ -46,18 +45,20 @@ class Prive extends Model
 
 	protected $casts = [
 		'user_id' => 'int',
-		'dateNaissance' => 'date:Y-m-d',
-		'fo_banques' => 'bool',
-		'fo_dettes' => 'bool',
-		'fo_immobiliers' => 'bool',
-		'fo_salarie' => 'bool',
-		'fo_autrePersonneCharge' => 'bool',
-		'fo_independant' => 'bool',
-		'fo_rentier' => 'bool',
-		'fo_autreRevenu' => 'bool',
-		'fo_assurance' => 'bool',
-		'fo_autreDeduction' => 'bool',
-		'fo_autreInformations' => 'bool'
+		'dateNaissance' => 'datetime',
+		'fo_enfants' => 'boolean',
+		'fo_autrePersonneCharge' => 'boolean',
+		'fo_revenu' => 'boolean',
+		'fo_indemnitesAssurance' => 'boolean',
+		'fo_rentier' => 'boolean',
+		'fo_autresRevenus' => 'boolean',
+		'fo_banques' => 'boolean',
+		'fo_titres' => 'boolean',
+		'fo_immobiliers' => 'boolean',
+		'fo_dettes' => 'boolean',
+		'fo_assurances' => 'boolean',
+		'fo_autresDeductions' => 'boolean',
+		'fo_autresInformations' => 'boolean',
 	];
 
 	protected $fillable = [
@@ -65,17 +66,19 @@ class Prive extends Model
 		'dateNaissance',
 		'nationalite',
 		'etatCivil',
-		'fo_banques',
-		'fo_dettes',
-		'fo_immobiliers',
-		'fo_salarie',
+		'fo_enfants',
 		'fo_autrePersonneCharge',
-		'fo_independant',
+		'fo_revenu',
+		'fo_indemnitesAssurance',
 		'fo_rentier',
-		'fo_autreRevenu',
-		'fo_assurance',
-		'fo_autreDeduction',
-		'fo_autreInformations'
+		'fo_autresRevenus',
+		'fo_banques',
+		'fo_titres',
+		'fo_immobiliers',
+		'fo_dettes',
+		'fo_assurances',
+		'fo_autresDeductions',
+		'fo_autresInformations',
 	];
 
 	public function user()
