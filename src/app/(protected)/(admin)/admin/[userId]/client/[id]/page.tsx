@@ -53,7 +53,8 @@ import { toast, Toaster } from "sonner";
 import axios from "axios";
 import AddRubriqueDialog from "@/components/adminPage/add-rubrique";
 import ConfirmationDialog from "@/components/confirmation-dialog";
-import AdminDocumentUploader from "@/components/adminPage/AdminDocumentUploader";
+import DocumentUpload from "@/components/protected/declarations-client/features/documents/DocumentUpload";
+import type { DocumentUploadProps } from "@/types/interfaces";
 
 // Définition des types pour les modèles
 interface Entreprise {
@@ -180,6 +181,10 @@ export default function ClientDetail() {
   const [uploadVisible, setUploadVisible] = useState<{
     [rubriqueId: number]: boolean;
   }>({});
+
+  const [adminSelectedFiles, setAdminSelectedFiles] = useState<
+    { file: File; rubriqueId: number }[]
+  >([]);
 
   // Fonction pour rafraîchir les données utilisateur
   const refreshUserData = async () => {
@@ -696,6 +701,83 @@ export default function ClientDetail() {
     } catch (err) {
       console.error("Erreur de suppression", err);
       toast.error("Erreur lors de la suppression du document");
+    }
+  };
+
+  const rubriqueMap = Object.fromEntries(
+    (activeDeclaration?.rubriques || []).map((r) => [
+      r.rubrique_id,
+      r.titre || r.nom || "",
+    ])
+  );
+
+  const handleAdminFilesSelected = (rubriqueId: number, files: File[]) => {
+    setAdminSelectedFiles((prev) => [
+      ...prev,
+      ...files.map((file) => ({ file, rubriqueId })),
+    ]);
+  };
+
+  const handleAdminFileRemoved = (fileId: string) => {
+    setAdminSelectedFiles((prev) =>
+      prev.filter((f) => f.file.name + f.file.size !== fileId)
+    );
+  };
+
+  const uploadAdminDocuments = async () => {
+    if (adminSelectedFiles.length === 0) {
+      toast.warning("Aucun fichier à enregistrer");
+      return;
+    }
+
+    try {
+      for (const { file, rubriqueId } of adminSelectedFiles) {
+        const formData = new FormData();
+        formData.append("file", file);
+        formData.append("rubriqueId", rubriqueId.toString());
+        formData.append("rubriqueName", rubriqueMap[rubriqueId] || "");
+        formData.append("userId", userDetails?.user_id.toString() || "");
+        formData.append("year", activeDeclaration?.annee?.toString() || "");
+
+        const uploadRes = await fetch("/api/upload", {
+          method: "POST",
+          body: formData,
+        });
+        if (!uploadRes.ok)
+          throw new Error(`Échec de l'upload pour ${file.name}`);
+
+        const uploaded = await uploadRes.json();
+        const extension =
+          uploaded.fileType?.split("/").pop()?.toLowerCase() || "other";
+
+        const payload = {
+          documents: [
+            {
+              rubrique_id: rubriqueId,
+              nom: uploaded.fileName,
+              type: extension,
+              cheminFichier: uploaded.key,
+              statut: "pending",
+              sous_rubrique: rubriqueMap[rubriqueId] || "",
+            },
+          ],
+        };
+
+        const res = await fetch(`${API_URL}/documents`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+
+        if (!res.ok) throw new Error("Erreur enregistrement BDD");
+      }
+
+      toast.success("Documents enregistrés avec succès");
+      setAdminSelectedFiles([]);
+      await refreshUserData();
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur pendant l'envoi ou l'enregistrement");
     }
   };
 
@@ -1470,7 +1552,7 @@ export default function ClientDetail() {
                                           </p>
                                         </div>
                                       )}
-                                      <AdminDocumentUploader
+                                      <DocumentUpload
                                         rubriqueId={rubrique.rubrique_id}
                                         rubriqueName={rubrique.titre}
                                         userId={userDetails.user_id}
@@ -1478,8 +1560,27 @@ export default function ClientDetail() {
                                           activeDeclaration?.annee?.toString() ||
                                           ""
                                         }
-                                        onUploadCompleted={refreshUserData}
+                                        hideExistingList={true}
+                                        onFilesSelected={(files) =>
+                                          handleAdminFilesSelected(
+                                            rubrique.rubrique_id,
+                                            files
+                                          )
+                                        }
+                                        onFileRemoved={handleAdminFileRemoved}
                                       />
+                                      {adminSelectedFiles.some(
+                                        (f) =>
+                                          f.rubriqueId === rubrique.rubrique_id
+                                      ) && (
+                                        <Button
+                                          onClick={uploadAdminDocuments}
+                                          className="mt-2"
+                                          variant="default"
+                                        >
+                                          Valider l’envoi
+                                        </Button>
+                                      )}
                                     </div>
                                   </AccordionContent>
                                 </AccordionItem>
