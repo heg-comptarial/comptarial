@@ -724,11 +724,6 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
     }
   };
   
-  
-
-  // Fonction pour valider la déclaration sans les documents
-  const validateDeclarationOnly = async () => {
-  if (!pendingDeclarationAction) return;
 
   const handleDeleteDocument = async (doc: Document, rubrique: Rubrique) => {
     try {
@@ -2014,5 +2009,4 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
       />
     </ProtectedRouteAdmin>
   );
-}
 }
