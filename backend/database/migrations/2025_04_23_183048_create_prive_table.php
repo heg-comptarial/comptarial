@@ -14,9 +14,9 @@ return new class extends Migration
         Schema::create('prive', function (Blueprint $table) {
             $table->bigIncrements('prive_id');
             $table->unsignedBigInteger('user_id')->index('user_id');
-            $table->date('dateNaissance');
-            $table->string('nationalite');
-            $table->string('etatCivil');
+            $table->date('dateNaissance')->nullable();
+            $table->string('nationalite')->nullable();
+            $table->string('etatCivil')->nullable();
             $table->boolean('fo_enfants')->default(false);
             $table->boolean('fo_autrePersonneCharge')->default(false);
             $table->boolean('fo_revenu')->default(false);
