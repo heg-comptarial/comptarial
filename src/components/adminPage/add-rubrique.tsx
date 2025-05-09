@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
 import { Loader2 } from "lucide-react"
 
 interface AddRubriqueDialogProps {
@@ -43,7 +42,6 @@ export default function AddRubriqueDialog({
 
   const [rubriqueData, setRubriqueData] = useState({
     titre: "",
-    description: "",
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -58,8 +56,7 @@ export default function AddRubriqueDialog({
           const response = await axios.get(`${API_URL}/rubriques/${rubriqueId}`)
           if (response.data) {
             setRubriqueData({
-              titre: response.data.titre || "",
-              description: response.data.description || "",
+              titre: response.data.titre || ""
             })
           }
         } catch (error) {
@@ -71,8 +68,7 @@ export default function AddRubriqueDialog({
       } else {
         // Réinitialiser le formulaire si on n'est pas en mode édition
         setRubriqueData({
-          titre: "",
-          description: "",
+          titre: ""
         })
       }
     }
@@ -99,8 +95,7 @@ export default function AddRubriqueDialog({
       // Préparer les données pour l'API
       const data = {
         declaration_id: declarationId,
-        titre: rubriqueData.titre,
-        description: rubriqueData.description || "",
+        titre: rubriqueData.titre
       }
 
       let response
@@ -119,8 +114,7 @@ export default function AddRubriqueDialog({
 
       // Réinitialiser le formulaire
       setRubriqueData({
-        titre: "",
-        description: "",
+        titre: ""
       })
 
       // Fermer la boîte de dialogue
@@ -168,16 +162,6 @@ export default function AddRubriqueDialog({
                 placeholder="Entrez le titre de la rubrique"
                 value={rubriqueData.titre}
                 onChange={(e) => setRubriqueData({ ...rubriqueData, titre: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Entrez une description (optionnel)"
-                value={rubriqueData.description}
-                onChange={(e) => setRubriqueData({ ...rubriqueData, description: e.target.value })}
-                className="min-h-[100px] w-full"
               />
             </div>
           </div>

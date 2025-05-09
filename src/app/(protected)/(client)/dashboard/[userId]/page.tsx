@@ -7,11 +7,12 @@ import ProtectedRoutePending from "@/components/routes/ProtectedRoutePending";
 import { useParams } from "next/navigation";
 
 interface EntrepriseDetails {
-  grandLivre: string | null;
-  // autres champs si besoin...
+  entreprise_id: number;
+  user_id: number;
 }
 
 interface UserDetails {
+  user_id: number;
   nom: string;
   adresse: string;
   localite: string;
@@ -20,13 +21,18 @@ interface UserDetails {
   numeroTelephone: string;
   role: string;
   statut: string;
+  dateCreation: string;
+  administrateurs: any | null;
+  declarations: any[]; // Liste des déclarations
   entreprises?: EntrepriseDetails | null;
+  notifications: any[];
+  prives: any | null;
 }
 
 async function fetchUser(userId: number): Promise<UserDetails | null> {
   if (!userId) return null;
 
-  const res = await fetch(`http://localhost:8000/api/users/${userId}`, {
+  const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
     headers: {
       "Content-Type": "application/json",
     },
@@ -37,27 +43,50 @@ async function fetchUser(userId: number): Promise<UserDetails | null> {
   return await res.json();
 }
 
+async function fetchDeclarationTitles(userId: number): Promise<string[]> {
+  const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}/titres-declarations`, {
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  if (!res.ok) return [];
+
+  const data: { success: boolean; titles: string[] } = await res.json();
+  return data.success ? Array.from(new Set(data.titles)) : []; // Supprime les doublons
+}
+
 export default function Dashboard() {
   const [user, setUser] = useState<UserDetails | null>(null);
+  const [declarationTitles, setDeclarationTitles] = useState<string[]>([]);
   const params = useParams();
   const userId = Number(params?.userId);
 
   useEffect(() => {
     fetchUser(userId).then(setUser);
+    fetchDeclarationTitles(userId).then((titles) => {
+      // Tri des titres dans l'ordre souhaité
+      const orderedTitles = [
+        "Comptabilité",
+        "TVA",
+        "Salaires",
+        "Administration",
+        "Fiscalité",
+        "Divers",
+      ].filter((title) => titles.includes(title));
+      setDeclarationTitles(orderedTitles);
+    });
   }, [userId]);
 
   if (!user) {
     return <div className="text-center py-20">Chargement des informations utilisateur...</div>;
   }
 
-  const { nom, adresse, localite, codePostal, role, statut, entreprises } = user;
+  const { nom, adresse, localite, codePostal, role, statut } = user;
 
   const isPending = statut === "pending";
   const isApproved = statut === "approved";
-  const isPrive = role === "prive";
   const isEntreprise = role === "entreprise";
-
-  const hasNoGrandLivre = isEntreprise && (!entreprises || !entreprises.grandLivre);
 
   return (
     <ProtectedRoutePending>
@@ -75,11 +104,11 @@ export default function Dashboard() {
           </div>
         )}
 
-        {hasNoGrandLivre && (
-          <div className="mb-8 rounded-xl border border-red-300 bg-red-100 text-red-800 p-4 text-sm shadow-sm">
-            ⚠️ Veuillez déposer votre Grand Livre pour pouvoir accéder aux fonctionnalités.
+        {isEntreprise && isApproved && declarationTitles.length === 0 && (
+          <div className="mb-8 rounded-xl border border-blue-300 bg-blue-100 text-blue-800 p-4 text-sm shadow-sm">
+            Vous n&apos;avez pas encore de déclarations. Les espaces de dépôt de documents seront créés sous peu.
             <br />
-            Sans ce document, certaines opérations seront bloquées.
+            Merci de votre patience.
           </div>
         )}
 
@@ -91,7 +120,7 @@ export default function Dashboard() {
           {isApproved && (
             <>
               {/* Liens pour "prive" */}
-              {isPrive && (
+              {role === "prive" && (
                 <>
                   <DashboardLink icon={FileText} label="Mes déclarations" href={`/declarations-client/${userId}`} />
                   <DashboardLink icon={FormInput} label="Modifier formulaire" href={`/formulaire/${userId}`} />
@@ -100,11 +129,15 @@ export default function Dashboard() {
               )}
 
               {/* Liens pour "entreprise" */}
-              {isEntreprise && (
-                <>
-                  <DashboardLink icon={FileText} label="Mes déclarations" href={`/declarations-client/${userId}`} />
-                </>
-              )}
+              {isEntreprise &&
+                declarationTitles.map((titre) => (
+                  <DashboardLink
+                    key={titre}
+                    icon={FileText}
+                    label={titre}
+                    href={`/declarations-client/${userId}?type=${encodeURIComponent(titre)}`}
+                  />
+                ))}
             </>
           )}
         </div>

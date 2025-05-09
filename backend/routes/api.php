@@ -124,15 +124,24 @@ Route::apiResource('/revenus', RevenuController::class);
 // Route pour les titres
 Route::apiResource('/titres', TitreController::class);
 
+// Route pour les autres personnes à charge
+Route::apiResource('/autrepersonnesacharges', AutrePersonneAChargeController::class);
+
 
 // Route pour obtenir tous les documents d'un user
 Route::get('users/{userId}/documents', [DocumentController::class, 'getDocumentsByUser']);
 
+// Route pour obtenir toutes les déclarations d'un user
+Route::get('/users/{userId}/declarations', [UserController::class, 'getAllDeclarationsByUser']);
+
 // Route pour obtenir une déclaration spécifique d'un user
 Route::get('/users/{userId}/declarations/{declarationId}', [UserController::class, 'getUserDeclarationWithDetails']);
 
-// Route pour obtenir toutes les déclarations d'un user
-Route::get('/users/{userId}/declarations', [UserController::class, 'getAllDeclarationsByUser']);
+// Route pour obtenir tous les titres des declarations d'un user
+Route::get('/users/{userId}/titres-declarations', [UserController::class, 'getAllDeclarationTitlesByUser']);
+
+// Route pour obtenir tous les titres des declarations d'un user
+Route::get('/users/{userId}/titres-declarations/{titre}', [UserController::class, 'getUserDeclarationsWithDetailsByTitreDeclaration']);
 
 // Route pour obtenir la declaration d'un user d'une année spécifique
 Route::get('/users/{userId}/declarations/year/{year}', [UserController::class, 'getDeclarationByYear']);
