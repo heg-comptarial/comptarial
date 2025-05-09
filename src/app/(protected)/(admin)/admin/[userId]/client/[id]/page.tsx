@@ -54,7 +54,6 @@ import axios from "axios";
 import AddRubriqueDialog from "@/components/adminPage/add-rubrique";
 import ConfirmationDialog from "@/components/confirmation-dialog";
 import DocumentUpload from "@/components/protected/declarations-client/features/documents/DocumentUpload";
-import type { DocumentUploadProps } from "@/types/interfaces";
 
 // Définition des types pour les modèles
 interface Entreprise {
