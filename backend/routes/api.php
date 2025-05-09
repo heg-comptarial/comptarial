@@ -48,6 +48,9 @@ Route::get('/users/status/approved', [UserController::class, 'getApproved']);
 // Routes supplémentaires pour les utilisateurs afin de créer soit un privé soit une entreprise
 Route::post('/users/{id}/approve', [UserController::class, 'approveUser']);
 
+// Routes supplémentaires pour les utilisateurs afin de charger les user avec des déclarations en attente
+Route::get('/users-with-pending-declarations', [UserController::class, 'usersWithPendingDeclarations']);
+
 
 // Routes supplémentaires pour les utilisateurs afin de trouver l'id d'un admin
 Route::get('/admin', [UserController::class, 'getAdminId'])->middleware("auth:sanctum");
@@ -61,6 +64,9 @@ Route::apiResource('documents', DocumentController::class);
 
 // Mettre à jour le statut d'un document
 //Route::patch('/documents/{id}/status', [DocumentController::class, 'updateStatus']);
+
+// getDocumentsWithRubrique 
+Route::get('/documents/rubriques', [DocumentController::class, 'getDocumentsWithRubrique']);
 
 // Routes pour les commentaires
 Route::apiResource('commentaires', CommentaireController::class);
@@ -81,6 +87,10 @@ Route::apiResource('notifications', NotificationController::class);
 
 // Routes pour les entités privées
 Route::apiResource('prives', PriveController::class);
+
+// Routes pour les formulaires privés
+Route::get('/prives/complet/{userId}', [PriveController::class, 'getFormulairesPrive']);
+
 
 // Routes pour les conjoints
 Route::apiResource('conjoints', ConjointController::class);

@@ -11,6 +11,23 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
+use App\Models\AutreInformations; // Ensure this class exists in the specified namespace
+use App\Models\AutrePersonneACharge;
+use App\Models\Immobilier;
+use App\Models\Banque;
+use App\Models\Conjoint;
+use App\Models\Revenu;
+use App\Models\Titre;
+use App\Models\User;
+use App\Models\Enfant;
+use App\Models\IndemniteAssurance;
+use App\Models\Deduction;
+use App\Models\InteretDettes;
+use App\Models\PensionAlimentaire;
+use App\Models\Rentier;
+;
+
+
 /**
  * Class Prive
  * 
@@ -95,4 +112,62 @@ class Prive extends Model
 	{
 		return $this->hasMany(Enfant::class, 'prive_id');
 	}
+
+	public function revenus()
+	{
+		return $this->hasMany(Revenu::class, 'prive_id');
+	}
+
+	public function banques()
+	{
+		return $this->hasMany(Banque::class, 'prive_id');
+	}
+
+	public function titres()
+	{
+		return $this->hasMany(Titre::class, 'prive_id');
+	}
+
+	public function immobiliers()
+	{
+		return $this->hasMany(Immobilier::class, 'prive_id');
+	}
+
+	public function interetDettes()
+	{
+		return $this->hasMany(InteretDettes::class, 'prive_id');
+	}
+
+	public function indemniteAssurances()
+	{
+		return $this->hasMany(IndemniteAssurance::class, 'prive_id');
+	}
+
+	public function pensionAlimentaires()
+	{
+		return $this->hasMany(PensionAlimentaire::class, 'enfant_id');
+	}
+
+
+	public function autresInformations()
+	{
+		return $this->hasMany(AutreInformations::class, 'prive_id');
+	}
+
+
+	public function autresPersonnesACharge()
+	{
+		return $this->hasMany(AutrePersonneACharge::class, 'prive_id');
+	}
+
+	public function rentier()
+	{
+		return $this->hasMany(Rentier::class, 'prive_id');
+	}
+
+	public function deductions()
+	{
+		return $this->hasMany(Deduction::class, 'prive_id');
+	}
+
 }

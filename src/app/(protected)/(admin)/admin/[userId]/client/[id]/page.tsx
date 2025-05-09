@@ -2,20 +2,13 @@
 
 import type React from "react";
 
-import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
-import { Badge } from "@/components/ui/badge";
+import { useRouter, useParams } from "next/navigation"
+import { useEffect, useState } from "react"
+import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
+import { Badge } from "@/components/ui/badge"
 import {
   FileText,
   Edit,
@@ -51,6 +44,8 @@ import ConfirmationDialog from "@/components/confirmation-dialog"
 import CreateDeclarationDialog from "@/components/adminPage/declaration-dialog"
 import { set } from "date-fns"
 import DocumentUpload from "@/components/protected/declarations-client/features/documents/DocumentUpload";
+import FormulairePrive from "@/components/adminPage/formulaire-prive"
+
 
 // Définition des types pour les modèles
 interface Entreprise {
@@ -74,22 +69,21 @@ interface Prive {
 
 // Mettre à jour l'interface Document pour correspondre à la structure de la table
 interface Document {
-  doc_id: number;
-  rubrique_id: number;
-  nom: string;
-  type: string;
-  cheminFichier: string;
-  statut: "pending" | "rejected" | "approved";
-  sous_rubrique?: string | null;
-  dateCreation: string;
+  doc_id: number
+  rubrique_id: number
+  nom: string
+  type: "pdf" | "doc" | "xls" | "xlsx" | "ppt" | "jpeg" | "jpg" | "png" | "other"
+  cheminFichier: string
+  statut: "pending" | "rejected" | "approved"
+  sous_rubrique?: string | null
+  dateCreation: string
   // Propriétés supplémentaires pour la compatibilité avec le code existant
-  chemin?: string; // Alias pour cheminFichier
-  dateUpload?: string; // Alias pour dateCreation
-  commentaire?: string; // Ajouté pour les commentaires
-  taille?: number; // Conservé pour la compatibilité
-  // Propriétés calculées pour l'affichage
-  rubriqueNom?: string;
-  annee?: number | string;
+  chemin?: string // Alias pour cheminFichier
+  dateUpload?: string // Alias pour dateCreation
+  commentaire?: string // Ajouté pour les commentaires
+  taille?: number 
+  rubriqueNom?: string
+  annee?: number | string
 }
 
 // Mettre à jour l'interface Rubrique pour correspondre à la structure de la table
@@ -550,8 +544,8 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
     const token = localStorage.getItem("auth_token");
 
     if (!token) {
-      console.error("Token manquant !");
-      return null;
+      console.error("Token manquant !")
+      return null
     }
 
     try {
@@ -562,44 +556,40 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
       });
       return response.data.admin_id;
     } catch (error) {
-      console.error("Erreur lors de la récupération de l'admin :", error);
+      console.error("Erreur lors de la récupération de l'admin :", error)
     }
-  };
+  }
 
   // Effet pour récupérer l'ID administrateur depuis les paramètres d'URL
   useEffect(() => {
     fetchAdminID()
       .then((id) => {
         if (id !== null) {
-          setAdminId(Number(id));
+          setAdminId(Number(id))
         }
       })
       .catch((err) => {
-        console.error("Impossible de récupérer l'admin_id :", err);
-      });
-  }, []);
+        console.error("Impossible de récupérer l'admin_id :", err)
+      })
+  }, [])
 
   // Remplacer la fonction handleYearChange par celle-ci pour corriger le problème de sélection des années
   const handleYearChange = (year: string) => {
     if (userDetails?.declarations) {
       const selected = userDetails.declarations.find((d) => {
-        const dYear =
-          d.annee?.toString() ??
-          new Date(d.dateCreation || d.dateSoumission || "")
-            .getFullYear()
-            .toString();
-        return dYear === year;
-      });
+        const dYear = d.annee?.toString() ?? new Date(d.dateCreation || d.dateSoumission || "").getFullYear().toString()
+        return dYear === year
+      })
 
       if (selected) {
-        setActiveDeclaration(selected);
+        setActiveDeclaration(selected)
       }
     }
-  };
+  }
 
   const getYearOfDeclaration = (d: Declaration) => {
     if (d.annee != null) {
-      return d.annee.toString();
+      return d.annee.toString()
     }
     const date = d.dateCreation || d.dateSoumission;
     return date ? new Date(date).getFullYear().toString() : "";
@@ -626,7 +616,7 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setEditedUser((prev: any) => ({
       ...prev,
@@ -646,13 +636,12 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
         );
       case "rejected":
       case "refusé":
-        return <Badge className="bg-red-100 text-red-800">Refusé</Badge>;
+        return <Badge className="bg-red-100 text-red-800">Refusé</Badge>
+      case "archived":
+      case "archivé":
+        return <Badge className="bg-blue-100 text-blue-800">Archivé</Badge>
       default:
-        return (
-          <Badge className="bg-gray-100 text-gray-800">
-            {status || "Inconnu"}
-          </Badge>
-        );
+        return <Badge className="bg-grey-100 text-grey-800">{status || "Inconnu"}</Badge>
     }
   };
 
@@ -674,29 +663,72 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
 
   // Remplacer la fonction handleModifierRubrique par celle-ci
   const handleModifierRubrique = (id: string | number) => {
-    setCurrentRubriqueId(id);
-    setIsEditingRubrique(true);
-  };
+    setCurrentRubriqueId(id)
+    setIsEditingRubrique(true)
+  }
 
-  const handleDownloadDocument = (
-    documentPath: string,
-    documentName: string
-  ) => {
-    // Dans un environnement réel, vous devriez vérifier si le chemin est complet ou relatif
-    const downloadUrl = documentPath.startsWith("http")
-      ? documentPath
-      : `${API_URL}/documents/download?path=${encodeURIComponent(
-          documentPath
-        )}`;
 
-    // Créer un élément a temporaire pour déclencher le téléchargement
-    const link = document.createElement("a");
-    link.href = downloadUrl;
-    link.download = documentName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const handleDownloadDocument = async (doc: Document, rubriqueName: string) => {
+    try {
+      // Vérifie que le document a un nom valide
+      const fileName = doc.nom || "document_inconnu"; // Valeur par défaut si doc.nom est absent
+      const rubriqueNom = doc.rubriqueNom || rubriqueName || "rubrique_unknown"; // Valeur par défaut si rubriqueNom est undefined
+  
+      const year = new Date(doc.dateCreation ?? new Date()).getFullYear().toString();
+      const userId = localStorage.getItem("user_id");
+      if (!userId) {
+        console.error("Utilisateur non connecté");
+        alert("Utilisateur non connecté. Impossible de télécharger le fichier.");
+        return;
+      }
+  
+      // Prépare les paramètres pour l'API
+      const params = new URLSearchParams({
+        fileName,
+        year,
+        userId,
+        rubriqueName: rubriqueNom,
+      });
+  
+      console.log("Paramètres envoyés à l'API pour le téléchargement :", params.toString());
+  
+      // Envoie la requête pour télécharger le fichier
+      const response = await axios.get(`/api/download?${params.toString()}`, {
+        responseType: "blob", // Indique que la réponse est un fichier binaire
+      });
+  
+      // Crée un objet Blob pour le fichier téléchargé
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+  
+      // Crée un lien temporaire pour déclencher le téléchargement
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = fileName; // Utilise le nom du fichier
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+  
+      // Libère l'URL créée
+      window.URL.revokeObjectURL(url);
+    } catch (error) {
+      console.error("Erreur lors du téléchargement :", error);
+  
+      // Gestion des erreurs spécifiques
+      if (axios.isAxiosError(error) && error.response) {
+        const errorMessage = error.response.data.message || "Erreur lors du téléchargement du fichier.";
+        alert(errorMessage);
+      } else {
+        alert("Le téléchargement a échoué. Veuillez réessayer.");
+      }
+    }
   };
+  
+  
+
+  // Fonction pour valider la déclaration sans les documents
+  const validateDeclarationOnly = async () => {
+  if (!pendingDeclarationAction) return;
 
   const handleDeleteDocument = async (doc: Document, rubrique: Rubrique) => {
     try {
@@ -1017,6 +1049,13 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
     }
   }
 
+  // Fonction pour gérer la soumission réussie du formulaire
+  const handleFormSubmitSuccess = async (formData: any) => {
+    toast.success("Formulaire soumis avec succès")
+    await refreshUserData()
+    return true
+  }
+
   if (loading || !userId) {
     return (
       <ProtectedRouteAdmin>
@@ -1087,7 +1126,7 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                       <Input
                         name="nom"
                         value={editedUser?.nom || ""}
-                        onChange={handleInputChange}
+                        onChange={(e) => handleInputChange(e)}
                         className="mt-1"
                       />
                     </div>
@@ -1136,11 +1175,21 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                         className="mt-1"
                       />
                     </div>
-                    <Button
-                      onClick={handleUserUpdate}
-                      disabled={isSaving}
-                      className="w-full"
-                    >
+                    <div>
+                      <label className="text-sm font-medium">Statut</label>
+                      <select
+                        name="statut"
+                        value={editedUser?.statut || ""}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-700 sm:text-sm h-10"
+                      >
+                        <option value="approved">Validé</option>
+                        <option value="pending">En attente</option>
+                        <option value="rejected">Refusé</option>
+                        <option value="archived">Archivé</option>
+                      </select>
+                    </div>
+                    <Button onClick={handleUserUpdate} disabled={isSaving} className="w-full">
                       {isSaving ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -1286,6 +1335,7 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
               <TabsList className="mb-6">
                 <TabsTrigger value="declarations">Déclarations</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
+                <TabsTrigger value="formilaire">Formulaire</TabsTrigger>
               </TabsList>
               <Button
                   variant="outline"
@@ -1348,9 +1398,7 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                         <div className="flex flex-wrap gap-2">
                           {declarationYears.map((year) => {
                             // Déterminer si ce bouton correspond à l'année active
-                            const isActive =
-                              activeDeclaration &&
-                              getYearOfDeclaration(activeDeclaration) === year;
+                            const isActive = activeDeclaration && getYearOfDeclaration(activeDeclaration) === year
 
                             return (
                               <Button
@@ -1475,20 +1523,6 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                                     <AlertTriangle className="h-4 w-4 mr-1" />
                                     En attente
                                   </Button>
-                                  {/*<Button
-                                    variant="outline"
-                                    size="sm"
-                                    className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
-                                    onClick={() =>
-                                      handleDeclarationStatusChange(
-                                        activeDeclaration.declaration_id || activeDeclaration.id || 0,
-                                        "rejected",
-                                      )
-                                    }
-                                  >
-                                    <XCircle className="h-4 w-4 mr-1" />
-                                    Refuser
-                                  </Button>*/}
                                 </div>
                               </div>
                             </div>
@@ -1553,44 +1587,24 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                                               </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                              {rubrique.documents.map(
-                                                (doc, index) => (
-                                                  <TableRow
-                                                    key={`rubrique-doc-${
-                                                      doc.doc_id || "unknown"
-                                                    }-${index}`}
-                                                  >
-                                                    <TableCell>
-                                                      {doc.nom}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                      {getStatusBadge(
-                                                        doc.statut
-                                                      )}
-                                                    </TableCell>
-                                                    <TableCell>
-                                                      {new Date(
-                                                        doc.dateCreation ||
-                                                          doc.dateUpload ||
-                                                          ""
-                                                      ).toLocaleDateString()}
-                                                    </TableCell>
-                                                    <TableCell className="text-right">
-                                                      <div className="flex justify-end gap-1">
-                                                        <Button
-                                                          variant="ghost"
-                                                          size="icon"
-                                                          onClick={() =>
-                                                            handleDownloadDocument(
-                                                              doc.cheminFichier ||
-                                                                doc.chemin ||
-                                                                "",
-                                                              doc.nom
-                                                            )
-                                                          }
-                                                        >
-                                                          <Download className="h-4 w-4" />
-                                                        </Button>
+                                              {rubrique.documents.map((doc, index) => (
+                                                <TableRow key={`rubrique-doc-${doc.doc_id || "unknown"}-${index}`}>
+                                                  <TableCell>{doc.nom}</TableCell>
+                                                  <TableCell>{getStatusBadge(doc.statut)}</TableCell>
+                                                  <TableCell>
+                                                    {new Date(
+                                                      doc.dateCreation || doc.dateUpload || "",
+                                                    ).toLocaleDateString()}
+                                                  </TableCell>
+                                                  <TableCell className="text-right">
+                                                    <div className="flex justify-end gap-1">
+                                                      <Button
+                                                        variant="ghost"
+                                                        size="icon"
+                                                        onClick={() => handleDownloadDocument(doc, rubrique.titre)}
+                                                      >
+                                                        <Download className="h-4 w-4" />
+                                                      </Button>
 
                                                         <Button
                                                           variant="ghost"
@@ -1834,16 +1848,7 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                                 </TableCell>
                                 <TableCell className="text-right">
                                   <div className="flex justify-end gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="icon"
-                                      onClick={() =>
-                                        handleDownloadDocument(
-                                          doc.cheminFichier || doc.chemin || "",
-                                          doc.nom
-                                        )
-                                      }
-                                    >
+                                    <Button variant="ghost" size="icon" onClick={() => handleDownloadDocument(doc, doc.rubriqueNom || "rubrique_unknown")}>
                                       <Download className="h-4 w-4" />
                                     </Button>
 
@@ -1958,6 +1963,26 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                   </CardContent>
                 </Card>
               </TabsContent>
+
+              <TabsContent value="formilaire">
+              <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Formulaire de {userDetails.nom}</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    {userDetails.user_id ? (
+                      <FormulairePrive
+                        userId={userDetails.user_id}
+                        onSubmitSuccess={handleFormSubmitSuccess}
+                      />
+                    ) : (
+                      <div className="text-center py-8">
+                        <p>Ce client n'a pas de profil privé associé.</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </TabsContent>
             </Tabs>
           </div>
         </div>
@@ -1989,4 +2014,5 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
       />
     </ProtectedRouteAdmin>
   );
+}
 }

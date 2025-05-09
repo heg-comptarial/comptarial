@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\AutrePersonneACharge;
+use App\Models\InteretDettes;
 use App\Models\Prive;
 use Illuminate\Http\Request;
 
@@ -91,4 +93,36 @@ class PriveController extends Controller
 
         return response()->json($prive);
     }
+
+    // Méthode pour récuperer les formulaires du privé
+    public function getFormulairesPrive($userId)
+    {
+        // Récupère le Prive d'un utilisateur avec ses relations définies
+        $prive = Prive::with([
+            'user',
+            'autresInformations',
+            'autresPersonnesACharge',
+            'banques',
+            'deductions',
+            'conjoints',
+            'enfants',
+            'immobiliers',
+            'indemniteAssurances',
+            'interetDettes',
+            'enfants.pensionsAlimentaires',
+            'rentier',
+            'revenus',
+            'titres',
+        ])->where('user_id', $userId)->first();
+
+        if (!$prive) {
+            return response()->json(['message' => 'Aucun enregistrement trouvé'], 404);
+        }
+
+        return response()->json($prive);
+    }   
+
+
+    
+
 }

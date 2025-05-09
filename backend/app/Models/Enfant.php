@@ -106,4 +106,9 @@ class Enfant extends Model
 	{
 		return $this->belongsTo(Prive::class, 'prive_id');
 	}
+
+	public function pensionsAlimentaires()
+	{
+		return $this->hasMany(PensionAlimentaire::class, 'enfant_id');
+	}
 }

@@ -31,7 +31,7 @@ class UserController extends Controller
             'codePostal' => 'required|string|max:10',
             'numeroTelephone' => 'required|string|max:15',
             'role' => 'required|in:admin,prive,entreprise',
-            'statut' => 'required|in:approved,rejected,pending',
+            'statut' => 'required|in:approved,rejected,pending,archive',
         ]);
 
         // Crée un nouvel utilisateur
@@ -69,7 +69,7 @@ class UserController extends Controller
             'codePostal' => 'string|max:10',
             'numeroTelephone' => 'string|max:15',
             'role' => 'in:admin,prive,entreprise',
-            'statut' => 'in:approved,rejected,pending',
+            'statut' => 'in:approved,rejected,pending,archived',
         ]);
 
         // Met à jour un utilisateur
@@ -347,5 +347,26 @@ class UserController extends Controller
             ], 500);
         }
     }
+    /**
+     * Retourne les utilisateurs avec au moins une déclaration "pending"
+     */
+    public function usersWithPendingDeclarations()
+    {
+        $users = User::where('statut', 'approved') // filtre sur le statut utilisateur
+            ->whereHas('declarations', function ($query) {
+                $query->where('statut', 'pending');
+            })
+            ->with(['declarations' => function ($query) {
+                $query->where('statut', 'pending');
+            }])
+            ->get();
+
+        return response()->json([
+            'status' => 'success',
+            'data' => $users
+        ]);
+    }
+
+
 
 }
