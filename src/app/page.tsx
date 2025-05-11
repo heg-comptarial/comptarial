@@ -110,21 +110,18 @@ export default function Home() {
         toast.success("Message envoyé !", {
           description: "Nous vous répondrons dans les plus brefs délais.",
           icon: <CheckCircle className="h-5 w-5" />,
-          duration: 5000,
         });
         form.reset();
       } else {
         toast.error("Erreur lors de l'envoi", {
           description: "Veuillez réessayer plus tard.",
           icon: <AlertCircle className="h-5 w-5" />,
-          duration: 5000,
         });
       }
     } catch (error) {
       toast.error("Une erreur est survenue", {
         description: "Veuillez vérifier votre connexion et réessayer.",
         icon: <AlertCircle className="h-5 w-5" />,
-        duration: 5000,
       });
       console.error(error);
     } finally {
@@ -759,7 +756,7 @@ export default function Home() {
                       className="w-full bg-black hover:bg-gray-800 text-white"
                       disabled={isSubmitting}
                     >
-                      {isSubmitting ? "Envoi en cours..." : "Send message"}
+                      {isSubmitting ? "Envoi en cours..." : "Envoyer"}
                     </Button>
                   </form>
                 </div>
