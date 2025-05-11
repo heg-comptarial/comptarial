@@ -26,8 +26,8 @@ use App\Http\Controllers\AutrePersonneAChargeController;
 use App\Http\Controllers\IndemniteAssuranceController;
 use App\Http\Controllers\TitreController;
 use App\Http\Controllers\DeductionController;
+use App\Http\Controllers\ContactController;
 use Illuminate\Support\Facades\Crypt;
-
 
 // Routes pour les utilisateurs
 Route::apiResource('users', UserController::class);
@@ -166,6 +166,8 @@ Route::post('logout', [AuthController::class, 'logout'])->middleware("auth:sanct
 // Route pour trouver un user prive avec l'id user
 Route::get('/prives/users/{userId}', [PriveController::class, 'getPriveByUserId']);
 
+// Route pour le formulaire de contact
+Route::post('/contact', [ContactController::class, 'send']);
 
 Route::get('/auth/user', function (Request $request){
     // Lire le cookie 'user_id' crypté
