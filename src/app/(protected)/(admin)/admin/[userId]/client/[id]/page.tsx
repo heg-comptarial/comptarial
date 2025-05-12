@@ -2,13 +2,20 @@
 
 import type React from "react";
 
-import { useRouter, useParams } from "next/navigation"
-import { useEffect, useState } from "react"
-import { Button } from "@/components/ui/button"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Badge } from "@/components/ui/badge"
+import { useRouter, useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Badge } from "@/components/ui/badge";
 import {
   FileText,
   Edit,
@@ -35,17 +42,22 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
-} from "@/components/ui/dialog"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { toast, Toaster } from "sonner"
-import axios from "axios"
-import AddRubriqueDialog from "@/components/adminPage/add-rubrique"
-import ConfirmationDialog from "@/components/confirmation-dialog"
-import CreateDeclarationDialog from "@/components/adminPage/declaration-dialog"
-import { set } from "date-fns"
+} from "@/components/ui/dialog";
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { toast, Toaster } from "sonner";
+import axios from "axios";
+import AddRubriqueDialog from "@/components/adminPage/add-rubrique";
+import ConfirmationDialog from "@/components/confirmation-dialog";
+import CreateDeclarationDialog from "@/components/adminPage/declaration-dialog";
+import { downloadDocument } from "@/services/documentService";
 import DocumentUpload from "@/components/protected/declarations-client/features/documents/DocumentUpload";
-import FormulairePrive from "@/components/adminPage/formulaire-prive"
-
+import FormulairePrive from "@/components/adminPage/formulaire-prive";
+import { getStatusBadge } from "@/utils/getStatusBadge";
 
 // Définition des types pour les modèles
 interface Entreprise {
@@ -69,28 +81,37 @@ interface Prive {
 
 // Mettre à jour l'interface Document pour correspondre à la structure de la table
 interface Document {
-  doc_id: number
-  rubrique_id: number
-  nom: string
-  type: "pdf" | "doc" | "xls" | "xlsx" | "ppt" | "jpeg" | "jpg" | "png" | "other"
-  cheminFichier: string
-  statut: "pending" | "rejected" | "approved"
-  sous_rubrique?: string | null
-  dateCreation: string
+  doc_id: number;
+  rubrique_id: number;
+  nom: string;
+  type:
+    | "pdf"
+    | "doc"
+    | "xls"
+    | "xlsx"
+    | "ppt"
+    | "jpeg"
+    | "jpg"
+    | "png"
+    | "other";
+  cheminFichier: string;
+  statut: "pending" | "rejected" | "approved";
+  sous_rubrique?: string | null;
+  dateCreation: string;
   // Propriétés supplémentaires pour la compatibilité avec le code existant
-  chemin?: string // Alias pour cheminFichier
-  dateUpload?: string // Alias pour dateCreation
-  commentaire?: string // Ajouté pour les commentaires
-  taille?: number 
-  rubriqueNom?: string
-  annee?: number | string
+  chemin?: string; // Alias pour cheminFichier
+  dateUpload?: string; // Alias pour dateCreation
+  commentaire?: string; // Ajouté pour les commentaires
+  taille?: number;
+  rubriqueNom?: string;
+  annee?: number | string;
 }
 
 // Mettre à jour l'interface Rubrique pour correspondre à la structure de la table
 interface Rubrique {
-  rubrique_id: number
-  declaration_id: number
-  titre: string
+  rubrique_id: number;
+  declaration_id: number;
+  titre: string;
   // Propriétés supplémentaires pour la compatibilité avec le code existant
   id?: number; // Alias pour rubrique_id
   nom?: string; // Alias pour titre
@@ -99,13 +120,13 @@ interface Rubrique {
 
 // Mettre à jour l'interface Declaration pour correspondre à la structure de la table
 interface Declaration {
-  declaration_id: number
-  user_id: number
-  titre: string
-  statut: "pending" | "approved"
-  annee: number | string
-  dateCreation: string
-  impots:string
+  declaration_id: number;
+  user_id: number;
+  titre: string;
+  statut: "pending" | "approved";
+  annee: number | string;
+  dateCreation: string;
+  impots: string;
   // Propriétés supplémentaires pour la compatibilité avec le code existant
   id?: number; // Alias pour declaration_id
   dateSoumission?: string; // Alias pour dateCreation
@@ -130,14 +151,13 @@ interface UserDetails {
 }
 
 export default function ClientDetail() {
-  const [openCreateDialog, setOpenCreateDialog] = useState(false)
-  const [titre, setTitre] = useState("")
-  const [annee, setAnnee] = useState("")
+  const [openCreateDialog, setOpenCreateDialog] = useState(false);
 
-  const params = useParams()
-  const router = useRouter()
-  const userId = params.id as string
-  const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
+  const params = useParams();
+  const router = useRouter();
+  const userId = params.id as string;
+  const API_URL =
+    process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null);
   const [loading, setLoading] = useState(true);
@@ -167,33 +187,42 @@ export default function ClientDetail() {
   const [documentsNonValides, setDocumentsNonValides] = useState<string[]>([]);
 
   // Ajouter ces états pour gérer la modification de rubrique
-  const [isEditingRubrique, setIsEditingRubrique] = useState(false)
+  const [isEditingRubrique, setIsEditingRubrique] = useState(false);
   const [currentRubriqueId, setCurrentRubriqueId] = useState<
     number | string | null
   >(null);
-  const [uploadVisible, setUploadVisible] = useState<{
-    [rubriqueId: number]: boolean;
-  }>({});
 
   const [adminSelectedFiles, setAdminSelectedFiles] = useState<
     { file: File; rubriqueId: number }[]
   >([]);
-  
-  const [isCreatingDeclaration, setIsCreatingDeclaration] = useState(false)
-  const [isEditingImpots, setIsEditingImpots] = useState(false);
-const [editedImpots, setEditedImpots] = useState(activeDeclaration?.impots || "");
-const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
+
+  const [editedImpots, setEditedImpots] = useState(
+    activeDeclaration?.impots || ""
+  );
+  const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
 
   // Liste des titres possibles pour une déclaration
-  const TITLES = ["Déclaration, Comptabilité", "TVA", "Salaires", "Administration", "Fiscalité", "Divers"]
+  const TITLES = [
+    "Déclaration, Comptabilité",
+    "TVA",
+    "Salaires",
+    "Administration",
+    "Fiscalité",
+    "Divers",
+  ];
 
-
-  const handleUpdateImpots = async (declarationId: number, newImpots: string) => {
+  const handleUpdateImpots = async (
+    declarationId: number,
+    newImpots: string
+  ) => {
     try {
-      const response = await axios.patch(`${API_URL}/declarations/${declarationId}`, {
-        impots: newImpots,
-      });
-  
+      const response = await axios.patch(
+        `${API_URL}/declarations/${declarationId}`,
+        {
+          impots: newImpots,
+        }
+      );
+
       if (response.status === 200) {
         toast.success("Montant des impôts mis à jour avec succès !");
         await refreshUserData(); // Rafraîchir les données utilisateur
@@ -210,14 +239,15 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
   const refreshUserData = async () => {
     try {
       // Conserver l'année active avant le rafraîchissement
-      const activeYear = activeDeclaration ? getYearOfDeclaration(activeDeclaration) : null;
+      const activeYear = activeDeclaration
+        ? getYearOfDeclaration(activeDeclaration)
+        : null;
 
       // Récupérer les données utilisateur depuis l'API
       const response = await axios.get(`${API_URL}/users/${userId}/full-data`);
       const data = response.data;
 
       if (data.success) {
-
         // Trier les déclarations par année (du plus grand au plus petit)
         const sortedDeclarations = data.data.declarations.sort(
           (a: Declaration, b: Declaration) => Number(b.annee) - Number(a.annee)
@@ -241,13 +271,19 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
 
       if (data.data.declarations && data.data.declarations.length > 0) {
         const years = data.data.declarations.map((d: Declaration) =>
-          d.annee ? d.annee.toString() : new Date(d.dateCreation || d.dateSoumission || "").getFullYear().toString(),
-        )
-      
-        const uniqueSortedYears = Array.from(new Set(years) as Set<string>).sort((a, b) => parseInt(b) - parseInt(a))
-      
-        setDeclarationYears(uniqueSortedYears)
-      } 
+          d.annee
+            ? d.annee.toString()
+            : new Date(d.dateCreation || d.dateSoumission || "")
+                .getFullYear()
+                .toString()
+        );
+
+        const uniqueSortedYears = Array.from(
+          new Set(years) as Set<string>
+        ).sort((a, b) => parseInt(b) - parseInt(a));
+
+        setDeclarationYears(uniqueSortedYears);
+      }
     } catch (error) {
       console.error("Erreur lors de la récupération des données:", error);
       toast.error("Erreur lors du rechargement des données utilisateur");
@@ -258,34 +294,46 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
     const fetchUserDetails = async () => {
       try {
         setLoading(true);
-        const response = await axios.get(`${API_URL}/users/${userId}/full-data`);
-    
+        const response = await axios.get(
+          `${API_URL}/users/${userId}/full-data`
+        );
+
         const data = response.data;
         if (!data.success) {
-          throw new Error(data.message || "Erreur lors de la récupération des données");
+          throw new Error(
+            data.message || "Erreur lors de la récupération des données"
+          );
         }
-    
+
         setUserDetails(data.data);
         setEditedUser(data.data);
-    
+
         // Extraire les années des déclarations et définir la déclaration active
         if (data.data.declarations && data.data.declarations.length > 0) {
           const sortedDeclarations = data.data.declarations.sort(
-            (a: Declaration, b: Declaration) => Number(b.annee) - Number(a.annee)
+            (a: Declaration, b: Declaration) =>
+              Number(b.annee) - Number(a.annee)
           );
-    
+
           const years = sortedDeclarations.map((d: Declaration) =>
-            d.annee ? d.annee.toString() : new Date(d.dateCreation || d.dateSoumission || "").getFullYear().toString()
+            d.annee
+              ? d.annee.toString()
+              : new Date(d.dateCreation || d.dateSoumission || "")
+                  .getFullYear()
+                  .toString()
           );
-    
+
           const uniqueSortedYears = Array.from(new Set(years) as Set<string>);
           setDeclarationYears(uniqueSortedYears);
-    
+
           // Définir la déclaration avec l'année la plus grande comme active
           setActiveDeclaration(sortedDeclarations[0]);
         }
       } catch (error) {
-        console.error("Erreur lors de la récupération des détails de l'utilisateur :", error);
+        console.error(
+          "Erreur lors de la récupération des détails de l'utilisateur :",
+          error
+        );
         toast.error("Erreur lors du chargement des données utilisateur");
       } finally {
         setLoading(false);
@@ -544,8 +592,8 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
     const token = localStorage.getItem("auth_token");
 
     if (!token) {
-      console.error("Token manquant !")
-      return null
+      console.error("Token manquant !");
+      return null;
     }
 
     try {
@@ -556,40 +604,44 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
       });
       return response.data.admin_id;
     } catch (error) {
-      console.error("Erreur lors de la récupération de l'admin :", error)
+      console.error("Erreur lors de la récupération de l'admin :", error);
     }
-  }
+  };
 
   // Effet pour récupérer l'ID administrateur depuis les paramètres d'URL
   useEffect(() => {
     fetchAdminID()
       .then((id) => {
         if (id !== null) {
-          setAdminId(Number(id))
+          setAdminId(Number(id));
         }
       })
       .catch((err) => {
-        console.error("Impossible de récupérer l'admin_id :", err)
-      })
-  }, [])
+        console.error("Impossible de récupérer l'admin_id :", err);
+      });
+  }, []);
 
   // Remplacer la fonction handleYearChange par celle-ci pour corriger le problème de sélection des années
   const handleYearChange = (year: string) => {
     if (userDetails?.declarations) {
       const selected = userDetails.declarations.find((d) => {
-        const dYear = d.annee?.toString() ?? new Date(d.dateCreation || d.dateSoumission || "").getFullYear().toString()
-        return dYear === year
-      })
+        const dYear =
+          d.annee?.toString() ??
+          new Date(d.dateCreation || d.dateSoumission || "")
+            .getFullYear()
+            .toString();
+        return dYear === year;
+      });
 
       if (selected) {
-        setActiveDeclaration(selected)
+        setActiveDeclaration(selected);
       }
     }
-  }
+  };
 
   const getYearOfDeclaration = (d: Declaration) => {
     if (d.annee != null) {
-      return d.annee.toString()
+      return d.annee.toString();
     }
     const date = d.dateCreation || d.dateSoumission;
     return date ? new Date(date).getFullYear().toString() : "";
@@ -616,33 +668,14 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
     }
   };
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>
+  ) => {
     const { name, value } = e.target;
     setEditedUser((prev: any) => ({
       ...prev,
       [name]: value,
     }));
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch (status?.toLowerCase()) {
-      case "approved":
-      case "validé":
-        return <Badge className="bg-green-100 text-green-800">Validé</Badge>;
-      case "pending":
-      case "en_attente":
-        return (
-          <Badge className="bg-yellow-100 text-yellow-800">En attente</Badge>
-        );
-      case "rejected":
-      case "refusé":
-        return <Badge className="bg-red-100 text-red-800">Refusé</Badge>
-      case "archived":
-      case "archivé":
-        return <Badge className="bg-blue-100 text-blue-800">Archivé</Badge>
-      default:
-        return <Badge className="bg-grey-100 text-grey-800">{status || "Inconnu"}</Badge>
-    }
   };
 
   const handleDeleteRubrique = async (id: string | number) => {
@@ -663,67 +696,44 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
 
   // Remplacer la fonction handleModifierRubrique par celle-ci
   const handleModifierRubrique = (id: string | number) => {
-    setCurrentRubriqueId(id)
-    setIsEditingRubrique(true)
-  }
+    setCurrentRubriqueId(id);
+    setIsEditingRubrique(true);
+  };
 
-
-  const handleDownloadDocument = async (doc: Document, rubriqueName: string) => {
+  const handleDownload = async (doc: Document, rubriqueName: string) => {
     try {
-      // Vérifie que le document a un nom valide
-      const fileName = doc.nom || "document_inconnu"; // Valeur par défaut si doc.nom est absent
-      const rubriqueNom = doc.rubriqueNom || rubriqueName || "rubrique_unknown"; // Valeur par défaut si rubriqueNom est undefined
-  
-      const year = new Date(doc.dateCreation ?? new Date()).getFullYear().toString();
-      const userId = localStorage.getItem("user_id");
-      if (!userId) {
-        console.error("Utilisateur non connecté");
-        alert("Utilisateur non connecté. Impossible de télécharger le fichier.");
-        return;
-      }
-  
-      // Prépare les paramètres pour l'API
-      const params = new URLSearchParams({
-        fileName,
-        year,
-        userId,
-        rubriqueName: rubriqueNom,
+      const query = new URLSearchParams({
+        fileName: doc.nom,
+        year:
+          doc.annee?.toString() ??
+          new Date(doc.dateCreation || doc.dateUpload || "")
+            .getFullYear()
+            .toString(),
+        userId: userDetails?.user_id?.toString() || "",
+        rubriqueName: rubriqueName || "",
       });
-  
-      console.log("Paramètres envoyés à l'API pour le téléchargement :", params.toString());
-  
-      // Envoie la requête pour télécharger le fichier
-      const response = await axios.get(`/api/download?${params.toString()}`, {
-        responseType: "blob", // Indique que la réponse est un fichier binaire
-      });
-  
-      // Crée un objet Blob pour le fichier téléchargé
-      const blob = new Blob([response.data]);
+
+      console.log("/api/download?" + query.toString());
+
+      const res = await fetch(`/api/download?${query.toString()}`);
+      if (!res.ok) throw new Error("Téléchargement échoué");
+
+      const blob = await res.blob();
       const url = window.URL.createObjectURL(blob);
-  
-      // Crée un lien temporaire pour déclencher le téléchargement
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = fileName; // Utilise le nom du fichier
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-  
-      // Libère l'URL créée
+
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = doc.nom;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+
       window.URL.revokeObjectURL(url);
-    } catch (error) {
-      console.error("Erreur lors du téléchargement :", error);
-  
-      // Gestion des erreurs spécifiques
-      if (axios.isAxiosError(error) && error.response) {
-        const errorMessage = error.response.data.message || "Erreur lors du téléchargement du fichier.";
-        alert(errorMessage);
-      } else {
-        alert("Le téléchargement a échoué. Veuillez réessayer.");
-      }
+    } catch (err) {
+      console.error(err);
+      toast.error("Erreur lors du téléchargement");
     }
   };
-  
 
   const handleDeleteDocument = async (doc: Document, rubrique: Rubrique) => {
     try {
@@ -1006,50 +1016,55 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
 
   // Fonction pour créer une nouvelle déclaration
   const handleCreateDeclaration = async (titre: string, annee: string) => {
-    setIsCreatingDeclaration(true)
+    setIsCreatingDeclaration(true);
     try {
-      const response = await axios.post(`http://127.0.0.1:8000/api/declarations`, {
-        user_id: userId,
-        titre,
-        statut: "pending",
-        annee,
-      })
+      const response = await axios.post(
+        `http://127.0.0.1:8000/api/declarations`,
+        {
+          user_id: userId,
+          titre,
+          statut: "pending",
+          annee,
+        }
+      );
 
       if (response.status === 201) {
-        toast.success(`Déclaration "${titre}" créée avec succès !`)
-        await refreshUserData()
+        toast.success(`Déclaration "${titre}" créée avec succès !`);
+        await refreshUserData();
       } else {
-        toast.error("Erreur lors de la création de la déclaration.")
+        toast.error("Erreur lors de la création de la déclaration.");
       }
     } catch (error) {
-      console.error("Erreur lors de la création de la déclaration:", error)
-      toast.error("Erreur lors de la création de la déclaration.")
+      console.error("Erreur lors de la création de la déclaration:", error);
+      toast.error("Erreur lors de la création de la déclaration.");
     } finally {
-      setIsCreatingDeclaration(false)
+      setIsCreatingDeclaration(false);
     }
-  }
+  };
 
   // Fonction pour supprimer une déclaration
   const handleDeleteDeclaration = async (declarationId: number) => {
-    const confirmed = window.confirm("Voulez-vous vraiment supprimer cette déclaration ?")
-    if (!confirmed) return
+    const confirmed = window.confirm(
+      "Voulez-vous vraiment supprimer cette déclaration ?"
+    );
+    if (!confirmed) return;
 
     try {
-      await axios.delete(`${API_URL}/declarations/${declarationId}`)
-      toast.success("Déclaration supprimée avec succès !")
-      await refreshUserData()
+      await axios.delete(`${API_URL}/declarations/${declarationId}`);
+      toast.success("Déclaration supprimée avec succès !");
+      await refreshUserData();
     } catch (error) {
-      console.error("Erreur lors de la suppression de la déclaration:", error)
-      toast.error("Erreur lors de la suppression de la déclaration.")
+      console.error("Erreur lors de la suppression de la déclaration:", error);
+      toast.error("Erreur lors de la suppression de la déclaration.");
     }
-  }
+  };
 
   // Fonction pour gérer la soumission réussie du formulaire
   const handleFormSubmitSuccess = async (formData: any) => {
-    toast.success("Formulaire soumis avec succès")
-    await refreshUserData()
-    return true
-  }
+    toast.success("Formulaire soumis avec succès");
+    await refreshUserData();
+    return true;
+  };
 
   if (loading || !userId) {
     return (
@@ -1077,8 +1092,10 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
   }
 
   // Déterminer les titres disponibles pour la création
-  const existingTitles = userDetails.declarations?.map((d) => d.titre) || []
-  const availableTitles = TITLES.filter((title) => !existingTitles.includes(title))
+  const existingTitles = userDetails.declarations?.map((d) => d.titre) || [];
+  const availableTitles = TITLES.filter(
+    (title) => !existingTitles.includes(title)
+  );
 
   return (
     <ProtectedRouteAdmin>
@@ -1184,7 +1201,11 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                         <option value="archived">Archivé</option>
                       </select>
                     </div>
-                    <Button onClick={handleUserUpdate} disabled={isSaving} className="w-full">
+                    <Button
+                      onClick={handleUserUpdate}
+                      disabled={isSaving}
+                      className="w-full"
+                    >
                       {isSaving ? (
                         <>
                           <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -1333,14 +1354,14 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                 <TabsTrigger value="formilaire">Formulaire</TabsTrigger>
               </TabsList>
               <Button
-                  variant="outline"
-                  size="sm"
-                  className="flex items-center gap-1"
-                  onClick={() => setOpenCreateDialog(true)}
-                >
-                  <Plus className="h-4 w-4" />
-                  Créer une nouvelle déclaration
-                </Button>
+                variant="outline"
+                size="sm"
+                className="flex items-center gap-1"
+                onClick={() => setOpenCreateDialog(true)}
+              >
+                <Plus className="h-4 w-4" />
+                Créer une nouvelle déclaration
+              </Button>
 
               <CreateDeclarationDialog
                 isOpen={openCreateDialog}
@@ -1354,32 +1375,36 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                   <CardHeader className="flex flex-row items-center justify-between">
                     <CardTitle className="text-lg">Déclarations</CardTitle>
                     {activeDeclaration && (
-        <div className="flex gap-2">
-          <Button
-        variant="outline"
-        size="sm"
-        className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
-        onClick={async () => {
-            await handleDeleteDeclaration(activeDeclaration.declaration_id || activeDeclaration.id || 0);
-            await refreshUserData();
-            setActiveDeclaration(null);
-        }}
-      >
-        <Trash2 className="h-4 w-4" />
-        Supprimer
-      </Button>
-          
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setIsAddingRubrique(true)}
-            className="flex items-center gap-1"
-          >
-            <Plus className="h-4 w-4" />
-            Ajouter une rubrique
-          </Button>
-        </div>
-      )}
+                      <div className="flex gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
+                          onClick={async () => {
+                            await handleDeleteDeclaration(
+                              activeDeclaration.declaration_id ||
+                                activeDeclaration.id ||
+                                0
+                            );
+                            await refreshUserData();
+                            setActiveDeclaration(null);
+                          }}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                          Supprimer
+                        </Button>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setIsAddingRubrique(true)}
+                          className="flex items-center gap-1"
+                        >
+                          <Plus className="h-4 w-4" />
+                          Ajouter une rubrique
+                        </Button>
+                      </div>
+                    )}
                   </CardHeader>
                   <CardContent>
                     {!userDetails.declarations ||
@@ -1393,7 +1418,9 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                         <div className="flex flex-wrap gap-2">
                           {declarationYears.map((year) => {
                             // Déterminer si ce bouton correspond à l'année active
-                            const isActive = activeDeclaration && getYearOfDeclaration(activeDeclaration) === year
+                            const isActive =
+                              activeDeclaration &&
+                              getYearOfDeclaration(activeDeclaration) === year;
 
                             return (
                               <Button
@@ -1408,66 +1435,86 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                           })}
                         </div>
 
-                        <Dialog open={isImpotsDialogOpen} onOpenChange={setIsImpotsDialogOpen}></Dialog>
-{/* Affichage ou modification des impôts */}
-{activeDeclaration && (
-  <div className="text-lg font-semibold text-primary flex items-center gap-2">
-    <p>
-      Montant des impôts :{" "}
-      <span className="font-bold">{activeDeclaration.impots || "Non renseigné"}</span>
-    </p>
-    <Button
-      variant="outline"
-      size="sm"
-      onClick={() => {
-        setIsImpotsDialogOpen(true);
-        setEditedImpots(activeDeclaration?.impots || "");
-      }}
-    >
-      Modifier
-    </Button>
-  </div>
-)}
+                        <Dialog
+                          open={isImpotsDialogOpen}
+                          onOpenChange={setIsImpotsDialogOpen}
+                        ></Dialog>
+                        {/* Affichage ou modification des impôts */}
+                        {activeDeclaration && (
+                          <div className="text-lg font-semibold text-primary flex items-center gap-2">
+                            <p>
+                              Montant des impôts :{" "}
+                              <span className="font-bold">
+                                {activeDeclaration.impots || "Non renseigné"}
+                              </span>
+                            </p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() => {
+                                setIsImpotsDialogOpen(true);
+                                setEditedImpots(
+                                  activeDeclaration?.impots || ""
+                                );
+                              }}
+                            >
+                              Modifier
+                            </Button>
+                          </div>
+                        )}
 
-{/* Dialogue pour modifier les impôts */}
-<Dialog open={isImpotsDialogOpen} onOpenChange={setIsImpotsDialogOpen}>
-  <DialogContent>
-    <DialogHeader>
-      <DialogTitle>Modifier le montant des impôts</DialogTitle>
-      <DialogDescription>
-        Saisissez le nouveau montant des impôts pour cette déclaration.
-      </DialogDescription>
-    </DialogHeader>
-    <div className="py-4">
-      <Input
-        type="text"
-        value={editedImpots}
-        onChange={(e) => setEditedImpots(e.target.value)}
-        placeholder="Entrez le montant des impôts"
-        className="w-full"
-      />
-    </div>
-    <DialogFooter>
-      <Button
-        variant="outline"
-        onClick={() => {
-          setIsImpotsDialogOpen(false);
-          setEditedImpots(activeDeclaration?.impots || "");
-        }}
-      >
-        Annuler
-      </Button>
-      <Button
-        onClick={async () => {
-          await handleUpdateImpots(activeDeclaration?.declaration_id || 0, editedImpots);
-          setIsImpotsDialogOpen(false);
-        }}
-      >
-        Enregistrer
-      </Button>
-    </DialogFooter>
-  </DialogContent>
-</Dialog>
+                        {/* Dialogue pour modifier les impôts */}
+                        <Dialog
+                          open={isImpotsDialogOpen}
+                          onOpenChange={setIsImpotsDialogOpen}
+                        >
+                          <DialogContent>
+                            <DialogHeader>
+                              <DialogTitle>
+                                Modifier le montant des impôts
+                              </DialogTitle>
+                              <DialogDescription>
+                                Saisissez le nouveau montant des impôts pour
+                                cette déclaration.
+                              </DialogDescription>
+                            </DialogHeader>
+                            <div className="py-4">
+                              <Input
+                                type="text"
+                                value={editedImpots}
+                                onChange={(e) =>
+                                  setEditedImpots(e.target.value)
+                                }
+                                placeholder="Entrez le montant des impôts"
+                                className="w-full"
+                              />
+                            </div>
+                            <DialogFooter>
+                              <Button
+                                variant="outline"
+                                onClick={() => {
+                                  setIsImpotsDialogOpen(false);
+                                  setEditedImpots(
+                                    activeDeclaration?.impots || ""
+                                  );
+                                }}
+                              >
+                                Annuler
+                              </Button>
+                              <Button
+                                onClick={async () => {
+                                  await handleUpdateImpots(
+                                    activeDeclaration?.declaration_id || 0,
+                                    editedImpots
+                                  );
+                                  setIsImpotsDialogOpen(false);
+                                }}
+                              >
+                                Enregistrer
+                              </Button>
+                            </DialogFooter>
+                          </DialogContent>
+                        </Dialog>
 
                         {activeDeclaration && (
                           <div className="space-y-4">
@@ -1554,7 +1601,9 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                                         variant="outline"
                                         size="sm"
                                         onClick={() => {
-                                          handleDeleteRubrique(rubrique.rubrique_id);
+                                          handleDeleteRubrique(
+                                            rubrique.rubrique_id
+                                          );
                                         }}
                                       >
                                         Supprimer
@@ -1582,24 +1631,42 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                                               </TableRow>
                                             </TableHeader>
                                             <TableBody>
-                                              {rubrique.documents.map((doc, index) => (
-                                                <TableRow key={`rubrique-doc-${doc.doc_id || "unknown"}-${index}`}>
-                                                  <TableCell>{doc.nom}</TableCell>
-                                                  <TableCell>{getStatusBadge(doc.statut)}</TableCell>
-                                                  <TableCell>
-                                                    {new Date(
-                                                      doc.dateCreation || doc.dateUpload || "",
-                                                    ).toLocaleDateString()}
-                                                  </TableCell>
-                                                  <TableCell className="text-right">
-                                                    <div className="flex justify-end gap-1">
-                                                      <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        onClick={() => handleDownloadDocument(doc, rubrique.titre)}
-                                                      >
-                                                        <Download className="h-4 w-4" />
-                                                      </Button>
+                                              {rubrique.documents.map(
+                                                (doc, index) => (
+                                                  <TableRow
+                                                    key={`rubrique-doc-${
+                                                      doc.doc_id || "unknown"
+                                                    }-${index}`}
+                                                  >
+                                                    <TableCell>
+                                                      {doc.nom}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                      {getStatusBadge(
+                                                        doc.statut
+                                                      )}
+                                                    </TableCell>
+                                                    <TableCell>
+                                                      {new Date(
+                                                        doc.dateCreation ||
+                                                          doc.dateUpload ||
+                                                          ""
+                                                      ).toLocaleDateString()}
+                                                    </TableCell>
+                                                    <TableCell className="text-right">
+                                                      <div className="flex justify-end gap-1">
+                                                        <Button
+                                                          variant="ghost"
+                                                          size="icon"
+                                                          onClick={() =>
+                                                            handleDownload(
+                                                              doc,
+                                                              rubrique.titre
+                                                            )
+                                                          }
+                                                        >
+                                                          <Download className="h-4 w-4" />
+                                                        </Button>
 
                                                         <Button
                                                           variant="ghost"
@@ -1843,7 +1910,16 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
                                 </TableCell>
                                 <TableCell className="text-right">
                                   <div className="flex justify-end gap-1">
-                                    <Button variant="ghost" size="icon" onClick={() => handleDownloadDocument(doc, doc.rubriqueNom || "rubrique_unknown")}>
+                                    <Button
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() =>
+                                        handleDownload(
+                                          doc,
+                                          doc.rubriqueNom || ""
+                                        )
+                                      }
+                                    >
                                       <Download className="h-4 w-4" />
                                     </Button>
 
@@ -1960,9 +2036,11 @@ const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
               </TabsContent>
 
               <TabsContent value="formilaire">
-              <Card>
+                <Card>
                   <CardHeader>
-                    <CardTitle className="text-lg">Formulaire de {userDetails.nom}</CardTitle>
+                    <CardTitle className="text-lg">
+                      Formulaire de {userDetails.nom}
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
                     {userDetails.user_id ? (
