@@ -3,7 +3,13 @@
 import { useState } from "react";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
-import { Search, UserPlus, Users } from "lucide-react";
+import {
+  Search,
+  UserPlus,
+  Users,
+  AlertCircle,
+  CheckCircle,
+} from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import {
@@ -14,11 +20,11 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { toast, Toaster } from "sonner";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
+import { getStatusBadge } from "@/utils/getStatusBadge";
 import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin";
-import { useParams, useRouter } from "next/navigation"
-
+import { useParams, useRouter } from "next/navigation";
 
 interface User {
   user_id: number;
@@ -52,10 +58,10 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("general");
-  const params = useParams()
-  const userId = Number(params?.userId)
-  const router = useRouter()
-  
+  const params = useParams();
+  const userId = Number(params?.userId);
+  const router = useRouter();
+
   const fetchPendingUsers = async () => {
     setLoading(true);
     try {
@@ -69,7 +75,13 @@ export default function Dashboard() {
       const data = await response.json();
       setUsers(data);
     } catch (error) {
-      console.error("Erreur lors du chargement des demandes:", error);
+      toast.error(
+        "Une erreur est survenue, veuillez vérifier votre connexion internet",
+        {
+          description: error instanceof Error ? error.message : String(error),
+          icon: <AlertCircle className="h-5 w-5" />,
+        }
+      );
     } finally {
       setLoading(false);
     }
@@ -88,7 +100,13 @@ export default function Dashboard() {
       const data = await response.json();
       setUsers(data);
     } catch (error) {
-      console.error("Erreur lors du chargement des clients:", error);
+      toast.error(
+        "Une erreur est survenue, veuillez vérifier votre connexion internet",
+        {
+          description: error instanceof Error ? error.message : String(error),
+          icon: <AlertCircle className="h-5 w-5" />,
+        }
+      );
     } finally {
       setLoading(false);
     }
@@ -105,14 +123,110 @@ export default function Dashboard() {
       });
 
       if (response.ok) {
-        console.log("Utilisateur approuvé avec succès.");
-        // Rafraîchir la liste des utilisateurs en attente ou faire d'autres actions
+        toast.success("Utilisateur approuvé avec succès.", {
+          description: "L'utilisateur a été approuvé et un email a été envoyé.",
+          icon: <CheckCircle className="h-5 w-5" />,
+        });
+
+        // Envoi de l'email d'approbation
+        await sendApprovalEmail(userId);
       } else {
         const data = await response.json();
-        console.log("Erreur : ", data.message);
+        toast.error("Une erreur est survenue", {
+          description: data.message,
+          icon: <AlertCircle className="h-5 w-5" />,
+        });
       }
     } catch (error) {
-      console.error("Erreur lors de l'approbation de l'utilisateur :", error);
+      toast.error("Erreur lors de l'acceptation de l'utilisateur", {
+        description: error instanceof Error ? error.message : String(error),
+        icon: <AlertCircle className="h-5 w-5" />,
+      });
+    }
+  };
+
+  /**
+   * Envoie un email de confirmation à l'utilisateur
+   * @param userId L'ID de l'utilisateur à qui envoyer l'email de confirmation
+   */
+  const sendApprovalEmail = async (userId: number) => {
+    try {
+      await fetch(`${API_URL}/users/${userId}/approve-registration`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } catch (error) {
+      toast.error("Erreur lors de l'envoi du mail de confirmation", {
+        description: error instanceof Error ? error.message : String(error),
+        icon: <AlertCircle className="h-5 w-5" />,
+      });
+    }
+  };
+
+  const deleteUser = async (userId: number, userName: string) => {
+    if (
+      !confirm(
+        `Êtes-vous sûr de vouloir refuser et supprimer l'utilisateur ${userName} ?`
+      )
+    ) {
+      return;
+    }
+
+    try {
+      // Optimistic UI update - Supprimer immédiatement l'utilisateur de la liste
+      setUsers((prevUsers) =>
+        prevUsers.filter((user) => user.user_id !== userId)
+      );
+
+      // Envoyer l'email de rejet
+      await sendRejectionEmail(userId);
+
+      // Envoyer la requête au backend
+      const response = await fetch(`${API_URL}/users/${userId}`, {
+        method: "DELETE",
+        ...fetchConfig,
+      });
+
+      toast.success("Utilisateur supprimé", {
+        description: "L'utilisateur a été supprimé avec succès.",
+        icon: <CheckCircle className="h-5 w-5" />,
+      });
+
+      if (!response.ok) {
+        // En cas d'erreur, recharger la liste pour restaurer l'état
+        throw new Error(`HTTP error! Status: ${response.status}`);
+      }
+
+      // Pas besoin de recharger la liste car nous avons déjà mis à jour l'UI
+    } catch (error) {
+      toast.error("Erreur lors de la suppression de l'utilisateur", {
+        description: error instanceof Error ? error.message : String(error),
+        icon: <AlertCircle className="h-5 w-5" />,
+      });
+      // En cas d'erreur, recharger la liste pour restaurer l'état correct
+      fetchPendingUsers();
+    }
+  };
+
+  /**
+   * Envoie un email de rejet à l'utilisateur
+   * @param userId L'ID de l'utilisateur à qui envoyer l'email de rejet
+   */
+  const sendRejectionEmail = async (userId: number) => {
+    try {
+      await fetch(`${API_URL}/users/${userId}/reject-registration`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+    } catch (error) {
+      toast.error("Erreur lors de l'envoi du mail de refus", {
+        description: error instanceof Error ? error.message : String(error),
+        icon: <AlertCircle className="h-5 w-5" />,
+      });
     }
   };
 
@@ -125,16 +239,21 @@ export default function Dashboard() {
       );
       if (!response.ok)
         throw new Error(`HTTP error! Status: ${response.status}`);
-  
+
       const json = await response.json();
       setUsers(json.data); // on suppose que tu veux stocker uniquement la propriété "data"
     } catch (error) {
-      console.error("Erreur lors du chargement des utilisateurs avec déclarations pending:", error);
+      toast.error(
+        "Erreur lors du chargement des utilisateurs avec déclarations pending",
+        {
+          description: error instanceof Error ? error.message : String(error),
+          icon: <AlertCircle className="h-5 w-5" />,
+        }
+      );
     } finally {
       setLoading(false);
     }
   };
-  
 
   const searchUsers = async () => {
     if (!searchTerm.trim()) {
@@ -163,35 +282,12 @@ export default function Dashboard() {
       const data = await response.json();
       setUsers(data);
     } catch (error) {
-      console.error("Erreur lors de la recherche des utilisateurs:", error);
+      toast.error("Erreur lors de la recherche des utilisateurs", {
+        description: error instanceof Error ? error.message : String(error),
+        icon: <AlertCircle className="h-5 w-5" />,
+      });
     } finally {
       setLoading(false);
-    }
-  };
-
-  const getStatusClass = (status: string) => {
-    switch (status) {
-      case "approved":
-        return "bg-green-100 text-green-800";
-      case "pending":
-        return "bg-yellow-100 text-yellow-800";
-      case "rejected":
-        return "bg-red-100 text-red-800";
-      default:
-        return "bg-gray-100 text-gray-800";
-    }
-  };
-
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case "approved":
-        return "Accepté";
-      case "pending":
-        return "En attente";
-      case "rejected":
-        return "Refusé";
-      default:
-        return status;
     }
   };
 
@@ -229,49 +325,21 @@ export default function Dashboard() {
         );
       }
 
-      console.log("Statut mis à jour avec succès");
+      // toast.success("Statut mis à jour avec succès", {
+      //   description: "L'utilisateur a été mis à jour.",
+      //   icon: <CheckCircle className="h-5 w-5" />,
+      // });
 
       // Recharger uniquement si nécessaire
       if (activeTab === "demandes") {
         fetchPendingUsers(); // Recharge uniquement les utilisateurs en attente
       }
     } catch (error) {
-      console.error("Erreur lors de la mise à jour du statut:", error);
-      setUsers(previousUsers); // Rétablir la liste en cas d'échec
-    }
-  };
-
-  const deleteUser = async (userId: number, userName: string) => {
-    if (
-      !confirm(
-        `Êtes-vous sûr de vouloir refuser et supprimer l'utilisateur ${userName} ?`
-      )
-    ) {
-      return;
-    }
-
-    try {
-      // Optimistic UI update - Supprimer immédiatement l'utilisateur de la liste
-      setUsers((prevUsers) =>
-        prevUsers.filter((user) => user.user_id !== userId)
-      );
-
-      // Envoyer la requête au backend
-      const response = await fetch(`${API_URL}/users/${userId}`, {
-        method: "DELETE",
-        ...fetchConfig,
+      toast.error("Erreur lors de la mise à jour du statut", {
+        description: error instanceof Error ? error.message : String(error),
+        icon: <AlertCircle className="h-5 w-5" />,
       });
-
-      if (!response.ok) {
-        // En cas d'erreur, recharger la liste pour restaurer l'état
-        throw new Error(`HTTP error! Status: ${response.status}`);
-      }
-
-      // Pas besoin de recharger la liste car nous avons déjà mis à jour l'UI
-    } catch (error) {
-      console.error("Erreur lors de la suppression de l'utilisateur:", error);
-      // En cas d'erreur, recharger la liste pour restaurer l'état correct
-      fetchPendingUsers();
+      setUsers(previousUsers); // Rétablir la liste en cas d'échec
     }
   };
 
@@ -280,9 +348,9 @@ export default function Dashboard() {
     fetchPendingUsers();
   }, []); // Le tableau vide [] signifie que cet effet s'exécute uniquement au montage
 
-
   return (
     <ProtectedRouteAdmin>
+      <Toaster position="bottom-right" richColors closeButton />
       <div className="container mx-auto py-10 px-4 max-w-full">
         <h1 className="text-2xl font-semibold mb-8">
           Tableau de bord administrateur
@@ -367,14 +435,7 @@ export default function Dashboard() {
                             <TableCell>
                               {new Date(user.dateCreation).toLocaleDateString()}
                             </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={`${getStatusClass(user.statut)}`}
-                              >
-                                {getStatusLabel(user.statut)}
-                              </Badge>
-                            </TableCell>
+                            <TableCell>{getStatusBadge(user.statut)}</TableCell>
                             <TableCell className="text-right space-x-1">
                               <Button
                                 variant="outline"
@@ -488,19 +549,20 @@ export default function Dashboard() {
                             <TableCell>
                               {new Date(user.dateCreation).toLocaleDateString()}
                             </TableCell>
-                            <TableCell>
-                              <Badge
-                                variant="outline"
-                                className={`${getStatusClass(user.statut)}`}
-                              >
-                                {getStatusLabel(user.statut)}
-                              </Badge>
-                            </TableCell>
+                            <TableCell>{getStatusBadge(user.statut)}</TableCell>
                             <TableCell className="text-right space-x-1">
-                            <Button variant="outline" size="sm" onClick={() => router.push(`/admin/${userId}/client/${user.user_id}`)}>
-                              Voir détails
-                            </Button>
-                          </TableCell>
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  router.push(
+                                    `/admin/${userId}/client/${user.user_id}`
+                                  )
+                                }
+                              >
+                                Voir détails
+                              </Button>
+                            </TableCell>
                           </TableRow>
                         ))
                       ) : (

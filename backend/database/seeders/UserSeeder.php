@@ -49,7 +49,7 @@ class UserSeeder extends Seeder
             ],
             [
                 'nom' => 'Isabelle Martin',
-                'email' => 'prive@example.com',
+                'email' => 'boran.u3@gmail.com',
                 'motDePasse' => Hash::make('password'),
                 'localite' => 'Vernier',
                 'adresse' => 'Rue du Village 45',

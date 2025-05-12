@@ -8,6 +8,9 @@ use App\Models\Entreprise;
 use Illuminate\Http\Request;
 use App\Models\Declaration;
 use App\Models\Administrateur;
+use App\Mail\RegistrationApprovedMail;
+use App\Mail\RegistrationRejectedMail;
+use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 
 class UserController extends Controller
@@ -347,6 +350,7 @@ class UserController extends Controller
             ], 500);
         }
     }
+
     /**
      * Retourne les utilisateurs avec au moins une déclaration "pending"
      */
@@ -367,6 +371,32 @@ class UserController extends Controller
         ]);
     }
 
+    /**
+     * Approuve l'inscription d'un utilisateur et envoie un email de confirmation.
+     */
+    public function approveRegistration($id)
+    {
+        $user = User::findOrFail($id);
+        $user->statut = 'approved';
+        $user->save();
 
+        Mail::to($user->email)->send(new RegistrationApprovedMail($user));
+
+        return response()->json(['message' => 'Utilisateur approuvé et email envoyé.']);
+    }
+
+    /**
+     * Rejette l'inscription d'un utilisateur et envoie un email de notification.
+     */
+    public function rejectRegistration($id)
+    {
+        $user = User::findOrFail($id);
+        $user->statut = 'rejected';
+        $user->save();
+
+        Mail::to($user->email)->send(new RegistrationRejectedMail($user));
+
+        return response()->json(['message' => 'Utilisateur refusé et email envoyé.']);
+    }
 
 }

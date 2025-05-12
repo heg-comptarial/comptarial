@@ -645,23 +645,35 @@ export default function Home() {
                       <div className="bg-black rounded-full p-3 text-white">
                         <Phone className="w-5 h-5" />
                       </div>
-                      <p className="text-lg">022 794 04 32</p>
+                      <a href="tel:0227940432" className="text-lg">
+                        022 794 04 32
+                      </a>
                     </div>
 
                     <div className="flex items-center gap-4">
                       <div className="bg-black rounded-full p-3 text-white">
                         <Mail className="w-5 h-5" />
                       </div>
-                      <p className="text-lg">contact@comptarial.ch</p>
+                      <a
+                        href="mailto:contact@comptarial.ch"
+                        className="text-lg"
+                      >
+                        contact@comptarial.ch
+                      </a>
                     </div>
 
                     <div className="flex items-center gap-4">
                       <div className="bg-black rounded-full p-3 text-white">
                         <MapPin className="w-5 h-5" />
                       </div>
-                      <p className="text-lg">
+                      <a
+                        href="https://www.google.com/maps/place/Av.+des+Communes-Réunies+72,+1212+Lancy,+Switzerland"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="text-lg hover:underline"
+                      >
                         Av. des Communes-Réunies 72, 1212 Lancy
-                      </p>
+                      </a>
                     </div>
                   </div>
                 </div>

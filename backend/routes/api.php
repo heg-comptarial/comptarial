@@ -169,6 +169,13 @@ Route::get('/prives/users/{userId}', [PriveController::class, 'getPriveByUserId'
 // Route pour le formulaire de contact
 Route::post('/contact', [ContactController::class, 'send']);
 
+// Approve a user's registration and send email
+Route::post('/users/{id}/approve-registration', [UserController::class, 'approveRegistration']);
+
+// Reject a user's registration and send email
+Route::post('/users/{id}/reject-registration', [UserController::class, 'rejectRegistration']);
+
+
 Route::get('/auth/user', function (Request $request){
     // Lire le cookie 'user_id' crypté
     $encryptedUserId = $request->cookie('user_id');
