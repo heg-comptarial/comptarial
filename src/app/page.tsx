@@ -28,6 +28,13 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  useEffect(() => {
+    const script = document.createElement("script");
+    script.src = `https://www.google.com/recaptcha/api.js?render=6LerjTcrAAAAAMm0XQKRjGOXyXvh1dGzLgXrdFI8`;
+    script.async = true;
+    document.body.appendChild(script);
+  }, []);
+
   // Handle scroll and update active section
   useEffect(() => {
     const handleScroll = () => {
@@ -90,11 +97,17 @@ export default function Home() {
     const form = e.currentTarget;
     const formData = new FormData(form);
 
+    const token = await window.grecaptcha.execute(
+      "6LerjTcrAAAAAMm0XQKRjGOXyXvh1dGzLgXrdFI8",
+      { action: "contact" }
+    );
+
     const data = {
       name: formData.get("name")?.toString() || "",
       email: formData.get("email")?.toString() || "",
       subject: formData.get("subject")?.toString() || "",
       message: formData.get("message")?.toString() || "",
+      recaptcha: token,
     };
 
     try {
