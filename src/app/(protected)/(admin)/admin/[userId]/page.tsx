@@ -259,37 +259,31 @@ export default function Dashboard() {
     if (!searchTerm.trim()) {
       // Si la recherche est vide, on recharge les utilisateurs selon l'onglet actif
       if (activeTab === "demandes") {
-        fetchPendingUsers();
+        fetchPendingUsers()
       } else if (activeTab === "clients") {
-        fetchApprovedUsers();
+        fetchApprovedUsers()
       }
-      return;
+      return
     }
 
-    setLoading(true);
+    setLoading(true)
     try {
-      const statut = activeTab === "demandes" ? "pending" : "approved";
+      const statut = activeTab === "demandes" ? "pending" : "approved"
       const response = await fetch(
-        `${API_URL}/users/search?q=${encodeURIComponent(
-          searchTerm
-        )}&statut=${statut}`,
-        fetchConfig
-      );
+        `${API_URL}/users?query=${encodeURIComponent(searchTerm)}&statut=${statut}`,
+        fetchConfig,
+      )
 
-      if (!response.ok)
-        throw new Error(`HTTP error! Status: ${response.status}`);
+      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
 
-      const data = await response.json();
-      setUsers(data);
+      const data = await response.json()
+      setUsers(data.results || []);
     } catch (error) {
-      toast.error("Erreur lors de la recherche des utilisateurs", {
-        description: error instanceof Error ? error.message : String(error),
-        icon: <AlertCircle className="h-5 w-5" />,
-      });
+      console.error("Erreur lors de la recherche des utilisateurs:", error)
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
-  };
+  }
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);

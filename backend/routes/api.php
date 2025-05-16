@@ -51,6 +51,9 @@ Route::post('/users/{id}/approve', [UserController::class, 'approveUser']);
 // Routes supplémentaires pour les utilisateurs afin de charger les user avec des déclarations en attente
 Route::get('/users-with-pending-declarations', [UserController::class, 'usersWithPendingDeclarations']);
 
+Route::get('users', [UserController::class, 'search']);
+
+
 
 // Routes supplémentaires pour les utilisateurs afin de trouver l'id d'un admin
 Route::get('/admin', [UserController::class, 'getAdminId'])->middleware("auth:sanctum");

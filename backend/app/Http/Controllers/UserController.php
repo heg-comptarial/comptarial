@@ -12,6 +12,7 @@ use App\Mail\RegistrationApprovedMail;
 use App\Mail\RegistrationRejectedMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class UserController extends Controller
 {
@@ -399,4 +400,47 @@ class UserController extends Controller
         return response()->json(['message' => 'Utilisateur refusé et email envoyé.']);
     }
 
+    public function search(Request $request)
+    {
+        $query = $request->input('query');
+        $statut = $request->input('statut');
+
+        // Logging pour le debug
+        Log::info('Recherche utilisateur avec :', [
+            'query' => $query,
+            'statut' => $statut
+        ]);
+
+        $users = User::query();
+
+        if (!empty($query)) {
+            // Recherche insensible à la casse et aux accents
+            $normalizedQuery = strtolower(iconv('UTF-8', 'ASCII//TRANSLIT', $query));
+
+            $users->where(function ($q) use ($normalizedQuery) {
+                $q->whereRaw('LOWER(nom) LIKE ?', ["%{$normalizedQuery}%"])
+                ->orWhereRaw('LOWER(email) LIKE ?', ["%{$normalizedQuery}%"])
+                ->orWhereRaw('LOWER(localite) LIKE ?', ["%{$normalizedQuery}%"])
+                ->orWhereRaw('LOWER(numeroTelephone) LIKE ?', ["%{$normalizedQuery}%"]);
+            });
+        }
+
+        if (!empty($statut)) {
+            $users->where('statut', $statut);
+        }
+
+        // Charger les relations
+        $users->with(['administrateurs', 'declarations', 'entreprises', 'notifications', 'prives']);
+
+        $results = $users->get();
+
+        Log::info('Résultats trouvés :', ['count' => $results->count()]);
+
+        return response()->json([
+            'success' => true,
+            'results' => $results
+        ]);
+    }
+
 }
+
