@@ -88,6 +88,14 @@ Route::patch('/declarations/{id}/validateDecEtDoc', [DeclarationController::clas
 // Routes pour les notifications
 Route::apiResource('notifications', NotificationController::class);
 
+Route::get('/users/{id}/notifications', [NotificationController::class, 'getUserNotifications']);
+Route::post('/users/{id}/notifications/mark-all-read', [NotificationController::class, 'markAllAsRead']);
+
+// Routes pour créer des notifications spécifiques
+Route::post('/notifications/document-comment', [NotificationController::class, 'createDocumentCommentNotification']);
+Route::post('/notifications/document-status', [NotificationController::class, 'createDocumentStatusNotification']);
+Route::post('/notifications/declaration-status', [NotificationController::class, 'createDeclarationStatusNotification']);
+
 // Routes pour les entités privées
 Route::apiResource('prives', PriveController::class);
 
