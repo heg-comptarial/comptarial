@@ -15,6 +15,7 @@ import {
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
 import { NavUser } from "@/components/sidebar/nav-user";
+import { NotificationBell } from "@/components/ui/notification-bell";
 import {
   Sidebar,
   SidebarContent,
@@ -23,6 +24,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { useParams } from "next/navigation";
 
@@ -87,21 +89,28 @@ export function PendingSidebar({ ...props }: React.ComponentProps<typeof Sidebar
   return (
     <Sidebar variant="inset" {...props} collapsible="icon">
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-            <Link href={`/dashboard/${userId}`} passHref>
-                <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
-                  <Command className="size-4" />
-                </div>
-                <div className="grid flex-1 text-left text-sm leading-tight">
-                  <span className="truncate font-semibold">Comptarial</span>
-                  <span className="truncate text-xs">Fiduciaire</span>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+        <div className="flex items-center justify-between px-4 py-2">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild>
+              <Link href={`/dashboard/${userId}`} passHref>
+                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
+                    <Command className="size-4" />
+                  </div>
+                  <div className="grid flex-1 text-left text-sm leading-tight">
+                    <span className="truncate font-semibold">Comptarial</span>
+                    <span className="truncate text-xs">Fiduciaire</span>
+                  </div>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+
+              {/* Ajout de la cloche de notification */}
+              {userId && <NotificationBell userId={userId} />}
+        </div>
+                
+        <SidebarSeparator />
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

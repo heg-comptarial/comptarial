@@ -116,6 +116,9 @@ export function EntrepriseSidebar(props: React.ComponentProps<typeof Sidebar>) {
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
+
+        {/* Ajout de la cloche de notification */}
+        {userId && <NotificationBell userId={userId} />}
       </SidebarHeader>
 
       <SidebarContent>
