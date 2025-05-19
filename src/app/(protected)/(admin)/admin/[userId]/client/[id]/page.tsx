@@ -224,6 +224,11 @@ export default function ClientDetail() {
       );
 
       if (response.status === 200) {
+        // Créer une notification pour le client
+        await axios.post(`${API_URL}/notifications`, {
+          user_id: userDetails?.user_id,
+          contenu: `Le montant des impôts de votre déclaration a été mis à jour: ${newImpots}`,
+        });
         toast.success("Montant des impôts mis à jour avec succès !");
         await refreshUserData(); // Rafraîchir les données utilisateur
       } else {
@@ -393,6 +398,12 @@ export default function ClientDetail() {
         statut: newStatus,
       });
 
+      // Créer une notification pour le client
+      await axios.post(`${API_URL}/notifications/document-status`, {
+        document_id: documentId,
+        status: newStatus,
+      });
+
       toast.success(`Statut du document mis à jour avec succès`);
 
       // Mettre à jour l'état local en utilisant la nouvelle route
@@ -432,6 +443,12 @@ export default function ClientDetail() {
           );
           return;
         }
+
+        // Créer une notification pour le client
+        await axios.post(`${API_URL}/notifications/declaration-status`, {
+          declaration_id: declarationId,
+          status: newStatus,
+        });
 
         toast.success("Statut de la déclaration mis à jour avec succès");
 
@@ -497,6 +514,12 @@ export default function ClientDetail() {
           );
           return;
         }
+
+        // Créer une notification pour le client
+        await axios.post(`${API_URL}/notifications/declaration-status`, {
+          declaration_id: declarationId,
+          status: newStatus,
+        });
 
         toast.success("Statut de la déclaration mis à jour avec succès");
 
@@ -564,6 +587,13 @@ export default function ClientDetail() {
         admin_id: adminId,
         contenu: commentaire,
         dateCreation: dateCreation,
+      });
+
+      // Créer une notification pour le client
+      await axios.post(`${API_URL}/notifications/document-comment`, {
+        admin_id: adminId,
+        document_id: documentId,
+        contenu: commentaire,
       });
 
       toast.success("Commentaire ajouté avec succès");
@@ -926,6 +956,12 @@ export default function ClientDetail() {
         return;
       }
 
+      // Créer une notification pour le client
+      await axios.post(`${API_URL}/notifications/declaration-status`, {
+        declaration_id: pendingDeclarationAction.declarationId,
+        status: pendingDeclarationAction.status,
+      });
+
       toast.success("Déclaration validée avec succès (sans les documents)");
 
       // Rafraîchir les données
@@ -980,6 +1016,13 @@ export default function ClientDetail() {
         );
         return;
       }
+
+      // Créer une notification pour le client
+      await axios.post(`${API_URL}/notifications/declaration-status`, {
+        declaration_id: pendingDeclarationAction.declarationId,
+        status: "approved",
+        message: "Votre déclaration et tous ses documents ont été validés"
+      });
 
       toast.success("Déclaration et documents validés avec succès");
 
