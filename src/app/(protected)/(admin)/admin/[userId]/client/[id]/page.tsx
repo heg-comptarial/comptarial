@@ -224,11 +224,13 @@ export default function ClientDetail() {
       );
 
       if (response.status === 200) {
+
         // Créer une notification pour le client
         await axios.post(`${API_URL}/notifications`, {
           user_id: userDetails?.user_id,
           contenu: `Le montant des impôts de votre déclaration a été mis à jour: ${newImpots}`,
         });
+        
         toast.success("Montant des impôts mis à jour avec succès !");
         await refreshUserData(); // Rafraîchir les données utilisateur
       } else {
@@ -880,6 +882,12 @@ export default function ClientDetail() {
 
         if (!res.ok) throw new Error("Erreur enregistrement BDD");
       }
+
+      // Créer une notification pour le client
+      await axios.post(`${API_URL}/notifications`, {
+        user_id: userDetails?.user_id,
+        contenu: `Vos documents ont été enregistrés avec succès.`,
+      });
 
       toast.success("Documents enregistrés avec succès");
       setAdminSelectedFiles([]);

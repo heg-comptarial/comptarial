@@ -17,6 +17,8 @@ return new class extends Migration
             $table->string('contenu');
             $table->dateTime('dateCreation')->useCurrent();
             $table->boolean('isRead')->default(false); 
+            $table->string('resource_type')->nullable();
+            $table->unsignedBigInteger('resource_id')->nullable();
         });
     }
 

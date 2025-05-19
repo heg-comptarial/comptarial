@@ -40,7 +40,9 @@ class Notification extends Model
 		'user_id',
 		'contenu',
 		'dateCreation',
-		'isRead'
+		'isRead',
+		'resource_type',
+        'resource_id',
 	];
 
 	public function user()
