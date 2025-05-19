@@ -14,16 +14,19 @@ class NotificationSeeder extends Seeder
                 'user_id' => 1,
                 'contenu' => 'Votre déclaration a été approuvée.',
                 'dateCreation' => now(),
+                'isRead' => false,
             ],
             [
                 'user_id' => 2,
                 'contenu' => 'Un nouveau document a été ajouté.',
                 'dateCreation' => now(),
+                'isRead' => false,
             ],
             [
                 'user_id' => 1,
                 'contenu' => 'Votre compte a été mis à jour.',
                 'dateCreation' => now(),
+                'isRead' => true,
             ],
         ]);
     }
