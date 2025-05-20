@@ -3,6 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Notification;
+use App\Models\Declaration;
+use App\Models\Document;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -111,86 +113,6 @@ class NotificationController extends Controller
         
         return response()->json($notification, 201);
     }
-    
-    public function createDocumentStatusNotification(Request $request)
-    {
-        $request->validate([
-            'document_id' => 'required|exists:document,doc_id',
-            'status' => 'required|string|in:approved,rejected,pending'
-        ]);
-        
-        // Récupérer le document et l'utilisateur associé
-        $document = \App\Models\Document::with('rubrique.declaration.user')->findOrFail($request->document_id);
-        
-        if (!$document->rubrique || !$document->rubrique->declaration || !$document->rubrique->declaration->user) {
-            return response()->json(['message' => 'Impossible de trouver l\'utilisateur associé au document'], 404);
-        }
-        
-        $user = $document->rubrique->declaration->user;
-        
-        // Déterminer le message en fonction du statut
-        $statusMessage = '';
-        switch($request->status) {
-            case 'approved':
-                $statusMessage = 'a été validé';
-                break;
-            case 'rejected':
-                $statusMessage = 'a été refusé';
-                break;
-            case 'pending':
-                $statusMessage = 'est en attente de validation';
-                break;
-        }
-        
-        // Créer la notification
-        $notification = Notification::create([
-            'user_id' => $user->user_id,
-            'contenu' => "Votre document '{$document->nom}' {$statusMessage}",
-            'dateCreation' => Carbon::now(),
-            'isRead' => false
-        ]);
-        
-        return response()->json($notification, 201);
-    }
-    
-    public function createDeclarationStatusNotification(Request $request)
-    {
-        $request->validate([
-            'declaration_id' => 'required|exists:declaration,declaration_id',
-            'status' => 'required|string|in:approved,rejected,pending'
-        ]);
-        
-        // Récupérer la déclaration et l'utilisateur associé
-        $declaration = \App\Models\Declaration::with('user')->findOrFail($request->declaration_id);
-        
-        if (!$declaration->user) {
-            return response()->json(['message' => 'Impossible de trouver l\'utilisateur associé à la déclaration'], 404);
-        }
-        
-        // Déterminer le message en fonction du statut
-        $statusMessage = '';
-        switch($request->status) {
-            case 'approved':
-                $statusMessage = 'a été validée';
-                break;
-            case 'rejected':
-                $statusMessage = 'a été refusée';
-                break;
-            case 'pending':
-                $statusMessage = 'est en attente de validation';
-                break;
-        }
-        
-        // Créer la notification
-        $notification = Notification::create([
-            'user_id' => $declaration->user->user_id,
-            'contenu' => "Votre déclaration '{$declaration->titre}' {$statusMessage}",
-            'dateCreation' => Carbon::now(),
-            'isRead' => false
-        ]);
-        
-        return response()->json($notification, 201);
-    }
 
 
     public function createRubriqueStatusNotification(Request $request)
@@ -265,6 +187,127 @@ class NotificationController extends Controller
         ]);
         
         return response()->json($notification, 201);
+    }
+
+    /**
+     * Crée une notification pour un changement de statut de document
+     */
+    public function createDocumentStatusNotification(Request $request)
+    {
+        $request->validate([
+            'document_id' => 'required|exists:document,doc_id',
+            'status' => 'required|string|in:approved,rejected,pending'
+        ]);
+        
+        // Récupérer le document et l'utilisateur associé
+        $document = Document::with('rubrique.declaration.user')->findOrFail($request->document_id);
+        
+        if (!$document->rubrique || !$document->rubrique->declaration || !$document->rubrique->declaration->user) {
+            return response()->json(['message' => 'Impossible de trouver l\'utilisateur associé au document'], 404);
+        }
+        
+        $user = $document->rubrique->declaration->user;
+        
+        // Déterminer le message en fonction du statut
+        $statusMessage = '';
+        switch($request->status) {
+            case 'approved':
+                $statusMessage = 'a été validé';
+                break;
+            case 'rejected':
+                $statusMessage = 'a été refusé';
+                break;
+            case 'pending':
+                $statusMessage = 'est en attente de validation';
+                break;
+        }
+        
+        // Créer la notification avec le type de ressource et l'ID corrects
+        $notification = Notification::create([
+            'user_id' => $user->user_id,
+            'contenu' => "Votre document '{$document->nom}' {$statusMessage}",
+            'dateCreation' => Carbon::now(),
+            'isRead' => false,
+            'resource_type' => 'document', // Type de ressource = document
+            'resource_id' => $document->doc_id, // ID de la ressource = ID du document
+        ]);
+        
+        return response()->json($notification, 201);
+    }
+    
+    /**
+     * Crée une notification pour un changement de statut de déclaration
+     */
+    public function createDeclarationStatusNotification(Request $request)
+    {
+        $request->validate([
+            'declaration_id' => 'required|exists:declaration,declaration_id',
+            'status' => 'required|string|in:approved,rejected,pending'
+        ]);
+        
+        // Récupérer la déclaration et l'utilisateur associé
+        $declaration = Declaration::with('user')->findOrFail($request->declaration_id);
+        
+        if (!$declaration->user) {
+            return response()->json(['message' => 'Impossible de trouver l\'utilisateur associé à la déclaration'], 404);
+        }
+        
+        // Déterminer le message en fonction du statut
+        $statusMessage = '';
+        switch($request->status) {
+            case 'approved':
+                $statusMessage = 'a été validée';
+                break;
+            case 'rejected':
+                $statusMessage = 'a été refusée';
+                break;
+            case 'pending':
+                $statusMessage = 'est en attente de validation';
+                break;
+        }
+        
+        // Créer la notification avec le type de ressource et l'ID corrects
+        $notification = Notification::create([
+            'user_id' => $declaration->user->user_id,
+            'contenu' => "Votre déclaration '{$declaration->titre}' {$statusMessage}",
+            'dateCreation' => Carbon::now(),
+            'isRead' => false,
+            'resource_type' => 'declaration', // Type de ressource = declaration
+            'resource_id' => $declaration->declaration_id, // ID de la ressource = ID de la déclaration
+        ]);
+        
+        return response()->json($notification, 201);
+    }
+
+    /**
+     * Crée une notification pour un type de déclaration spécifique
+     */
+    public function createDeclarationTypeNotification(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:user,user_id',
+            'type' => 'required|string|in:comptabilite,tva,salaires,administration,fiscalite,divers',
+            'message' => 'required|string'
+        ]);
+        
+        // Créer la notification avec le type de ressource = type de déclaration
+        $notification = Notification::create([
+            'user_id' => $request->user_id,
+            'contenu' => $request->message,
+            'dateCreation' => Carbon::now(),
+            'isRead' => false,
+            'resource_type' => $request->type, // Type de ressource = type de déclaration
+            'resource_id' => null, // Pas d'ID spécifique pour ce type
+        ]);
+        
+        return response()->json($notification, 201);
+    }
+
+    public function deleteAllForUser($id)
+    {
+        // Supprime toutes les notifications de l'utilisateur
+        Notification::where('user_id', $id)->delete();
+        return response()->json(['message' => 'Toutes les notifications ont été supprimées.'], 200);
     }
 
 

@@ -146,32 +146,29 @@ export function NotificationBell({ userId }: { userId: number }) {
 
       // Construire l'URL en fonction du type de ressource
       let url = ""
-      const adminId = sessionStorage.getItem("admin_id")
+      const userId = sessionStorage.getItem("userId") || localStorage.getItem("userId")
 
       switch (notification.resource_type) {
         case "document":
-          // Rediriger vers la page du document
-          // Nous avons besoin de connaître l'ID de la déclaration et du client
-          // Pour simplifier, nous pouvons rediriger vers la page du client
-          if (adminId) {
-            url = `/admin/${adminId}/client/${notification.user_id}`
-          }
+          // Pour un document, rediriger vers la déclaration contenant ce document
+          url = `/declarations-client/${userId}?document=${notification.resource_id}`
           break
         case "declaration":
-          // Rediriger vers la page de la déclaration
-          if (adminId) {
-            url = `/admin/${adminId}/client/${notification.user_id}`
-          }
+          // Pour une déclaration, rediriger vers la page de cette déclaration
+          url = `/declarations-client/${userId}?declaration=${notification.resource_id}`
           break
-        case "user":
-          // Rediriger vers la page du client
-          if (adminId) {
-            url = `/admin/${adminId}/client/${notification.resource_id}`
-          }
+        case "comptabilite":
+        case "tva":
+        case "salaires":
+        case "administration":
+        case "fiscalite":
+        case "divers":
+          // Pour les types de déclaration spécifiques
+          url = `/declarations-client/${userId}?type=${encodeURIComponent(notification.resource_type)}`
           break
         default:
           // Par défaut, rediriger vers le tableau de bord
-          url = "/admin"
+          url = `/dashboard/${userId}`
       }
 
       if (url) {
@@ -196,7 +193,7 @@ export function NotificationBell({ userId }: { userId: number }) {
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-80 p-0" align="end">
+      <PopoverContent className="w-[500px] p-0" align="start" >
         <div className="flex items-center justify-between p-4">
           <h3 className="font-medium">Notifications</h3>
           <div className="flex gap-2">
@@ -205,18 +202,7 @@ export function NotificationBell({ userId }: { userId: number }) {
                 Tout marquer comme lu
               </Button>
             )}
-            {notifications.length > 0 && (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={deleteAllNotifications}
-                disabled={isDeleting}
-                className="text-destructive hover:text-destructive"
-              >
-                <Trash2 className="h-4 w-4 mr-1" />
-                Tout supprimer
-              </Button>
-            )}
+            
           </div>
         </div>
         <Separator />
@@ -260,7 +246,23 @@ export function NotificationBell({ userId }: { userId: number }) {
               <p className="text-sm text-muted-foreground">Aucune notification</p>
             </div>
           )}
+            
         </ScrollArea>
+
+        {notifications.length > 0 && (
+          <div className="flex justify-end px-4 py-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={deleteAllNotifications}
+               disabled={isDeleting}
+              className="text-destructive hover:text-destructive"
+            >
+              <Trash2 className="h-4 w-4 mr-1" />
+                Tout supprimer
+            </Button>
+        </div>
+      )}
       </PopoverContent>
     </Popover>
   )

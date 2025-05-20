@@ -96,6 +96,9 @@ Route::post('/notifications/document-comment', [NotificationController::class, '
 Route::post('/notifications/document-status', [NotificationController::class, 'createDocumentStatusNotification']);
 Route::post('/notifications/declaration-status', [NotificationController::class, 'createDeclarationStatusNotification']);
 
+Route::delete('/users/{id}/notifications', [NotificationController::class, 'deleteAllForUser']);
+
+
 // Routes pour les entités privées
 Route::apiResource('prives', PriveController::class);
 
