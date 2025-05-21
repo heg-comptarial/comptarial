@@ -72,4 +72,30 @@ class EnfantController extends Controller
         $enfant->delete();
         return response()->json(null, 204);
     }
+    public function destroyByPriveId($prive_id)
+{
+    $deleted = Enfant::where('prive_id', $prive_id)->delete();
+
+    if ($deleted === 0) {
+        return response()->noContent();
+    }
+
+    return response()->json([
+        'message' => 'Toutes les informations associées à ce privé ont été supprimées',
+        'count' => $deleted
+    ]);
+}
+//     public function destroyByEnfantId($id)
+// {
+//     $deleted = Enfant::where('enfant_id', $id)->delete();
+
+//     if ($deleted === 0) {
+//         return response()->noContent();
+//     }
+
+//     return response()->json([
+//         'message' => 'Toutes les informations associées à ce privé ont été supprimées',
+//         'count' => $deleted
+//     ]);
+// }
 }

@@ -37,7 +37,7 @@ class Rubrique extends Model
 	protected $fillable = [
 		'declaration_id',
 		'titre',
-		'description'
+		'type'
 	];
 
 	public function declaration()

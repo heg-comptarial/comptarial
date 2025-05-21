@@ -11,6 +11,7 @@ class Deduction extends Model
 
     // Nom de la table associée
     protected $table = 'deduction';
+    protected $primaryKey = 'autre_deduction_id';
 
     // Désactiver les timestamps automatiques
     public $timestamps = false;

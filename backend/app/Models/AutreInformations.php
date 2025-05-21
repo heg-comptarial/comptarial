@@ -11,6 +11,7 @@ class AutreInformations extends Model
 
     // Nom de la table associée
     protected $table = 'autreinformations';
+    public $timestamps = false; // Désactive les timestamps
 
     // Attributs pouvant être remplis en masse
     protected $fillable = [

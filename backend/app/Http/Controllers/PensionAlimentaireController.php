@@ -86,4 +86,23 @@ class PensionAlimentaireController extends Controller
         $pension->delete();
         return response()->json(['message' => 'Resource deleted successfully']);
     }
+
+public function getByEnfantId($enfant_id)
+{
+    $pension = PensionAlimentaire::where('enfant_id', $enfant_id)->firstOrFail();
+    return response()->json($pension);
+}
+    public function destroyByEnfantId($enfat_id)
+{
+    $deleted = PensionAlimentaire::where('enfant_id', $enfat_id)->delete();
+
+    if ($deleted === 0) {
+        return response()->noContent();
+    }
+
+    return response()->json([
+        'message' => 'Toutes les informations associées à ce privé ont été supprimées',
+        'count' => $deleted
+    ]);
+}
 }

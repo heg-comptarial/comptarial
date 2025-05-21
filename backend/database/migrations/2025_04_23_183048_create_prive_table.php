@@ -20,10 +20,7 @@ return new class extends Migration
             $table->boolean('fo_enfants')->default(false);
             $table->boolean('fo_autrePersonneCharge')->default(false);
             $table->boolean('fo_revenu')->default(false);
-            $table->boolean('fo_independant')->default(false);
-            $table->boolean('fo_indemnitesAssurance')->default(false);
             $table->boolean('fo_rentier')->default(false);
-            $table->boolean('fo_autresRevenus')->default(false);
             $table->boolean('fo_banques')->default(false);
             $table->boolean('fo_titres')->default(false);
             $table->boolean('fo_immobiliers')->default(false);

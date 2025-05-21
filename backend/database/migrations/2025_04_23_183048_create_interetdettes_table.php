@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::create('interetdettes', function (Blueprint $table) {
             $table->bigIncrements('dettes_id');
-            $table->unsignedBigInteger('prive_id')->index('prive_id');
+            $table->unsignedBigInteger('prive_id')->index('prive_id')->unique();
             $table->boolean('fo_attestationEmprunt')->default(false)->comment('solde et intérêts');
             $table->boolean('fo_attestationCarteCredit')->default(false)->comment('solde et intérêts');
             $table->boolean('fo_attestationHypotheque')->default(false)->comment('solde et intérêts');

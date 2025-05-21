@@ -11,11 +11,14 @@ class Banque extends Model
 
     // Nom de la table associée
     protected $table = 'banque';
+    public $timestamps = false; // Désactive les timestamps
+    protected $primaryKey = 'banque_id';
+
 
     // Attributs pouvant être remplis en masse
     protected $fillable = [
         'prive_id',
-        'fo_attestationFinAnnee',
+        'nb_compte',
     ];
 
     // Relation avec le modèle Prive (si applicable)

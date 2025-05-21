@@ -92,4 +92,27 @@ class AutrePersonneAChargeController extends Controller
         $autrePersonne->delete();
         return response()->json(['message' => 'Resource deleted successfully']);
     }
+        public function getByPriveId($prive_id)
+{
+    $infos = AutrePersonneACharge::where('prive_id', $prive_id)->get();
+
+    if ($infos->isEmpty()) {
+        return response()->json(['message' => 'Aucune information trouvée pour ce privé'], 404);
+    }
+
+    return response()->json($infos);
+}
+public function destroyByPriveId($prive_id)
+{
+    $deleted = AutrePersonneACharge::where('prive_id', $prive_id)->delete();
+
+    if ($deleted === 0) {
+        return response()->noContent();
+    }
+
+    return response()->json([
+        'message' => 'Toutes les informations associées à ce privé ont été supprimées',
+        'count' => $deleted
+    ]);
+}
 }

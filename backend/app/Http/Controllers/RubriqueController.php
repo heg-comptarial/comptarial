@@ -20,7 +20,7 @@ class RubriqueController extends Controller
         $request->validate([
             'declaration_id' => 'required|exists:declaration,declaration_id',
             'titre' => 'required|string|max:255',
-            'description' => 'required|string|max:500',
+            'type' => 'required|string|max:255',
         ]);
     
         // Vérifie s'il existe déjà une rubrique avec le même titre pour cette déclaration
@@ -66,5 +66,14 @@ class RubriqueController extends Controller
         $rubrique = Rubrique::findOrFail($id);
         $rubrique->delete();
         return response()->json(null, 204);
+    }
+    public function getRubriqueByDeclarationID($id){
+        $rubrique = Rubrique::where('declaration_id', $id)->get();
+
+    if ($rubrique->isEmpty()) {
+        return response()->json(['message' => 'Aucun revenu trouvé pour ce privé'], 404);
+    }
+
+    return response()->json($rubrique);
     }
 }

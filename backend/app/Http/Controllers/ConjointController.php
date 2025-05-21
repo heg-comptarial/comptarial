@@ -68,4 +68,27 @@ class ConjointController extends Controller
         $conjoint->delete();
         return response()->json(null, 204);
     }
+        public function getByPriveId($prive_id)
+{
+    $conjoint = Conjoint::where('prive_id', $prive_id)->get();
+
+    if ($conjoint->isEmpty()) {
+        return response()->noContent();
+    }
+
+    return response()->json($conjoint);
+}
+public function destroyByPriveId($prive_id)
+{
+    $deleted = Conjoint::where('prive_id', $prive_id)->delete();
+
+    if ($deleted === 0) {
+        return response()->noContent();
+    }
+
+    return response()->json([
+        'message' => 'Toutes les informations associées à ce privé ont été supprimées',
+        'count' => $deleted
+    ]);
+}
 }

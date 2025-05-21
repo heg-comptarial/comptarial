@@ -20,6 +20,7 @@ interface ImmobiliersProps {
 }
 
 export interface Immobilier {
+  immobilier_id?:number
   statut: string
   canton: string
   commune: string
@@ -118,14 +119,25 @@ export default function Immobiliers({ data, onUpdate, onNext, onPrev }: Immobili
   }
 
   // Supprimer un bien immobilier
-  const removeImmobilier = (index: number) => {
-    const updatedImmobiliers = [...formData.immobiliers]
-    updatedImmobiliers.splice(index, 1)
-    setFormData((prev) => ({
-      ...prev,
-      immobiliers: updatedImmobiliers,
-    }))
+const removeImmobilier = async (index: number) => {
+  const token = localStorage.getItem("auth_token");
+  const updatedImmobiliers = [...formData.immobiliers];
+  const immobilier = updatedImmobiliers[index];
+
+  try {
+    await axios.delete(`http://127.0.0.1:8000/api/immobiliers/${immobilier.immobilier_id}`, { 
+      headers: { Authorization: `Bearer ${token }` } 
+    });
+    
+    updatedImmobiliers.splice(index, 1);
+    setFormData(prev => ({ ...prev, immobiliers: updatedImmobiliers }));
+
+  } catch (error) {
+    console.error("Erreur suppression:", error);
   }
+};
+
+
 
   // Mettre à jour un bien immobilier
   const updateImmobilier = (index: number, field: keyof Immobilier, value: string | boolean) => {
@@ -139,6 +151,7 @@ export default function Immobiliers({ data, onUpdate, onNext, onPrev }: Immobili
       immobiliers: updatedImmobiliers,
     }))
   }
+
 
   // Soumettre le formulaire
   const handleSubmit = async (e: React.FormEvent) => {

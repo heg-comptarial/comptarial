@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('banque', function (Blueprint $table) {
             $table->bigIncrements('banque_id');
             $table->unsignedBigInteger('prive_id')->index('prive_id');
-            $table->boolean('fo_attestationFinAnnee')->default(false);
+            $table->integer('nb_compte')->default(1);
         });
     }
 

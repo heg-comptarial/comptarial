@@ -104,4 +104,28 @@ class RevenuController extends Controller
         $revenu->delete();
         return response()->json(['message' => 'Resource deleted successfully']);
     }
+    public function getByPriveId($prive_id)
+{
+    $revenus = Revenu::where('prive_id', $prive_id)->get();
+
+    if ($revenus->isEmpty()) {
+        return response()->json(['message' => 'Aucun revenu trouvé pour ce privé'], 404);
+    }
+
+    return response()->json($revenus);
+}
+public function destroyByPriveId($prive_id)
+{
+    $deleted = Revenu::where('prive_id', $prive_id)->delete();
+
+    if ($deleted === 0) {
+        return response()->noContent();
+    }
+
+    return response()->json([
+        'message' => 'Toutes les informations associées à ce privé ont été supprimées',
+        'count' => $deleted
+    ]);
+}
+
 }

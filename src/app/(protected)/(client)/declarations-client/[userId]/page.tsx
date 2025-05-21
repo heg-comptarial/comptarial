@@ -13,14 +13,19 @@ import { foFields } from "@/utils/foFields";
 import { getStatusBadge } from "@/utils/getStatusBadge";
 import YearSelector from "@/components/protected/declarations-client/features/selector/YearSelector";
 import RubriqueAccordionItem from "@/components/protected/declarations-client/features/documents/RubriqueAccordionItem";
+import dynamic from "next/dynamic";
+import router from "next/router";
+import { useYearStore } from '@/store/useYear';
 
 export default function DeclarationsClientPage() {
-  const [selectedYear, setSelectedYear] = useState<string | null>(null);
+  //const [selectedYear, setSelectedYear] = useState<string | null>(null);
   const [declaration, setDeclaration] = useState<Declaration | null>(null);
   const [userDeclarations, setUserDeclarations] = useState<Declaration[]>([]);
   const [declarationYears, setDeclarationYears] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [toastShown, setToastShown] = useState(false);
+  const [priveId, setPriveId] = useState<number | null>(null);
+
   const [selectedFiles, setSelectedFiles] = useState<
     { file: File; rubriqueId: number }[]
   >([]);
@@ -28,6 +33,21 @@ export default function DeclarationsClientPage() {
   const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
   const params = useParams();
   const userId = Number(params?.userId);
+  const [showForm, setShowForm] = useState(false);    
+  const [error, setError] = useState<string | null>(null);
+  const selectedYear = useYearStore((state) => state.selectedYear);
+  const setSelectedYear = useYearStore((state) => state.setSelectedYear);
+
+
+
+  const FormulaireDeclaration = dynamic(() => import("../../formulaire/[userId]/page"), {
+    ssr: false,
+    loading: () => (
+      <div className="flex justify-center items-center min-h-[400px]">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    ),
+  });
 
   useEffect(() => {
     const fetchDeclarations = async () => {
@@ -94,30 +114,28 @@ export default function DeclarationsClientPage() {
         const prives: Prive[] = await priveRes.json();
         const userPrive = prives.find((p) => p.user_id === userId);
 
-        for (const [field, value] of Object.entries(userPrive || {})) {
-          if (
-            field.startsWith("fo_") &&
-            value === true &&
-            foFields[field as keyof typeof foFields]
-          ) {
-            const rubriqueInfo = foFields[field as keyof typeof foFields];
-            const titre = rubriqueInfo.titre.trim().toLowerCase();
-            if (existingTitles.has(titre)) continue;
-            const createRes = await fetch(
-              "http://localhost:8000/api/rubriques",
-              {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                  declaration_id: data.declaration_id,
-                  titre: rubriqueInfo.titre,
-                  description: rubriqueInfo.description,
-                }),
-              }
-            );
-            if (createRes.ok) createdRubriques.push(await createRes.json());
-          }
-        }
+        console.log(data.declaration_id)
+
+for (const [field, value] of Object.entries(userPrive || {})) {
+  if (
+    field.startsWith("fo_") &&
+    value === true &&
+    foFields[field as keyof typeof foFields]
+  ) {
+    const rubriqueInfo = foFields[field as keyof typeof foFields];
+    const titre = rubriqueInfo.titre.trim().toLowerCase();
+    if (existingTitles.has(titre)) continue;
+    const createRes = await fetch(
+      `http://localhost:8000/api/rubriques?declaration_id=${data.declaration_id}}`,
+      {
+        method: "GET",
+        headers: { "Content-Type": "application/json" },
+      }
+    );
+
+    if (createRes.ok) createdRubriques.push(await createRes.json());
+  }
+}
 
         const finalRes = await fetch(
           `http://localhost:8000/api/users/${userId}/declarations/${data.declaration_id}`
@@ -147,6 +165,41 @@ export default function DeclarationsClientPage() {
       setToastShown(false);
     }
   }, [loading, toastShown, declaration]);
+
+  useEffect(() => {
+    const fetchPriveId = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+
+        if (!token || !userId) {
+          router.push("/connexion");
+          return;
+        }
+
+        const response = await axios.get(
+          `http://127.0.0.1:8000/api/prives/users/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            withCredentials: true,
+          }
+        );
+
+        if (response.data?.prive_id) {
+          setPriveId(response.data.prive_id);
+        } else {
+          setError("Identifiant privé introuvable.");
+        }
+      } catch (err) {
+        console.error("Erreur lors de la récupération du privé:", err);
+        setError("Erreur de récupération du privé.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchPriveId();
+  }, [userId, router]);
+
 
   const handleYearChange = (year: number) => setSelectedYear(year.toString());
 
@@ -178,6 +231,12 @@ export default function DeclarationsClientPage() {
       }
     }
   };
+  const handleCloseForm = () => {
+      console.log("handleCloseForm appelé");
+
+  refreshDeclaration(); // recharge les données si nécessaire
+  setShowForm(false);   // referme le formulaire
+};
 
   const uploadAndSaveDocuments = async () => {
     if (selectedFiles.length === 0)
@@ -259,10 +318,41 @@ export default function DeclarationsClientPage() {
       </div>
 
       <div className="p-10 pt-5">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
-          {declaration?.statut && getStatusBadge(declaration.statut)}
+<div className="flex justify-between items-center mb-6">
+  <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
+  <div className="flex items-center gap-2">
+    {declaration?.statut && getStatusBadge(declaration.statut)}
+{declaration?.statut === "pending" && (
+  <Button
+    variant="outline"
+    size="sm"
+    onClick={() => setShowForm(!showForm)}
+  >
+    {showForm ? "Fermer" : "Modifier les informations du formulaire"}
+  </Button>
+)}
+  </div>
+</div>
+      {showForm && (
+        <div className="my-6">
+          <FormulaireDeclaration
+            mode="edit"
+            priveId={priveId}
+            onSubmitSuccess={async () => {
+              try {
+                await refreshDeclaration()
+                setShowForm(false)
+                toast.success("Formulaire soumis avec succès")
+                return true
+              } catch (error) {
+                console.error("Erreur lors de la fermeture du formulaire:", error)
+                return false
+              }
+            }}
+          />
         </div>
+      )}
+
 
         {declaration?.rubriques?.length ? (
           <Accordion

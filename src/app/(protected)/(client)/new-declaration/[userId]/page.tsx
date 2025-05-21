@@ -336,6 +336,7 @@ export default function NouvelleDeclaration() {
           </div>
         )}
         <FormulaireDeclaration
+          mode="create"
           onSubmitSuccess={createDeclaration}
           priveId={priveId}
         />

@@ -5,6 +5,7 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
+import axios from "axios"
 
 export interface PensionAlimentaireData {
   enfant_id?: number
@@ -13,7 +14,6 @@ export interface PensionAlimentaireData {
   nom: string
   prenom: string
   noContribuable: string
-  preuveVersement: boolean
 }
 
 interface PensionAlimentaireProps {
@@ -38,13 +38,13 @@ export default function PensionAlimentaire({
     nom: "",
     prenom: "",
     noContribuable: "",
-    preuveVersement: false,
   })
 
   // Initialiser les données du formulaire si elles existent
   useEffect(() => {
     if (data) {
       setFormData(data)
+      console.log("TT e "+data)
     } else {
       // Réinitialiser avec l'ID de l'enfant
       setFormData({
@@ -54,7 +54,6 @@ export default function PensionAlimentaire({
         nom: "",
         prenom: "",
         noContribuable: "",
-        preuveVersement: false,
       })
     }
   }, [data, enfantId])
@@ -68,6 +67,14 @@ export default function PensionAlimentaire({
     setFormData(updatedData)
     onUpdate(updatedData)
   }
+
+  const deletePension = async() => {
+  const token = localStorage.getItem("auth_token");
+  const enfantId = formData.enfant_id
+      axios.delete(`http://127.0.0.1:8000/api/pensionsalimentaires/enfants/${enfantId}`, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      })
+}
 
   return (
     <div className="space-y-4">
@@ -167,20 +174,7 @@ export default function PensionAlimentaire({
               />
             </div>
 
-            <div className="space-y-2 pt-2">
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id={`preuveVersement-${enfantId}`}
-                  checked={formData.preuveVersement}
-                  onCheckedChange={(checked) => handleChange("preuveVersement", checked as boolean)}
-                />
-                <Label htmlFor={`preuveVersement-${enfantId}`}>
-                  {formData.statut === "verse"
-                    ? "J'ai une preuve de versement de la pension alimentaire"
-                    : "J'ai une preuve de réception de la pension alimentaire"}
-                </Label>
-              </div>
-            </div>
+ 
           </CardContent>
         </Card>
       )}

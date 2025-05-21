@@ -12,6 +12,8 @@ class Rentier extends Model
     // Nom de la table associée
     protected $table = 'rentier';
 
+    protected $primaryKey = 'rentier_id';
+
     // Désactiver les timestamps automatiques
     public $timestamps = false;
 

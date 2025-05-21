@@ -92,4 +92,29 @@ class AutreInformationsController extends Controller
         $autreInformations->delete();
         return response()->json(['message' => 'Resource deleted successfully']);
     }
+
+    public function getByPriveId($prive_id)
+{
+    $infos = AutreInformations::where('prive_id', $prive_id)->firstOrFail();
+    return response()->json($infos);
+
+    if ($infos->isEmpty()) {
+        return response()->json(['message' => 'Aucune information trouvée pour ce privé'], 404);
+    }
+
+}
+public function destroyByPriveId($prive_id)
+{
+    $deleted = AutreInformations::where('prive_id', $prive_id)->delete();
+
+    if ($deleted === 0) {
+        return response()->noContent();
+    }
+
+    return response()->json([
+        'message' => 'Toutes les informations associées à ce privé ont été supprimées',
+        'count' => $deleted
+    ]);
+}
+
 }
