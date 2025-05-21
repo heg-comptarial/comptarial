@@ -21,7 +21,9 @@ export default function DeclarationsClientPage() {
   const [declarationYears, setDeclarationYears] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [toastShown, setToastShown] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<{ file: File; rubriqueId: number }[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<
+    { file: File; rubriqueId: number }[]
+  >([]);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
 
@@ -35,7 +37,9 @@ export default function DeclarationsClientPage() {
     const fetchDeclarations = async () => {
       if (!userId) return;
       try {
-        const { data } = await axios.get(`http://localhost:8000/api/users/${userId}`);
+        const { data } = await axios.get(
+          `http://localhost:8000/api/users/${userId}`
+        );
         const declarations = data.declarations || [];
         const userRole = data.role as "prive" | "entreprise" | null;
         setRole(userRole);
@@ -45,7 +49,7 @@ export default function DeclarationsClientPage() {
             ? declarations.filter((d: Declaration) => d.titre === typeFromUrl)
             : declarations;
 
-            console.log("Filtered Declarations: ", filteredDeclarations);
+        console.log("Filtered Declarations: ", filteredDeclarations);
 
         setUserDeclarations(filteredDeclarations);
 
@@ -94,7 +98,9 @@ export default function DeclarationsClientPage() {
         }
 
         const existingTitles = new Set(
-          (data.rubriques || []).map((r: Rubrique) => r.titre.trim().toLowerCase())
+          (data.rubriques || []).map((r: Rubrique) =>
+            r.titre.trim().toLowerCase()
+          )
         );
 
         const createdRubriques = [];
@@ -111,15 +117,18 @@ export default function DeclarationsClientPage() {
             const rubriqueInfo = foFields[field as keyof typeof foFields];
             const titre = rubriqueInfo.titre.trim().toLowerCase();
             if (existingTitles.has(titre)) continue;
-            const createRes = await fetch("http://localhost:8000/api/rubriques", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                declaration_id: data.declaration_id,
-                titre: rubriqueInfo.titre,
-                description: rubriqueInfo.description,
-              }),
-            });
+            const createRes = await fetch(
+              "http://localhost:8000/api/rubriques",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  declaration_id: data.declaration_id,
+                  titre: rubriqueInfo.titre,
+                  description: rubriqueInfo.description,
+                }),
+              }
+            );
             if (createRes.ok) createdRubriques.push(await createRes.json());
           }
         }
@@ -198,7 +207,8 @@ export default function DeclarationsClientPage() {
           formData.append("rubriqueId", rubriqueId.toString());
           formData.append(
             "rubriqueName",
-            declaration?.rubriques.find((r) => r.rubrique_id === rubriqueId)?.titre || ""
+            declaration?.rubriques.find((r) => r.rubrique_id === rubriqueId)
+              ?.titre || ""
           );
 
           const res = await fetch("/api/upload", {
@@ -233,6 +243,14 @@ export default function DeclarationsClientPage() {
         .querySelectorAll("[data-hide-uploader]")
         .forEach((el) => el.dispatchEvent(new CustomEvent("closeUploader")));
       await refreshDeclaration();
+
+      // Envoi du mail de notification à l'administrateur
+      await fetch(
+        `http://localhost:8000/api/declarations/${userId}/${declaration?.declaration_id}/notify-update`,
+        {
+          method: "POST",
+        }
+      );
     } catch {
       toast.error("Erreur lors de l'enregistrement");
     } finally {
@@ -249,11 +267,15 @@ export default function DeclarationsClientPage() {
     );
   }
 
-  if (role === "entreprise" && (!typeFromUrl || userDeclarations.length === 0)) {
+  if (
+    role === "entreprise" &&
+    (!typeFromUrl || userDeclarations.length === 0)
+  ) {
     return (
       <div className="flex items-center justify-center h-screen text-center">
         <p className="text-lg text-muted-foreground">
-          Aucune déclaration trouvée pour le type : <strong>{typeFromUrl}</strong>
+          Aucune déclaration trouvée pour le type :{" "}
+          <strong>{typeFromUrl}</strong>
         </p>
       </div>
     );
@@ -281,7 +303,8 @@ export default function DeclarationsClientPage() {
         {/* Affichage du montant des impôts */}
         {declaration?.impots && (
           <p className="text-lg text-muted-foreground">
-            Montant des impôts : <span className="font-semibold">{declaration.impots}</span>
+            Montant des impôts :{" "}
+            <span className="font-semibold">{declaration.impots}</span>
           </p>
         )}
 

@@ -29,6 +29,7 @@ use App\Http\Controllers\DeductionController;
 use App\Http\Controllers\ContactController;
 use App\Http\Controllers\ForgotPasswordController;
 use App\Http\Controllers\ResetPasswordController;
+use App\Http\Controllers\DeclarationUpdateNotificationController;
 use Illuminate\Support\Facades\Crypt;
 
 // Routes pour les utilisateurs
@@ -183,6 +184,8 @@ Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink
 // Route pour réinitialiser le mot de passe
 Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
+// Route pour envoyer un email de notification de mise à jour de déclaration par le client
+Route::post('/declarations/{userId}/{declarationId}/notify-update', [DeclarationUpdateNotificationController::class, 'notify']);
 
 Route::get('/auth/user', function (Request $request){
     // Lire le cookie 'user_id' crypté
