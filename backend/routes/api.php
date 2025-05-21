@@ -98,6 +98,10 @@ Route::post('/notifications/declaration-status', [NotificationController::class,
 
 Route::delete('/users/{id}/notifications', [NotificationController::class, 'deleteAllForUser']);
 
+// Routes pour les notifications administrateur
+Route::post('/notifications/admin', [NotificationController::class, 'createAdminNotification']);
+Route::post('/notifications/new-declaration', [NotificationController::class, 'createNewDeclarationNotification']);
+Route::post('/notifications/new-document', [NotificationController::class, 'createNewDocumentNotification']);
 
 // Routes pour les entités privées
 Route::apiResource('prives', PriveController::class);
