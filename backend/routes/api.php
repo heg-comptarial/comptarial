@@ -27,6 +27,8 @@ use App\Http\Controllers\IndemniteAssuranceController;
 use App\Http\Controllers\TitreController;
 use App\Http\Controllers\DeductionController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\ForgotPasswordController;
+use App\Http\Controllers\ResetPasswordController;
 use Illuminate\Support\Facades\Crypt;
 
 // Routes pour les utilisateurs
@@ -174,6 +176,12 @@ Route::post('/users/{id}/approve-registration', [UserController::class, 'approve
 
 // Reject a user's registration and send email
 Route::post('/users/{id}/reject-registration', [UserController::class, 'rejectRegistration']);
+
+// Route pour envoyer un email de réinitialisation de mot de passe
+Route::post('/forgot-password', [ForgotPasswordController::class, 'sendResetLink']);
+
+// Route pour réinitialiser le mot de passe
+Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 
 
 Route::get('/auth/user', function (Request $request){
