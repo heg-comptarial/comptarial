@@ -187,6 +187,9 @@ Route::post('/reset-password', [ResetPasswordController::class, 'reset']);
 // Route pour envoyer un email de notification de mise à jour de déclaration par le client
 Route::post('/declarations/{userId}/{declarationId}/notify-update', [DeclarationUpdateNotificationController::class, 'notify']);
 
+// Route pour envoyer un email de notification de mise à jour de déclaration par l'admin
+Route::post('/documents/admin-upload-notification', [DocumentController::class, 'notifyUserOfNewAdminDocument']);
+
 Route::get('/auth/user', function (Request $request){
     // Lire le cookie 'user_id' crypté
     $encryptedUserId = $request->cookie('user_id');

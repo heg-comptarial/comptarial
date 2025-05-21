@@ -854,6 +854,17 @@ export default function ClientDetail() {
       toast.success("Documents enregistrés avec succès");
       setAdminSelectedFiles([]);
       await refreshUserData();
+
+      // Envoi de la notification à l'utilisateur
+      await fetch(`${API_URL}/documents/admin-upload-notification`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: userDetails?.user_id,
+          title: activeDeclaration?.titre,
+          year: activeDeclaration?.annee,
+        }),
+      });
     } catch (err) {
       console.error(err);
       toast.error("Erreur pendant l'envoi ou l'enregistrement");

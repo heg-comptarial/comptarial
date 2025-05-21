@@ -5,7 +5,10 @@ namespace App\Http\Controllers;
 use App\Models\Document;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-
+use Illuminate\Support\Facades\Mail;
+use App\Models\User;
+use App\Models\Declaration;
+use App\Mail\AdminUploadedDocumentMail;
 
 class DocumentController extends Controller
 {
@@ -136,5 +139,16 @@ class DocumentController extends Controller
         return response()->json($documents);
     }
 
+    public function notifyUserOfNewAdminDocument(Request $request)
+    {
+        $user = User::findOrFail($request->user_id);
+        $declaration = Declaration::where('user_id', $user->user_id)
+                                ->where('annee', $request->year)
+                                ->where('titre', $request->title)
+                                ->firstOrFail();
 
+        Mail::to($user->email)->send(new AdminUploadedDocumentMail($user, $declaration));
+
+        return response()->json(['message' => 'Mail envoyé à l’utilisateur.']);
+    }
 }
