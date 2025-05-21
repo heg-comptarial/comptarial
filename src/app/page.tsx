@@ -230,7 +230,7 @@ export default function Home() {
 
               {/* Auth Buttons */}
               <div className="hidden md:flex items-center gap-4">
-                <Link href="/connexion">
+                <Link href="/login">
                   <Button
                     data-testid="signin-button"
                     variant="outline"
@@ -239,7 +239,7 @@ export default function Home() {
                     Se connecter
                   </Button>
                 </Link>
-                <Link href="/inscription">
+                <Link href="/register">
                   <Button
                     data-testid="signup-button"
                     className="rounded-full px-6"
