@@ -80,4 +80,34 @@ export const NotificationService = {
       throw error
     }
   },
+
+  // Créer une notification pour une nouvelle déclaration
+  createNewDeclarationNotification: async (userId: number, declarationId: number) => {
+    try {
+      const response = await axios.post(`${API_URL}/notifications/new-declaration`, {
+        user_id: userId,
+        declaration_id: declarationId,
+      })
+      return response.data
+    } catch (error) {
+      console.error("Erreur lors de la création de la notification de nouvelle déclaration:", error)
+      throw error
+    }
+  },
+
+  // Créer une notification pour un nouveau document
+  createNewDocumentNotification: async (userId: number, documentId: number) => {
+    try {
+      const response = await axios.post(`${API_URL}/notifications/new-document`, {
+        user_id: userId,
+        document_id: documentId,
+      })
+      return response.data
+    } catch (error) {
+      console.error("Erreur lors de la création de la notification de nouveau document:", error)
+      throw error
+    }
+  },
+
+  
 }

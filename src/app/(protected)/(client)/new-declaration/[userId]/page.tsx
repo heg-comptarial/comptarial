@@ -12,6 +12,9 @@ import dynamic from "next/dynamic";
 import { FormDataType } from "@/types/interfaces";
 import ProtectedRoutePrive from "@/components/routes/ProtectedRouteApprovedPrive";
 import { useParams } from "next/navigation";
+import { NotificationService } from "@/services/notification-service"
+import { toast } from "sonner"
+
 
 const FormulaireDeclaration = dynamic(() => import("../../formulaire/[userId]/page"), {
   ssr: false,
@@ -155,6 +158,28 @@ export default function NouvelleDeclaration() {
           },
         }
       );
+
+      // Créer la déclaration
+      const response = await axios.post("http://127.0.0.1:8000/api/declarations", declarationData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      // Récupérer l'ID de la déclaration créée
+      const declarationId = response.data.declaration_id
+
+      // Envoyer une notification aux administrateurs
+      try {
+        await NotificationService.createDeclarationStatusNotification(declarationId, "pending")
+        console.log("Notification envoyée aux administrateurs")
+      } catch (notifError) {
+        console.error("Erreur lors de l'envoi de la notification:", notifError)
+        // Ne pas bloquer le processus si la notification échoue
+      }
+
+      toast.success("Déclaration créée avec succès")
   
       router.push(`/declarations-client/${userId}`);
     } catch (error: unknown) {
@@ -249,7 +274,19 @@ export default function NouvelleDeclaration() {
               Bienvenue ! Comme c&apos;est votre première déclaration, nous
               allons vous guider à travers le processus.
             </p>
-            <Button onClick={() => setShowForm(true)} className="w-full">
+            <Button
+                onClick={() => {
+                  setShowForm(true)
+                  // Notifier les administrateurs que l'utilisateur commence une nouvelle déclaration
+                  NotificationService.createAdminNotification(
+                    userId,
+                    `${userName} a commencé à créer sa première déclaration`,
+                    "user",
+                    userId,
+                  ).catch((err) => console.error("Erreur notification:", err))
+                }}
+                className="w-full"
+              >
               Commencer ma déclaration
             </Button>
           </CardContent>
