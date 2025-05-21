@@ -63,7 +63,7 @@ export function NavUser({
         console.log("Déconnexion réussie");
         localStorage.removeItem("auth_token");
         localStorage.removeItem("user_id");
-        router.push("/connexion");
+        router.push("/login");
       } else {
         console.error("Erreur lors de la déconnexion", response.data);
       }

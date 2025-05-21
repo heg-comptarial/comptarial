@@ -36,7 +36,7 @@ export default function ProtectedRoutePrive({ children }: ProtectedRouteProps) {
       const authToken = localStorage.getItem("auth_token");
 
       if (!authToken || !userId) {
-        router.push("/connexion");
+        router.push("/login");
         return;
       }
 

@@ -421,13 +421,13 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
       try {
         const token = localStorage.getItem("auth_token")
         if (!token) {
-          router.push("/connexion")
+          router.push("/login")
           return
         }
 
         // Récupérer l'ID utilisateur depuis localStorage
         if (!userId) {
-          router.push("/connexion")
+          router.push("/login")
           return
         }
 
@@ -642,7 +642,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
       const token = localStorage.getItem("auth_token")
 
       if (!token || !userId) {
-        router.push("/connexion")
+        router.push("/login")
         return
       }
 

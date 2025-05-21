@@ -42,7 +42,7 @@ export default function ProtectedRouteAdmin({ children }: ProtectedRouteProps) {
       if (!userId || !authToken) {
         setIsAuthenticated(false);
         console.error("Vous n'êtes pas connecté. Veuillez vous connecter.");
-        router.push("/connexion"); // Redirection si non connecté
+        router.push("/login"); // Redirection si non connecté
         return;
       }
 

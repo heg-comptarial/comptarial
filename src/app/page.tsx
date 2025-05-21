@@ -303,7 +303,7 @@ export default function Home() {
               Contact
             </button>
             <div className="flex flex-col gap-4 mt-8 w-64">
-              <Link href="/connexion">
+              <Link href="/login">
                 <Button
                   data-testid="signin-button"
                   variant="outline"
@@ -313,7 +313,7 @@ export default function Home() {
                   Se connecter
                 </Button>
               </Link>
-              <Link href="/inscription">
+              <Link href="/register">
                 <Button
                   data-testid="signup-button"
                   size="lg"
@@ -360,7 +360,7 @@ export default function Home() {
                   </p>
 
                   <div className="flex flex-col sm:flex-row gap-4 pt-4">
-                    <Link href="/inscription">
+                    <Link href="/register">
                       <Button size="lg" className="w-full sm:w-auto">
                         S&apos;inscrire
                       </Button>

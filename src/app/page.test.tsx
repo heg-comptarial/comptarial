@@ -45,13 +45,13 @@ describe("Home Page", () => {
   it("le bouton 'Se connecter' contient le bon lien", () => {
     render(<Home />);
     const link = screen.getByTestId("signin-button").closest("a"); // Récupère l'élément <a> parent
-    expect(link).toHaveAttribute("href", "/connexion");
+    expect(link).toHaveAttribute("href", "/login");
 });
 
 it("le bouton 'S'inscrire' contient le bon lien", () => {
     render(<Home />);
     const link = screen.getByTestId("signup-button").closest("a"); // Récupère l'élément <a> parent
-    expect(link).toHaveAttribute("href", "/inscription");
+    expect(link).toHaveAttribute("href", "/register");
 });
 
 });

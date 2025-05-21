@@ -44,12 +44,12 @@ export default function NouvelleDeclaration() {
       try {
         const token = localStorage.getItem("auth_token");
         if (!token) {
-          router.push("/connexion");
+          router.push("/login");
           return;
         }
 
         if (!userId) {
-          router.push("/connexion");
+          router.push("/login");
           return;
         }
 
@@ -175,7 +175,7 @@ export default function NouvelleDeclaration() {
       try {
         const token = localStorage.getItem("auth_token");
         if (!token || !priveId) {
-          router.push("/connexion");
+          router.push("/login");
           return;
         }
 
