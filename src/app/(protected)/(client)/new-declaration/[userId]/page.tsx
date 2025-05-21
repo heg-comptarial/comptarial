@@ -39,8 +39,10 @@ export default function NouvelleDeclaration() {
   const [hasDeclaration, setHasDeclaration] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [hasChanges, setHasChanges] = useState<string | null>(null);
-  const params = useParams()
-  const userId = Number(params?.userId)
+  const params = useParams();
+  const userId = Number(params?.userId);
+  const [userName, setUserName] = useState<string>("")
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -54,6 +56,16 @@ export default function NouvelleDeclaration() {
         if (!userId) {
           router.push("/connexion");
           return;
+        }
+
+        // Récupérer les informations de l'utilisateur pour les notifications
+        const userResponse = await axios.get(`http://127.0.0.1:8000/api/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+
+        if (userResponse.data && userResponse.data.nom) {
+          setUserName(userResponse.data.nom)
         }
 
         const priveResponse = await axios.get(
@@ -314,18 +326,36 @@ export default function NouvelleDeclaration() {
             <RadioGroup className="space-y-4 mb-6">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
-                  value="oui"
-                  id="oui"
-                  onClick={() => handleChangesChoice("oui")}
-                />
+                    value="oui"
+                    id="oui"
+                    onClick={() => {
+                      handleChangesChoice("oui")
+                      // Notifier les administrateurs du choix de l'utilisateur
+                      NotificationService.createAdminNotification(
+                        userId,
+                        `${userName} a indiqué des changements dans sa situation pour sa nouvelle déclaration`,
+                        "user",
+                        userId,
+                      ).catch((err) => console.error("Erreur notification:", err))
+                    }}
+                  />
                 <Label htmlFor="oui">Oui, ma situation a changé</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
-                  value="non"
-                  id="non"
-                  onClick={() => handleChangesChoice("non")}
-                />
+                    value="non"
+                    id="non"
+                    onClick={() => {
+                      handleChangesChoice("non")
+                      // Notifier les administrateurs du choix de l'utilisateur
+                      NotificationService.createAdminNotification(
+                        userId,
+                        `${userName} a indiqué aucun changement dans sa situation pour sa nouvelle déclaration`,
+                        "user",
+                        userId,
+                      ).catch((err) => console.error("Erreur notification:", err))
+                    }}
+                  />
                 <Label htmlFor="non">Non, ma situation est identique</Label>
               </div>
             </RadioGroup>

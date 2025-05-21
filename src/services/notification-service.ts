@@ -109,5 +109,22 @@ export const NotificationService = {
     }
   },
 
-  
+
+  // Créer une notification pour tous les administrateurs
+  createAdminNotification: async (userId: number, message: string, resourceType?: string, resourceId?: number) => {
+    try {
+      const response = await axios.post(`${API_URL}/notifications/admin`, {
+        user_id: userId,
+        contenu: message,
+        resource_type: resourceType,
+        resource_id: resourceId,
+      })
+      return response.data
+    } catch (error) {
+      console.error("Erreur lors de la création de la notification admin:", error)
+      throw error
+    }
+  },
+
+
 }
