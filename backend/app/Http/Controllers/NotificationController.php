@@ -5,6 +5,8 @@ namespace App\Http\Controllers;
 use App\Models\Notification;
 use App\Models\Declaration;
 use App\Models\Document;
+use App\Models\Administrateur;
+use App\Models\User;
 use Illuminate\Http\Request;
 use Carbon\Carbon;
 
@@ -308,6 +310,140 @@ class NotificationController extends Controller
         // Supprime toutes les notifications de l'utilisateur
         Notification::where('user_id', $id)->delete();
         return response()->json(['message' => 'Toutes les notifications ont été supprimées.'], 200);
+    }
+
+    /**
+     * Crée une notification pour tous les administrateurs
+     */
+    public function createAdminNotification(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:user,user_id',
+            'contenu' => 'required|string',
+            'resource_type' => 'nullable|string',
+            'resource_id' => 'nullable|integer',
+        ]);
+        
+        // Récupérer l'utilisateur concerné
+        $user = User::findOrFail($request->user_id);
+        
+        // Récupérer tous les administrateurs
+        $admins = Administrateur::with('user')->get();
+        
+        $notifications = [];
+        
+        // Créer une notification pour chaque administrateur
+        foreach ($admins as $admin) {
+            if (!$admin->user) continue;
+            
+            $notification = Notification::create([
+                'user_id' => $admin->user->user_id,
+                'contenu' => $request->contenu,
+                'dateCreation' => Carbon::now(),
+                'isRead' => false,
+                'resource_type' => $request->resource_type,
+                'resource_id' => $request->resource_id,
+            ]);
+            
+            $notifications[] = $notification;
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Notifications créées pour tous les administrateurs',
+            'count' => count($notifications),
+            'notifications' => $notifications
+        ], 201);
+    }
+    
+    /**
+     * Crée une notification pour une nouvelle déclaration
+     */
+    public function createNewDeclarationNotification(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:user,user_id',
+            'declaration_id' => 'required|exists:declaration,declaration_id',
+        ]);
+        
+        // Récupérer l'utilisateur et la déclaration
+        $user = User::findOrFail($request->user_id);
+        $declaration = Declaration::findOrFail($request->declaration_id);
+        
+        // Récupérer tous les administrateurs
+        $admins = Administrateur::with('user')->get();
+        
+        $notifications = [];
+        
+        // Créer une notification pour chaque administrateur
+        foreach ($admins as $admin) {
+            if (!$admin->user) continue;
+            
+            $notification = Notification::create([
+                'user_id' => $admin->user->user_id,
+                'contenu' => "Nouvelle déclaration créée par {$user->nom} ({$declaration->titre})",
+                'dateCreation' => Carbon::now(),
+                'isRead' => false,
+                'resource_type' => 'declaration',
+                'resource_id' => $declaration->declaration_id,
+            ]);
+            
+            $notifications[] = $notification;
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Notifications de nouvelle déclaration créées pour tous les administrateurs',
+            'count' => count($notifications),
+            'notifications' => $notifications
+        ], 201);
+    }
+    
+    /**
+     * Crée une notification pour un nouveau document
+     */
+    public function createNewDocumentNotification(Request $request)
+    {
+        $request->validate([
+            'user_id' => 'required|exists:user,user_id',
+            'document_id' => 'required|exists:document,doc_id',
+        ]);
+        
+        // Récupérer l'utilisateur et le document
+        $user = User::findOrFail($request->user_id);
+        $document = Document::with('rubrique.declaration')->findOrFail($request->document_id);
+        
+        if (!$document->rubrique || !$document->rubrique->declaration) {
+            return response()->json(['message' => 'Impossible de trouver la déclaration associée au document'], 404);
+        }
+        
+        // Récupérer tous les administrateurs
+        $admins = Administrateur::with('user')->get();
+        
+        $notifications = [];
+        
+        // Créer une notification pour chaque administrateur
+        foreach ($admins as $admin) {
+            if (!$admin->user) continue;
+            
+            $notification = Notification::create([
+                'user_id' => $admin->user->user_id,
+                'contenu' => "Nouveau document '{$document->nom}' ajouté par {$user->nom}",
+                'dateCreation' => Carbon::now(),
+                'isRead' => false,
+                'resource_type' => 'document',
+                'resource_id' => $document->doc_id,
+            ]);
+            
+            $notifications[] = $notification;
+        }
+        
+        return response()->json([
+            'success' => true,
+            'message' => 'Notifications de nouveau document créées pour tous les administrateurs',
+            'count' => count($notifications),
+            'notifications' => $notifications
+        ], 201);
     }
 
 
