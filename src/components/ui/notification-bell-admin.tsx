@@ -151,9 +151,9 @@ export function NotificationBellAdmin({ userId, adminId }: { userId: number; adm
     // Fermer le popover
     setIsOpen(false)
 
-    console.log("=== NOTIFICATION ADMIN CLICK DEBUG ===")
-    console.log("Notification complète:", notification)
-    console.log("Admin ID:", adminId)
+    //console.log("=== NOTIFICATION ADMIN CLICK DEBUG ===")
+    //console.log("Notification complète:", notification)
+    //console.log("Admin ID:", adminId)
 
     // Extraire l'ID client de la notification
     let clientId = notification.target_user_id
@@ -248,7 +248,7 @@ export function NotificationBellAdmin({ userId, adminId }: { userId: number; adm
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <p className="text-sm font-medium pr-6">{notification.contenu}</p>
+                    <p className="text-sm font-medium pr-6">{notification.contenu.replace(/\(Client ID: \d+\)/, "").trim()}</p>
                     {!notification.isRead && (
                       <Badge variant="secondary" className="ml-2">
                         Nouveau
