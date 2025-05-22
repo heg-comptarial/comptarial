@@ -109,7 +109,6 @@ export const NotificationService = {
     }
   },
 
-
   // Créer une notification pour tous les administrateurs
   createAdminNotification: async (userId: number, message: string, resourceType?: string, resourceId?: number) => {
     try {
@@ -122,6 +121,22 @@ export const NotificationService = {
       return response.data
     } catch (error) {
       console.error("Erreur lors de la création de la notification admin:", error)
+      throw error
+    }
+  },
+
+  // Créer une notification pour la mise à jour du profil utilisateur
+  createProfileUpdateNotification: async (userId: number) => {
+    try {
+      const response = await axios.post(`${API_URL}/notifications/admin`, {
+        user_id: userId,
+        contenu: `L'utilisateur a mis à jour son profil`,
+        resource_type: "user",
+        resource_id: userId,
+      })
+      return response.data
+    } catch (error) {
+      console.error("Erreur lors de la création de la notification de mise à jour de profil:", error)
       throw error
     }
   },
