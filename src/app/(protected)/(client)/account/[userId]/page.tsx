@@ -17,6 +17,106 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProtectedRoutePending from "@/components/routes/ProtectedRoutePending";
 import { useParams } from "next/navigation";
 
+function ResetPassword() {
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validation basique
+    if (newPassword !== confirmPassword) {
+      alert("Les nouveaux mots de passe ne correspondent pas");
+      return;
+    }
+
+    try {
+      // Ici, vous devrez remplacer par votre appel API réel
+      const response = await fetch(`http://127.0.0.1:8000/api/users/change-password`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          currentPassword,
+          newPassword
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error("Échec de la mise à jour du mot de passe");
+      }
+
+      alert("Mot de passe mis à jour avec succès !");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour du mot de passe:", error);
+      alert("Une erreur est survenue lors de la mise à jour du mot de passe");
+    }
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Changer votre mot de passe</CardTitle>
+        <CardDescription>
+          Pour modifier votre mot de passe, veuillez saisir votre mot de passe actuel puis le nouveau.
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="currentPassword">Mot de passe actuel</Label>
+            <Input
+              id="currentPassword"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Entrez votre mot de passe actuel"
+              required
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+            <Input
+              id="newPassword"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Entrez votre nouveau mot de passe"
+              required
+            />
+            <p className="text-xs text-gray-500">
+              Le mot de passe doit contenir au moins 8 caractères, une majuscule,
+              un chiffre et un caractère spécial.
+            </p>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirmez votre nouveau mot de passe"
+              required
+            />
+          </div>
+
+          <Button type="submit" className="w-full">
+            Mettre à jour le mot de passe
+          </Button>
+        </form>
+      </CardContent>
+    </Card>
+  );
+}
+
 export default function AccountPage() {
   const params = useParams();
   const userId = Number(params?.userId);
@@ -38,7 +138,6 @@ export default function AccountPage() {
 
   const handleInputChange = (section: string, field: string, value: any) => {
     setEditedData((prev: any) => {
-      // Cas d'un champ racine (ex: "personal")
       if (section === "personal") {
         return {
           ...prev,
@@ -46,7 +145,6 @@ export default function AccountPage() {
         };
       }
   
-      // Cas d'un champ imbriqué (ex: "prive", "entreprise")
       return {
         ...prev,
         [section]: {
@@ -56,7 +154,6 @@ export default function AccountPage() {
       };
     });
   };
-  
 
   const handleSectionUpdate = async (section: string) => {
     try {
@@ -74,7 +171,6 @@ export default function AccountPage() {
           numeroTelephone: editedData.numeroTelephone,
         };
       } else if (section === "prive") {
-        // Vérifiez si la section `prive` existe avant de continuer
         if (!userData.prives) {
           console.warn("La section 'prive' est absente, aucune mise à jour effectuée.");
           return;
@@ -94,19 +190,17 @@ export default function AccountPage() {
       }
     } catch (error) {
       console.error(`Erreur lors de la mise à jour de la section "${section}" :`, error);
-      throw error; // Propager l'erreur pour la gérer dans `handleSaveAll`
+      throw error;
     }
   };
 
   const handleSaveAll = async () => {
     try {
-      // Mettre à jour les sections nécessaires
       await handleSectionUpdate("personal");
       await handleSectionUpdate("prive");
   
-      // Afficher une seule notification après toutes les mises à jour
       alert("Toutes les modifications ont été enregistrées avec succès !");
-      setIsEditing(false); // Quitter le mode édition
+      setIsEditing(false);
     } catch (error) {
       console.error("Erreur lors de l'enregistrement des modifications :", error);
       alert("Une erreur est survenue lors de l'enregistrement des modifications.");
@@ -163,7 +257,6 @@ export default function AccountPage() {
       </div>
     );
   };
-  
 
   const renderSection = (title: string, inputs: JSX.Element[]) => (
     <Card>
@@ -221,30 +314,30 @@ export default function AccountPage() {
               </>
             )}
             <div className="flex justify-end gap-4">
-  {!isEditing ? (
-    <Button variant="outline" onClick={() => setIsEditing(true)}>
-      Modifier
-    </Button>
-  ) : (
-    <>
-      <Button
-        variant="outline"
-        onClick={handleSaveAll} // Appeler la fonction regroupée
-      >
-        Enregistrer
-      </Button>
-      <Button
-        onClick={() => {
-          setEditedData(userData); // Réinitialiser les données
-          setIsEditing(false);     // Quitter le mode édition
-        }}
-      >
-        Annuler
-      </Button>
-    </>
-  )}
-</div>
+              {!isEditing ? (
+                <Button variant="outline" onClick={() => setIsEditing(true)}>
+                  Modifier
+                </Button>
+              ) : (
+                <>
+                  <Button variant="outline" onClick={handleSaveAll}>
+                    Enregistrer
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      setEditedData(userData);
+                      setIsEditing(false);
+                    }}
+                  >
+                    Annuler
+                  </Button>
+                </>
+              )}
+            </div>
+          </TabsContent>
 
+          <TabsContent value="password" className="space-y-6">
+            <ResetPassword />
           </TabsContent>
         </Tabs>
       </div>
