@@ -40,7 +40,7 @@ export function NotificationBellAdmin({ userId, adminId }: { userId: number; adm
     }
 
     try {
-      console.log("Récupération des notifications pour l'administrateur:", userId)
+      //console.log("Récupération des notifications pour l'administrateur:", userId)
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/${userId}/notifications`,
       )
