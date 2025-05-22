@@ -12,6 +12,9 @@ import dynamic from "next/dynamic";
 import { FormDataType } from "@/types/interfaces";
 import ProtectedRoutePrive from "@/components/routes/ProtectedRouteApprovedPrive";
 import { useParams } from "next/navigation";
+import { NotificationService } from "@/services/notification-service"
+import { toast } from "sonner"
+
 
 const FormulaireDeclaration = dynamic(() => import("../../formulaire/[userId]/page"), {
   ssr: false,
@@ -36,8 +39,10 @@ export default function NouvelleDeclaration() {
   const [hasDeclaration, setHasDeclaration] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [hasChanges, setHasChanges] = useState<string | null>(null);
-  const params = useParams()
-  const userId = Number(params?.userId)
+  const params = useParams();
+  const userId = Number(params?.userId);
+  const [userName, setUserName] = useState<string>("")
+
 
   useEffect(() => {
     const fetchUserData = async () => {
@@ -51,6 +56,16 @@ export default function NouvelleDeclaration() {
         if (!userId) {
           router.push("/login");
           return;
+        }
+
+        // Récupérer les informations de l'utilisateur pour les notifications
+        const userResponse = await axios.get(`http://127.0.0.1:8000/api/users/${userId}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        })
+
+
+        if (userResponse.data && userResponse.data.nom) {
+          setUserName(userResponse.data.nom)
         }
 
         const priveResponse = await axios.get(
@@ -155,6 +170,28 @@ export default function NouvelleDeclaration() {
           },
         }
       );
+
+      // Créer la déclaration
+      const response = await axios.post("http://127.0.0.1:8000/api/declarations", declarationData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+
+      // Récupérer l'ID de la déclaration créée
+      const declarationId = response.data.declaration_id
+
+      // Envoyer une notification aux administrateurs
+      try {
+        await NotificationService.createDeclarationStatusNotification(declarationId, "pending")
+        console.log("Notification envoyée aux administrateurs")
+      } catch (notifError) {
+        console.error("Erreur lors de l'envoi de la notification:", notifError)
+        // Ne pas bloquer le processus si la notification échoue
+      }
+
+      toast.success("Déclaration créée avec succès")
   
       router.push(`/declarations-client/${userId}`);
     } catch (error: unknown) {
@@ -249,7 +286,19 @@ export default function NouvelleDeclaration() {
               Bienvenue ! Comme c&apos;est votre première déclaration, nous
               allons vous guider à travers le processus.
             </p>
-            <Button onClick={() => setShowForm(true)} className="w-full">
+            <Button
+                onClick={() => {
+                  setShowForm(true)
+                  // Notifier les administrateurs que l'utilisateur commence une nouvelle déclaration
+                  NotificationService.createAdminNotification(
+                    userId,
+                    `${userName} a commencé à créer sa première déclaration`,
+                    "user",
+                    userId,
+                  ).catch((err) => console.error("Erreur notification:", err))
+                }}
+                className="w-full"
+              >
               Commencer ma déclaration
             </Button>
           </CardContent>
@@ -277,18 +326,36 @@ export default function NouvelleDeclaration() {
             <RadioGroup className="space-y-4 mb-6">
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
-                  value="oui"
-                  id="oui"
-                  onClick={() => handleChangesChoice("oui")}
-                />
+                    value="oui"
+                    id="oui"
+                    onClick={() => {
+                      handleChangesChoice("oui")
+                      // Notifier les administrateurs du choix de l'utilisateur
+                      NotificationService.createAdminNotification(
+                        userId,
+                        `${userName} a indiqué des changements dans sa situation pour sa nouvelle déclaration`,
+                        "user",
+                        userId,
+                      ).catch((err) => console.error("Erreur notification:", err))
+                    }}
+                  />
                 <Label htmlFor="oui">Oui, ma situation a changé</Label>
               </div>
               <div className="flex items-center space-x-2">
                 <RadioGroupItem
-                  value="non"
-                  id="non"
-                  onClick={() => handleChangesChoice("non")}
-                />
+                    value="non"
+                    id="non"
+                    onClick={() => {
+                      handleChangesChoice("non")
+                      // Notifier les administrateurs du choix de l'utilisateur
+                      NotificationService.createAdminNotification(
+                        userId,
+                        `${userName} a indiqué aucun changement dans sa situation pour sa nouvelle déclaration`,
+                        "user",
+                        userId,
+                      ).catch((err) => console.error("Erreur notification:", err))
+                    }}
+                  />
                 <Label htmlFor="non">Non, ma situation est identique</Label>
               </div>
             </RadioGroup>

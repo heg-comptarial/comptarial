@@ -31,17 +31,30 @@ class Notification extends Model
 
 	protected $casts = [
 		'user_id' => 'int',
-		'dateCreation' => 'datetime'
+		'dateCreation' => 'datetime',
+		'isRead' => 'boolean'
+
 	];
 
 	protected $fillable = [
 		'user_id',
 		'contenu',
-		'dateCreation'
+		'dateCreation',
+		'isRead',
+		'resource_type',
+        'resource_id',
+		'target_user_id',
 	];
 
 	public function user()
 	{
 		return $this->belongsTo(User::class, 'user_id');
 	}
+
+	public function markAsRead()
+	{
+		$this->isRead = true;
+		$this->save();
+	}
+
 }

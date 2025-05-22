@@ -17,6 +17,8 @@ import {
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
 import { NavUser } from "@/components/sidebar/nav-user";
+import { NotificationBell } from "@/components/ui/notification-bell";
+
 import {
   Sidebar,
   SidebarContent,
@@ -25,6 +27,7 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
+  SidebarSeparator,
 } from "@/components/ui/sidebar";
 import { useParams } from "next/navigation";
 
@@ -104,25 +107,31 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
       {...props}
     >
       <SidebarHeader>
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton size="lg" asChild>
-              <Link href={`/dashboard/${userId}`} passHref>
-                <div className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted transition-colors">
-                  <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground transition-all">
-                    <Command className="size-4" />
+        <div className="flex items-center justify-between px-4 py-2">
+          <SidebarMenu>
+            <SidebarMenuItem>
+              <SidebarMenuButton size="lg" asChild>
+                <Link href={`/dashboard/${userId}`} passHref>
+                  <div className="flex items-center gap-2 rounded-lg p-2 hover:bg-muted transition-colors">
+                    <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground transition-all">
+                      <Command className="size-4" />
+                    </div>
+                    <div className="grid flex-1 text-left text-sm leading-tight">
+                      <span className="truncate font-semibold">Comptarial</span>
+                      <span className="truncate text-xs text-muted-foreground">
+                        Fiduciaire
+                      </span>
+                    </div>
                   </div>
-                  <div className="grid flex-1 text-left text-sm leading-tight">
-                    <span className="truncate font-semibold">Comptarial</span>
-                    <span className="truncate text-xs text-muted-foreground">
-                      Fiduciaire
-                    </span>
-                  </div>
-                </div>
-              </Link>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
+                </Link>
+              </SidebarMenuButton>
+            </SidebarMenuItem>
+          </SidebarMenu>
+
+            {/* Ajout de la cloche de notification */}
+            {userId && <NotificationBell userId={userId} />}
+        </div>
+        <SidebarSeparator />
       </SidebarHeader>
 
       <SidebarContent>

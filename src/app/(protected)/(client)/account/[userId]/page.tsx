@@ -16,6 +16,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import ProtectedRoutePending from "@/components/routes/ProtectedRoutePending";
 import { useParams } from "next/navigation";
+import { NotificationService } from "@/services/notification-service"
+
 
 function ResetPassword() {
   const [currentPassword, setCurrentPassword] = useState("");
@@ -123,6 +125,7 @@ export default function AccountPage() {
   const [userData, setUserData] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<any>(null);
+  const [userName, setUserName] = useState<string>("")
 
   useEffect(() => {
     const fetchUser = async () => {
@@ -131,6 +134,7 @@ export default function AccountPage() {
       const { declarations, notifications, ...filtered } = data;
       setUserData(filtered);
       setEditedData(filtered);
+      setUserName(filtered.nom || "Utilisateur")
     };
 
     fetchUser();
@@ -198,6 +202,19 @@ export default function AccountPage() {
     try {
       await handleSectionUpdate("personal");
       await handleSectionUpdate("prive");
+
+      // Envoyer une notification aux administrateurs
+      try {
+        await NotificationService.createAdminNotification(
+          userId,
+          `${userName} a mis à jour ses informations personnelles`,
+          "user",
+          userId,
+        )
+      } catch (notifError) {
+        console.error("Erreur lors de l'envoi de la notification:", notifError)
+        // Ne pas bloquer le processus si la notification échoue
+      }
   
       alert("Toutes les modifications ont été enregistrées avec succès !");
       setIsEditing(false);

@@ -28,6 +28,7 @@ export default function DeclarationsClientPage() {
   const [priveId, setPriveId] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
+  const [userName, setUserName] = useState<string>("")
 
   const params = useParams();
   const searchParams = useSearchParams();
@@ -60,6 +61,9 @@ export default function DeclarationsClientPage() {
         const declarations = data.declarations || [];
         const userRole = data.role as "prive" | "entreprise" | null;
         setRole(userRole);
+
+        // Stocker le nom de l'utilisateur pour les notifications
+        setUserName(data.nom || "Utilisateur")
 
         const filteredDeclarations =
           userRole === "entreprise" && typeFromUrl
@@ -293,6 +297,37 @@ for (const [field, value] of Object.entries(userPrive || {})) {
       });
 
       if (!saveRes.ok) throw new Error(await saveRes.text());
+
+      const savedDocuments = await saveRes.json();
+
+      
+      // Envoyer une notification pour chaque document
+      if (savedDocuments && savedDocuments.documents) {
+        for (const doc of savedDocuments.documents) {
+          try {
+            // Utiliser directement l'API pour envoyer la notification
+            const notifRes = await fetch("http://localhost:8000/api/notifications/admin", {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                user_id: userId,
+                contenu: `${userName} a téléchargé un nouveau document: ${doc.nom}`,
+                resource_type: "document",
+                resource_id: doc.doc_id,
+              }),
+            })
+
+            if (!notifRes.ok) {
+              console.error("Erreur lors de l'envoi de la notification:", await notifRes.text())
+            } else {
+              console.log("Notification envoyée avec succès:", await notifRes.json())
+            }
+          } catch (error) {
+            console.error("Erreur lors de l'envoi de la notification:", error)
+          }
+        }
+      }
+
       toast.success(`${documents.length} documents enregistrés.`);
       setSelectedFiles([]);
       document
