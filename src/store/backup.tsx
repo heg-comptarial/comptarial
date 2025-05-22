@@ -17,7 +17,10 @@ import ProtectedPrive from "@/components/routes/ProtectedRouteApprovedPrive"
 import { useParams } from "next/navigation"
 import AutrePersonne from "@/components/formulaires/autrePersonne"
 import Revenu from "@/components/formulaires/revenu"
+import Independants from "@/components/formulaires/independant"
+import IndemnitesAssurance from "@/components/formulaires/assurances"
 import Rentier from "@/components/formulaires/rentier"
+import AutresRevenus from "@/components/formulaires/autresRevenus"
 import Banques from "@/components/formulaires/banques"
 import Titres from "@/components/formulaires/titres"
 import Immobiliers from "@/components/formulaires/immobiliers"
@@ -28,18 +31,11 @@ import AutresDeductions from "@/components/formulaires/autresDeductions"
 import AutresInformations from "@/components/formulaires/autresInformations"
 import Conjoint from "@/components/formulaires/conjoint"
 import { useYearStore } from "@/store/useYear"
-import { integer } from "aws-sdk/clients/cloudfront"
 
-interface Rubrique {
-  rubrique_id?: number
-  declaration_id: number |null;
-  type: string
-  titre: string
-}
 // Interfaces pour les différents types de données
 interface ImmobiliersData {
   immobiliers: Array<{
-    immobilier_id?: number
+    immobilier_id?:number
     statut: string
     canton: string
     commune: string
@@ -63,8 +59,8 @@ interface ImmobiliersData {
 }
 
 interface RevenuData {
-  revenu_id?: number
-  prive_id?: number
+  revenu_id?:number
+  prive_id?:number
   indemnites: boolean
   interruptionsTravailNonPayees: boolean
   interuptionsTravailNonPayeesDebut: string
@@ -82,23 +78,48 @@ interface RevenuData {
 }
 
 interface RentierData {
-  rentier_id?: number
+  rentier_id?:number
   fo_attestationRenteAVSAI: boolean
   fo_attestationRentePrevoyance: boolean
   fo_autresRentes: boolean
 }
 
+interface IndependantsData {
+  // Définir la structure selon votre composant Independants
+  // Par exemple:
+  activiteIndependante: boolean
+  chiffreAffaires: string
+  // ... autres propriétés
+}
 
+interface IndemnitesAssuranceData {
+  indemnite_assurance_id?:number
+  fo_chomage: boolean
+  fo_maladie: boolean
+  fo_accident: boolean
+  fo_materniteMilitairePC: boolean
+}
 
+interface AutresRevenusData {
+  // Définir la structure selon votre composant AutresRevenus
+  // Par exemple:
+  autresRevenus: boolean
+  // ... autres propriétés
+}
 
 interface BanquesData {
-  banque_id?:number
-  prive_id?:number 
-  nb_compte: number
+  comptes: Array<{
+    // Définir la structure d'un compte bancaire
+    // Par exemple:
+    banque: string
+    iban: string
+    solde: string
+    // ... autres propriétés
+  }>
 }
 
 interface TitresData {
-  titre_id?: number
+  titre_id?:number
   compteBancairePostale: boolean
   actionOuPartSociale: boolean
   autreElementFortune: boolean
@@ -109,14 +130,14 @@ interface TitresData {
 }
 
 interface DettesData {
-  dettes_id?: number
+  dettes_id?:number
   fo_attestationEmprunt: boolean
   fo_attestationCarteCredit: boolean
   fo_attestationHypotheque: boolean
 }
 
 interface AssurancesData {
-  indemnite_assurance_id?: number
+  indemnite_assurance_id?:number
   fo_chomage: boolean
   fo_maladie: boolean
   fo_accident: boolean
@@ -124,7 +145,7 @@ interface AssurancesData {
 }
 
 interface AutresDeductionsData {
-  autre_deduction_id?: number
+  autre_deduction_id?:number
   fo_rachatLPP: boolean
   fo_attestation3emePilierA: boolean
   fo_attestation3emePilierB: boolean
@@ -139,7 +160,7 @@ interface AutresDeductionsData {
 }
 
 interface AutresInformationsData {
-  autre_informations_id?: number
+  autre_informations_id?:number
   fo_versementBoursesEtudes: boolean
   fo_pensionsPercuesEnfantMajeurACharge: boolean
   fo_prestationsAVSSPC: boolean
@@ -213,13 +234,14 @@ interface Enfant {
 }
 
 interface PensionAlimentaireData {
-  pension_id?: number
+  pension_id?:number
   enfant_id?: number
   statut: "verse" | "recu"
   montantContribution: string
   nom: string
   prenom: string
   noContribuable: string
+  preuveVersement: boolean
 }
 
 interface FormDataType {
@@ -232,7 +254,10 @@ interface FormDataType {
   enfants?: EnfantsData
   autrePersonne?: AutrePersonneData
   revenu?: RevenuData
+  independants?: IndependantsData
+  indemnitesAssurance?: IndemnitesAssuranceData
   rentier?: RentierData
+  autresRevenus?: AutresRevenusData
   banques?: BanquesData
   titres?: TitresData
   immobiliers?: ImmobiliersData
@@ -245,7 +270,6 @@ interface FormDataType {
 interface FormulaireDeclarationProps {
   onSubmitSuccess?: (formData: FormDataType) => Promise<boolean>
   priveId?: number | null
-  mode: "create" | "edit"
 }
 
 interface EnfantsData {
@@ -255,7 +279,7 @@ interface EnfantsData {
 
 interface AutrePersonneData {
   personnesACharge: Array<{
-    autre_personne_id?: number
+    autre_personne_id?:number
     nom: string
     prenom: string
     dateNaissance: string
@@ -269,7 +293,7 @@ interface AutrePersonneData {
   }>
 }
 
-export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,mode }: FormulaireDeclarationProps) {
+export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null }: FormulaireDeclarationProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isDataLoading, setIsDataLoading] = useState(!!priveId)
@@ -279,7 +303,10 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
   const userId = Number(params?.userId)
   const [autrePersonneData, setAutrePersonneData] = useState<AutrePersonneData | null>(null)
   const [revenuData, setRevenuData] = useState<RevenuData | null>(null)
+  const [independantsData, setIndependantsData] = useState<IndependantsData | null>(null)
+  const [indemnitesAssuranceData, setIndemnitesAssuranceData] = useState<IndemnitesAssuranceData | null>(null)
   const [rentierData, setRentierData] = useState<RentierData | null>(null)
+  const [autresRevenusData, setAutresRevenusData] = useState<AutresRevenusData | null>(null)
   const [banquesData, setBanquesData] = useState<BanquesData | null>(null)
   const [titresData, setTitresData] = useState<TitresData | null>(null)
   const [immobiliersData, setImmobiliersData] = useState<ImmobiliersData | null>(null)
@@ -292,7 +319,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
   const stepRefs = useRef<{ [key: number]: HTMLButtonElement | null }>({})
   const [conjointData, setConjointData] = useState<ConjointData | null>(null)
   const [pensionsAlimentaires, setPensionsAlimentaires] = useState<PensionAlimentaireData[]>([])
-  const selectedYear = useYearStore((state) => state.selectedYear)
+  const selectedYear = useYearStore(state => state.selectedYear)
 
 
   // Informations de base
@@ -339,13 +366,14 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
     fo_banques: false,
     fo_dettes: false,
     fo_immobiliers: false,
-    fo_revenu: false,
+    fo_salarie: false,
     fo_autrePersonneCharge: false,
     fo_independant: false,
     fo_rentier: false,
-    fo_assurances: false,
-    fo_autresDeductions: false,
-    fo_autresInformations: false,
+    fo_autreRevenu: false,
+    fo_assurance: false,
+    fo_autreDeduction: false,
+    fo_autreInformations: false,
   })
 
   const etapesMap: { [key: string]: number } = {
@@ -353,47 +381,38 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
     conjoint: 2, // Conjoint
     fo_enfants: 3, // Enfants
     fo_autrePersonneCharge: 4, // AutrePersonneCharge
-    fo_revenu: 5, // Revenu
-    fo_assurances: 6, // Assurance
-    fo_rentier: 7, // Rentier
-    fo_banques: 8, // Banques
-    fo_titres: 9, // Titres
-    fo_immobiliers: 10, // Immobiliers
-    fo_dettes: 11, // Dettes
-    fo_autresDeductions: 12, // Autres Deductions
-    fo_autresInformations: 13, // Autres Informations
-    confirmation: 14, // Confirmation
+    fo_salarie: 5, // Revenu
+    fo_independant: 6, // Indépendants
+    fo_assurance: 7, // Assurance
+    fo_rentier: 8, // Rentier
+    fo_autreRevenu: 9, // Autres Revenu
+    fo_banques: 10, // Banques
+    fo_titres: 11, // Titres
+    fo_immobiliers: 12, // Immobiliers
+    fo_dettes: 13, // Dettes
+    fo_autreDeduction: 14, // Autres Deductions
+    fo_autreInformations: 15, // Autres Informations
+    confirmation: 18, // Confirmation
   }
 
   const etapeLabelFromKey = (key: string): string => {
     const map: { [key: string]: string } = {
       fo_enfants: "Enfants",
       fo_autrePersonneCharge: "Autres personnes",
-      fo_revenu: "Revenu",
-      fo_assurances: "Assurances",
+      fo_salarie: "Revenu",
+      fo_independant: "Indépendant",
+      fo_assurance: "Assurances",
       fo_rentier: "Rentier",
+      fo_autreRevenu: "Autres revenus",
       fo_banques: "Banques",
       fo_titres: "Titres",
       fo_immobiliers: "Immobiliers",
       fo_dettes: "Dettes",
-      fo_autresDeductions: "Autres déductions",
-      fo_autresInformations: "Autres informations",
+      fo_autreDeduction: "Autres déductions",
+      fo_autreInformations: "Autres informations",
     }
     return map[key] || key
   }
-  const foToApiMap: Record<string, string> = {
-  fo_autrePersonneCharge: "autrepersonneacharge",
-  fo_revenu: "revenus",
-  fo_rentier: "rentiers",
-  fo_banques: "banques",
-  fo_titres: "titres",
-  fo_immobiliers: "immobiliers",
-  fo_dettes: "interetsdettes",
-  fo_assurances: "indemnitesassurance",
-  fo_autresDeductions: "autresdeductions",
-  fo_autresInformations: "autresinformations",
-  fo_enfants: "enfants",
-}
 
   // Fonction pour formater une date au format YYYY-MM-DD
   const formatDate = (dateString: string): string => {
@@ -450,7 +469,6 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
           Authorization: `Bearer ${token}`,
         },
       })
-      console.log("OUIUOUI "+response.data)
       return response.data
     } catch (error) {
       console.error(`Erreur lors de la récupération de la pension alimentaire pour l'enfant ${enfantId}:`, error)
@@ -464,13 +482,13 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
       try {
         const token = localStorage.getItem("auth_token")
         if (!token) {
-          router.push("/login")
+          router.push("/connexion")
           return
         }
 
         // Récupérer l'ID utilisateur depuis localStorage
         if (!userId) {
-          router.push("/login")
+          router.push("/connexion")
           return
         }
 
@@ -600,7 +618,6 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                     ) {
                       try {
                         const pensionData = await fetchPensionAlimentaire(enfant.enfant_id, token)
-                        console.log("WEEE "+ JSON.stringify(pensionData))
                         if (pensionData) {
                           allPensions.push(pensionData)
                           updatedEnfants[i] = {
@@ -625,12 +642,41 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                     enfants: updatedEnfants,
                     pensionsAlimentaires: allPensions,
                   })
-                }
-                await fetchPensionsForAllEnfants()}
-                
-              
 
+                  // Récupérer les données du conjoint si l'utilisateur est marié ou pacsé
+                  if (priveResponse.data.etatCivil === "marié" || priveResponse.data.etatCivil === "pacse") {
+                    try {
+                      const conjointResponse = await axios.get(
+                        `http://127.0.0.1:8000/api/conjoints/prives/${priveId}`,
+                        {
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                          },
+                        },
+                      )
 
+                      if (conjointResponse.data && conjointResponse.data.length > 0) {
+                        const conjoint = conjointResponse.data[0]
+                        setConjointData({
+                          conjoint_id: conjoint.conjoint_id,
+                          nom: conjoint.nom || "",
+                          prenom: conjoint.prenom || "",
+                          email: conjoint.email || "",
+                          localite: conjoint.localite || "",
+                          adresse: conjoint.adresse || "",
+                          codePostal: conjoint.codePostal || "",
+                          numeroTelephone: conjoint.numeroTelephone || "",
+                          etatCivil: conjoint.etatCivil || "Marié-e",
+                          dateNaissance: formatDate(conjoint.dateNaissance || ""),
+                          nationalite: conjoint.nationalite || "",
+                          professionExercee: conjoint.professionExercee || "",
+                          contributionReligieuse: conjoint.contributionReligieuse || "Aucune organisation religieuse",
+                        })
+                      }
+                    } catch (error) {
+                      console.error("Erreur lors de la récupération des données du conjoint:", error)
+                    }
+                  }
 
                   // Récupérer les données des autres personnes à charge
                   if (priveResponse.data.fo_autrePersonneCharge) {
@@ -670,6 +716,87 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                     }
                   }
 
+                  // Récupérer les données de revenu
+                  if (priveResponse.data.fo_revenu) {
+                    try {
+                      const revenuResponse = await axios.get(`http://127.0.0.1:8000/api/revenus/prives/${priveId}`, {
+                        headers: {
+                          Authorization: `Bearer ${token}`,
+                        },
+                      })
+
+                      if (revenuResponse.data && revenuResponse.data.length > 0) {
+                        const revenu = revenuResponse.data[0]
+                        setRevenuData({
+                          revenu_id: revenu.revenu_id,
+                          indemnites: revenu.indemnites || false,
+                          interruptionsTravailNonPayees: revenu.interruptionsTravailNonPayees || false,
+                          interuptionsTravailNonPayeesDebut: formatDate(revenu.interuptionsTravailNonPayeesDebut || ""),
+                          interuptionsTravailNonPayeesFin: formatDate(revenu.interuptionsTravailNonPayeesFin || ""),
+                          activiteIndependante: revenu.activiteIndependante || false,
+                          prestationsSociales: revenu.prestationsSociales || false,
+                          subsidesAssuranceMaladie: revenu.subsidesAssuranceMaladie || false,
+                          fo_certificatSalaire: revenu.fo_certificatSalaire || false,
+                          fo_renteViagere: revenu.fo_renteViagere || false,
+                          fo_allocationLogement: revenu.fo_allocationLogement || false,
+                          fo_preuveEncaissementSousLoc: revenu.fo_preuveEncaissementSousLoc || false,
+                          fo_gainsAccessoires: revenu.fo_gainsAccessoires || false,
+                          fo_attestationAutresRevenus: revenu.fo_attestationAutresRevenus || false,
+                          fo_etatFinancier: revenu.fo_etatFinancier || false,
+                        })
+                      }
+                    } catch (error) {
+                      console.error("Erreur lors de la récupération des données de revenu:", error)
+                    }
+                  }
+
+                  // Récupérer les données d'indépendant
+                  if (priveResponse.data.fo_independant) {
+                    try {
+                      const independantResponse = await axios.get(
+                        `http://127.0.0.1:8000/api/independants/prives/${priveId}`,
+                        {
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                          },
+                        },
+                      )
+
+                      if (independantResponse.data && independantResponse.data.length > 0) {
+                        const independant = independantResponse.data[0]
+                        setIndependantsData(independant)
+                      }
+                    } catch (error) {
+                      console.error("Erreur lors de la récupération des données d'indépendant:", error)
+                    }
+                  }
+
+                  // Récupérer les données d'indemnités assurance
+                  if (priveResponse.data.fo_assurance) {
+                    try {
+                      const indemnitesResponse = await axios.get(
+                        `http://127.0.0.1:8000/api/indemnitesassurances/prives/${priveId}`,
+                        {
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                          },
+                        },
+                      )
+
+                      if (indemnitesResponse.data && indemnitesResponse.data.length > 0) {
+                        const indemnites = indemnitesResponse.data[0]
+                        setIndemnitesAssuranceData({
+                          indemnite_assurance_id: indemnites.indemnite_assurance_id,
+                          fo_chomage: indemnites.fo_chomage || false,
+                          fo_maladie: indemnites.fo_maladie || false,
+                          fo_accident: indemnites.fo_accident || false,
+                          fo_materniteMilitairePC: indemnites.fo_materniteMilitairePC || false,
+                        })
+                      }
+                    } catch (error) {
+                      console.error("Erreur lors de la récupération des données d'indemnités assurance:", error)
+                    }
+                  }
 
                   // Récupérer les données de rentier
                   if (priveResponse.data.fo_rentier) {
@@ -694,7 +821,26 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                     }
                   }
 
+                  // Récupérer les données d'autres revenus
+                  if (priveResponse.data.fo_autreRevenu) {
+                    try {
+                      const autresRevenusResponse = await axios.get(
+                        `http://127.0.0.1:8000/api/autresrevenus/prives/${priveId}`,
+                        {
+                          headers: {
+                            Authorization: `Bearer ${token}`,
+                          },
+                        },
+                      )
 
+                      if (autresRevenusResponse.data && autresRevenusResponse.data.length > 0) {
+                        const autresRevenus = autresRevenusResponse.data[0]
+                        setAutresRevenusData(autresRevenus)
+                      }
+                    } catch (error) {
+                      console.error("Erreur lors de la récupération des données d'autres revenus:", error)
+                    }
+                  }
 
                   // Récupérer les données des banques
                   if (priveResponse.data.fo_banques) {
@@ -705,11 +851,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                         },
                       })
 
-                      if (banquesResponse.data) {
+                      if (banquesResponse.data && banquesResponse.data.length > 0) {
                         setBanquesData({
-                          banque_id: banquesResponse.data.banque_id,
-                          prive_id:banquesResponse.data.prive_id,
-                          nb_compte : banquesResponse.data.nb_compte
+                          comptes: banquesResponse.data,
                         })
                       }
                     } catch (error) {
@@ -729,7 +873,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                       if (titresResponse.data && titresResponse.data.length > 0) {
                         const titres = titresResponse.data[0]
                         setTitresData({
-                          titre_id: titres.titre_id,
+                          titre_id:titres.titre_id,
                           compteBancairePostale: titres.compteBancairePostale || false,
                           actionOuPartSociale: titres.actionOuPartSociale || false,
                           autreElementFortune: titres.autreElementFortune || false,
@@ -759,7 +903,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                       if (immobiliersResponse.data && immobiliersResponse.data.length > 0) {
                         // Gérer le cas où il y a plusieurs biens immobiliers
                         const immobiliers = immobiliersResponse.data.map((immobilier: any) => ({
-                          immobilier_id: immobilier.immobilier_id,
+                          immobilier_id:immobilier.imboilier_id,
                           statut: immobilier.statut || "occupe",
                           canton: immobilier.canton || "",
                           commune: immobilier.commune || "",
@@ -802,9 +946,6 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                           },
                         },
                       )
-                      console.log(dettesResponse)
-                                            console.log(dettesResponse.data)
-
 
                       if (dettesResponse.data && dettesResponse.data.length > 0) {
                         const dettes = dettesResponse.data[0]
@@ -821,7 +962,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                   }
 
                   // Récupérer les données des assurances
-                  if (priveResponse.data.fo_assurances) {
+                  if (priveResponse.data.fo_assurance) {
                     try {
                       const assurancesResponse = await axios.get(
                         `http://127.0.0.1:8000/api/indemnitesassurance/prives/${priveId}`,
@@ -848,10 +989,10 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                   }
 
                   // Récupérer les données des autres déductions
-                  if (priveResponse.data.fo_autresDeductions) {
+                  if (priveResponse.data.fo_autreDeduction) {
                     try {
                       const autresDeductionsResponse = await axios.get(
-                        `http://127.0.0.1:8000/api/deductions/prives/${priveId}`,
+                        `http://127.0.0.1:8000/api/autresdeductions/prives/${priveId}`,
                         {
                           headers: {
                             Authorization: `Bearer ${token}`,
@@ -859,8 +1000,8 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                         },
                       )
 
-                      if (autresDeductionsResponse.data) {
-                        const autresDeductions = autresDeductionsResponse.data
+                      if (autresDeductionsResponse.data && autresDeductionsResponse.data.length > 0) {
+                        const autresDeductions = autresDeductionsResponse.data[0]
                         setAutresDeductionsData({
                           autre_deduction_id: autresDeductions.autre_deduction_id,
                           fo_rachatLPP: autresDeductions.fo_rachatLPP || false,
@@ -882,7 +1023,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                   }
 
                   // Récupérer les données des autres informations
-                  if (priveResponse.data.fo_autresInformations) {
+                  if (priveResponse.data.fo_autreInformations) {
                     try {
                       const autresInformationsResponse = await axios.get(
                         `http://127.0.0.1:8000/api/autresinformations/prives/${priveId}`,
@@ -893,10 +1034,10 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                         },
                       )
 
-                      if (autresInformationsResponse.data) {
-                        const autresInformations = autresInformationsResponse.data
+                      if (autresInformationsResponse.data && autresInformationsResponse.data.length > 0) {
+                        const autresInformations = autresInformationsResponse.data[0]
                         setAutresInformationsData({
-                          autre_informations_id: autresInformations.autre_informations_id,
+                          autre_informations_id:autresInformations.autre_informations_id,
                           fo_versementBoursesEtudes: autresInformations.fo_versementBoursesEtudes || false,
                           fo_pensionsPercuesEnfantMajeurACharge:
                             autresInformations.fo_pensionsPercuesEnfantMajeurACharge || false,
@@ -913,13 +1054,11 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                       console.error("Erreur lors de la récupération des données des autres informations:", error)
                     }
                   }
-
-
-
                 }
 
-              
-            
+                fetchPensionsForAllEnfants()
+              }
+            }
           } catch (error) {
             console.error("Erreur lors de la récupération des données du privé:", error)
             setError("Une erreur est survenue lors de la récupération de vos données.")
@@ -936,12 +1075,11 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
     fetchData()
   }, [router, priveId, userId])
 
-
   // Construction dynamique des étapes à afficher
   const etapesAffichees = useMemo(() => {
     const baseEtapes = [
       { step: 1, label: "Informations" },
-      { step: 14, label: "Confirmation" },
+      { step: 18, label: "Confirmation" },
     ]
 
     const dynEtapes = Object.entries(formSections)
@@ -1142,766 +1280,709 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
   }
 
   // Soumission du formulaire
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setError(null)
-    setIsLoading(true)
+// Soumission du formulaire
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault()
+  setError(null)
+  setIsLoading(true)
 
-    try {
-      const token = localStorage.getItem("auth_token")
+  try {
+    const token = localStorage.getItem("auth_token")
 
-      if (!token || !userId) {
-        router.push("/login")
-        return
+    if (!token || !userId) {
+      router.push("/connexion")
+      return
+    }
+
+    // 1. Mettre à jour le privé avec les nouvelles informations
+    if (priveId) {
+      // Données à mettre à jour dans le privé
+      const priveData = {
+        dateNaissance: infoBase.dateNaissance,
+        nationalite: infoBase.nationalite,
+        etatCivil: infoBase.etatCivil,
+        genre: infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse" ? "couple" : "individuel",
+        ...formSections,
       }
 
-      // 1. Mettre à jour le privé avec les nouvelles informations
-      if (priveId) {
-        // Données à mettre à jour dans le privé
-        const priveData = {
-          dateNaissance: infoBase.dateNaissance,
-          nationalite: infoBase.nationalite,
-          etatCivil: infoBase.etatCivil,
-          genre: infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse" ? "couple" : "individuel",
-          ...formSections,
+      // Mise à jour du privé
+      await axios.put(`http://127.0.0.1:8000/api/prives/${priveId}`, priveData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+      
+
+// 1. Vérifier si une déclaration existe pour l’année en cours
+
+
+const existingResponse = await axios.get(
+  `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${selectedYear}`,
+  {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  }
+);
+
+console.log(existingResponse)
+// Initialisation de declarationId ici
+let declarationId: number | null = null;
+
+// 2. Vérifier s’il y a une déclaration pour l’année en cours
+
+if (existingResponse) {
+  declarationId = existingResponse.data.declaration_id;
+  console.log(`Une déclaration pour ${selectedYear} existe déjà avec ID ${declarationId}.`);
+} else {
+let currentYear = new Date().getFullYear.toString()
+
+  // Créer la déclaration principale
+  const declarationData = {
+    user_id: userId,
+    prive_id: priveId,
+    titre: `Déclaration`,
+    statut: "pending",
+    annee: currentYear,
+    dateCreation: new Date().toISOString(),
+  };
+
+  const declarationResponse = await axios.post(
+    "http://127.0.0.1:8000/api/declarations",
+    declarationData,
+    {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    }
+  );
+
+  declarationId = declarationResponse.data.declaration_id;
+
+  if (!declarationId) {
+    throw new Error("Impossible de créer la déclaration");
+  }
+
+  console.log("Déclaration créée avec l'ID:", declarationId);
+}
+
+      // 3. Envoyer les données de chaque composant à sa table respective
+      const apiCalls = []
+
+      // 3.1 Gérer le conjoint si marié ou pacsé
+      if ((infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse") && conjointData) {
+        const conjointApiData = {
+          declaration_id: declarationId,
+          prive_id: priveId,
+          nom: conjointData.nom,
+          prenom: conjointData.prenom,
+          email: conjointData.email,
+          localite: conjointData.localite,
+          adresse: conjointData.adresse,
+          codePostal: conjointData.codePostal,
+          numeroTelephone: conjointData.numeroTelephone,
+          etatCivil: conjointData.etatCivil,
+          dateNaissance: conjointData.dateNaissance,
+          nationalite: conjointData.nationalite,
+          professionExercee: conjointData.professionExercee,
+          contributionReligieuse: conjointData.contributionReligieuse,
         }
 
-        // Mise à jour du privé
-        await axios.put(`http://127.0.0.1:8000/api/prives/${priveId}`, priveData, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        })
-        // Initialisation de declarationId 
-        let declarationId: number | null = null
-
-        if(mode == "edit"){
-           const existingResponse = await axios.get(
-          `http://127.0.0.1:8000/api/users/${userId}/declarations/year/${selectedYear}`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        )
-
-        console.log(existingResponse)
-
-        // 2. Vérifier s'il y a une déclaration pour l'année en cours
-
-        if (existingResponse) {
-          declarationId = existingResponse.data.declaration_id
-          console.log(`Une déclaration pour ${selectedYear} existe déjà avec ID ${declarationId}.`)
+        // Si le conjoint a un ID, c'est une mise à jour
+        if (conjointData.conjoint_id) {
+          apiCalls.push(
+            axios.put(`http://127.0.0.1:8000/api/conjoints/${conjointData.conjoint_id}`, conjointApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          )
+        } else {
+          // Sinon, c'est une nouvelle entrée
+          apiCalls.push(
+            axios.post("http://127.0.0.1:8000/api/conjoints", conjointApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          )
         }
-        }else if(mode == "create"){
-          
-          const currentYear = new Date().getFullYear().toString()
-          console.log(currentYear +"   "+mode)
+      }
 
-          // Créer la déclaration principale
-          const declarationData = {
-            user_id: userId,
-            prive_id: priveId,
-            titre: `Déclaration`,
-            statut: "pending",
-            annee: currentYear,
-            dateCreation: new Date().toISOString(),
-          }
+      // 3.2 Gérer les enfants et pensions alimentaires
+      if (enfantsData) {
+        // Envoyer les données des enfants
+        if (enfantsData.enfants && enfantsData.enfants.length > 0) {
+          for (const enfant of enfantsData.enfants) {
+            const enfantApiData = {
+              declaration_id: declarationId,
+              prive_id: priveId,
+              ...enfant,
+            }
 
-          const declarationResponse = await axios.post("http://127.0.0.1:8000/api/declarations", declarationData, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
-            },
-          })
+            // Supprimer la propriété temporaire _hasPensionAlimentaire
+            if (enfantApiData._hasPensionAlimentaire !== undefined) {
+              delete enfantApiData._hasPensionAlimentaire
+            }
 
-           declarationId = declarationResponse.data.declaration_id
+            let enfantId;
 
-          if (!declarationId) {
-            throw new Error("Impossible de créer la déclaration")
-          }
-
-          console.log("Déclaration créée avec l'ID:", declarationId)
-        
-        }
-
-
-        // 3. Envoyer les données de chaque composant à sa table respective
-        const apiCalls = []
-
-        // 3.1 Gérer le conjoint si marié ou pacsé
-        if ((infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse") && conjointData) {
-          const conjointApiData = {
-            declaration_id: declarationId,
-            prive_id: priveId,
-            nom: conjointData.nom,
-            prenom: conjointData.prenom,
-            email: conjointData.email,
-            localite: conjointData.localite,
-            adresse: conjointData.adresse,
-            codePostal: conjointData.codePostal,
-            numeroTelephone: conjointData.numeroTelephone,
-            etatCivil: conjointData.etatCivil,
-            dateNaissance: conjointData.dateNaissance,
-            nationalite: conjointData.nationalite,
-            professionExercee: conjointData.professionExercee,
-            contributionReligieuse: conjointData.contributionReligieuse,
-          }
-
-          // Si le conjoint a un ID, c'est une mise à jour
-          if (conjointData.conjoint_id) {
-            apiCalls.push(
-              axios.put(`http://127.0.0.1:8000/api/conjoints/${conjointData.conjoint_id}`, conjointApiData, {
+            // Si l'enfant a un ID, c'est une mise à jour
+            if (enfant.enfant_id) {
+              const existingId = enfant.enfant_id;
+              await axios.put(`http://127.0.0.1:8000/api/enfants/${existingId}`, enfantApiData, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                   "Content-Type": "application/json",
                 },
-              }),
-            )
-          } else {
-            // Sinon, c'est une nouvelle entrée
-            apiCalls.push(
-              axios.post("http://127.0.0.1:8000/api/conjoints", conjointApiData, {
+              });
+              enfantId = existingId;
+            } else {
+              // Sinon, c'est une nouvelle entrée
+              const enfantResponse = await axios.post("http://127.0.0.1:8000/api/enfants", enfantApiData, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                   "Content-Type": "application/json",
                 },
-              }),
-            )
-          }
-        }
+              });
+              enfantId = enfantResponse.data.enfant_id;
+            }
 
-        // 3.2 Gérer les enfants et pensions alimentaires
-        if (enfantsData) {
-          // Envoyer les données des enfants
-          if (enfantsData.enfants && enfantsData.enfants.length > 0) {
-            for (const enfant of enfantsData.enfants) {
-              const enfantApiData = {
-                declaration_id: declarationId,
-                prive_id: priveId,
-                ...enfant,
-              }
+            // Envoyer les pensions alimentaires associées à cet enfant
+            if (enfantsData.pensionsAlimentaires && enfantsData.pensionsAlimentaires.length > 0) {
+              const pensionsForEnfant = enfantsData.pensionsAlimentaires.filter(
+                (p) => p.enfant_id === enfant.enfant_id
+              );
 
-              // Supprimer la propriété temporaire _hasPensionAlimentaire
-              if (enfantApiData._hasPensionAlimentaire !== undefined) {
-                delete enfantApiData._hasPensionAlimentaire
-              }
+              for (const pension of pensionsForEnfant) {
+                const pensionApiData = {
+                  declaration_id: declarationId,
+                  enfant_id: enfantId,
+                  statut: pension.statut,
+                  montantContribution: pension.montantContribution,
+                  nom: pension.nom,
+                  prenom: pension.prenom,
+                  noContribuable: pension.noContribuable,
+                  preuveVersement: pension.preuveVersement,
+                };
 
-              let enfantId
-
-              // Si l'enfant a un ID, c'est une mise à jour
-              if (enfant.enfant_id) {
-                const existingId = enfant.enfant_id
-                await axios.put(`http://127.0.0.1:8000/api/enfants/${existingId}`, enfantApiData, {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                })
-                enfantId = existingId
-              } else {
-                // Sinon, c'est une nouvelle entrée
-                const enfantResponse = await axios.post("http://127.0.0.1:8000/api/enfants", enfantApiData, {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                })
-                enfantId = enfantResponse.data.enfant_id
-              }
-
-                //Supprimer la pension si _hasPensionAlimentaire est false
-              if (!enfant._hasPensionAlimentaire && enfantId) {
-                try {
-                  await axios.delete(
-                    `http://127.0.0.1:8000/api/pensionsalimentaires/enfants/${enfantId}`,
-                    {
+                // Si la pension a un ID, c'est une mise à jour
+                if (pension.pension_id) {
+                  apiCalls.push(
+                    axios.put(`http://127.0.0.1:8000/api/pensionsalimentaires/${pension.pension_id}`, pensionApiData, {
                       headers: {
                         Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
                       },
-                    }
-                  )
-                  console.log(`Pensions supprimées pour l'enfant ${enfantId}`)
-                } catch (err) {
-                  console.error(`Erreur suppression pension enfant ${enfantId}:`, err)
-                }
-              }
-
-              // Envoyer les pensions alimentaires associées à cet enfant
-              if (enfantsData.pensionsAlimentaires && enfantsData.pensionsAlimentaires.length > 0) {
-                const pensionsForEnfant = enfantsData.pensionsAlimentaires.filter(
-                  (p) => p.enfant_id === enfant.enfant_id,
-                )
-
-                for (const pension of pensionsForEnfant) {
-                  const pensionApiData = {
-                    declaration_id: declarationId,
-                    enfant_id: enfantId,
-                    statut: pension.statut,
-                    montantContribution: pension.montantContribution,
-                    nom: pension.nom,
-                    prenom: pension.prenom,
-                    noContribuable: pension.noContribuable,
-                  }
-
-                  // Si la pension a un ID, c'est une mise à jour
-                  if (pension.pension_id) {
-                    apiCalls.push(
-                      axios.put(
-                        `http://127.0.0.1:8000/api/pensionsalimentaires/${pension.pension_id}`,
-                        pensionApiData,
-                        {
-                          headers: {
-                            Authorization: `Bearer ${token}`,
-                            "Content-Type": "application/json",
-                          },
-                        },
-                      ),
-                    )
-                  } else {
-                    // Sinon, c'est une nouvelle entrée
-                    apiCalls.push(
-                      axios.post("http://127.0.0.1:8000/api/pensionsalimentaires", pensionApiData, {
-                        headers: {
-                          Authorization: `Bearer ${token}`,
-                          "Content-Type": "application/json",
-                        },
-                      }),
-                    )
-                  }
+                    })
+                  );
+                } else {
+                  // Sinon, c'est une nouvelle entrée
+                  apiCalls.push(
+                    axios.post("http://127.0.0.1:8000/api/pensionsalimentaires", pensionApiData, {
+                      headers: {
+                        Authorization: `Bearer ${token}`,
+                        "Content-Type": "application/json",
+                      },
+                    })
+                  );
                 }
               }
             }
           }
         }
+      }
 
-
-        // 3.3 Autres personnes à charge
-        if (autrePersonneData && autrePersonneData.personnesACharge && autrePersonneData.personnesACharge.length > 0) {
-          for (const personne of autrePersonneData.personnesACharge) {
-            const personneApiData = {
-              autre_persone_id: personne.autre_personne_id,
-              declaration_id: declarationId,
-              prive_id: priveId,
-              nom: personne.nom,
-              prenom: personne.prenom,
-              dateNaissance: personne.dateNaissance,
-              degreParente: personne.degreParente,
-              nbPersonneParticipation: personne.nbPersonneParticipation,
-              vieAvecPersonneCharge: personne.vieAvecPersonneCharge,
-              revenusBrutPersonneACharge: personne.revenusBrutPersonneACharge,
-              fortuneNetPersonneACharge: personne.fortuneNetPersonneACharge,
-              montantVerseAPersonneACharge: personne.montantVerseAPersonneACharge,
-              fo_preuveVersementEffectue: personne.fo_preuveVersementEffectue,
-            }
-            console.log(personne)
-
-            // Si la personne a un ID, c'est une mise à jour
-            if (personne.autre_personne_id) {
-              apiCalls.push(
-                axios.put(
-                  `http://127.0.0.1:8000/api/autrepersonneacharge/${personne.autre_personne_id}`,
-                  personneApiData,
-                  {
-                    headers: {
-                      Authorization: `Bearer ${token}`,
-                      "Content-Type": "application/json",
-                    },
-                  },
-                ),
-              )
-            } else {
-              // Sinon, c'est une nouvelle entrée
-              apiCalls.push(
-                axios.post("http://127.0.0.1:8000/api/autrepersonneacharge", personneApiData, {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                }),
-              )
-            }
-          }
-        }
-
-        // 3.4 Revenus
-        if (revenuData) {
-          const revenuApiData = {
+      // 3.3 Autres personnes à charge
+      if (autrePersonneData && autrePersonneData.personnesACharge && autrePersonneData.personnesACharge.length > 0) {
+        for (const personne of autrePersonneData.personnesACharge) {
+          const personneApiData = {
+            autre_persone_id: personne.autre_personne_id,
             declaration_id: declarationId,
             prive_id: priveId,
-            ...revenuData,
-          }
+            nom: personne.nom,
+            prenom: personne.prenom,
+            dateNaissance: personne.dateNaissance,
+            degreParente: personne.degreParente,
+            nbPersonneParticipation: personne.nbPersonneParticipation,
+            vieAvecPersonneCharge: personne.vieAvecPersonneCharge,
+            revenusBrutPersonneACharge: personne.revenusBrutPersonneACharge,
+            fortuneNetPersonneACharge: personne.fortuneNetPersonneACharge,
+            montantVerseAPersonneACharge: personne.montantVerseAPersonneACharge,
+            fo_preuveVersementEffectue: personne.fo_preuveVersementEffectue,
+          };
+          console.log(personne)
 
-          // Si le revenu a un ID, c'est une mise à jour
-          if (revenuData.revenu_id) {
+          // Si la personne a un ID, c'est une mise à jour
+          if (personne.autre_personne_id) {
             apiCalls.push(
-              axios.put(`http://127.0.0.1:8000/api/revenus/${revenuData.revenu_id}`, revenuApiData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }),
-            )
-          } else {
-            // Sinon, c'est une nouvelle entrée
-            apiCalls.push(
-              axios.post("http://127.0.0.1:8000/api/revenus", revenuApiData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }),
-            )
-          }
-        }
-
-
-
-        // 3.7 Rentier
-        if (rentierData) {
-          const rentierApiData = {
-            declaration_id: declarationId,
-            prive_id: priveId,
-            ...rentierData,
-          }
-
-          console.log("rentier " + rentierData.rentier_id)
-
-          // Si le rentier a un ID, c'est une mise à jour
-          if (rentierData.rentier_id) {
-            apiCalls.push(
-              axios.put(`http://127.0.0.1:8000/api/rentiers/${rentierData.rentier_id}`, rentierApiData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }),
-            )
-          } else {
-            // Sinon, c'est une nouvelle entrée
-            apiCalls.push(
-              axios.post("http://127.0.0.1:8000/api/rentiers", rentierApiData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }),
-            )
-          }
-        }
-
-
-
-        // 3.9 Banques
-        
-if (banquesData) {
-  const banquesApiData = {
-    declaration_id: declarationId,
-    prive_id: priveId,
-    ...banquesData,
-  }
-
-  // Si la banque a un ID, c'est une mise à jour
-  if (banquesData.banque_id) {
-    apiCalls.push(
-      axios.put(`http://127.0.0.1:8000/api/banques/${banquesData.banque_id}`, banquesApiData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
-    )
-  } else {
-    // Sinon, c'est une nouvelle entrée
-    apiCalls.push(
-      axios.post("http://127.0.0.1:8000/api/banques", banquesApiData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      })
-    )
-  }
-}
-       
-
-        // 3.10 Titres
-        if (titresData) {
-          const titresApiData = {
-            declaration_id: declarationId,
-            prive_id: priveId,
-            ...titresData,
-          }
-
-          // Si les titres ont un ID, c'est une mise à jour
-          if (titresData.titre_id) {
-            apiCalls.push(
-              axios.put(`http://127.0.0.1:8000/api/titres/${titresData.titre_id}`, titresApiData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }),
-            )
-          } else {
-            // Sinon, c'est une nouvelle entrée
-            apiCalls.push(
-              axios.post("http://127.0.0.1:8000/api/titres", titresApiData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }),
-            )
-          }
-        }
-
-        // 3.11 Immobiliers
-        if (immobiliersData && immobiliersData.immobiliers && immobiliersData.immobiliers.length > 0) {
-          for (const immobilier of immobiliersData.immobiliers) {
-            const immobilierApiData = {
-              declaration_id: declarationId,
-              prive_id: priveId,
-              statut: immobilier.statut,
-              canton: immobilier.canton,
-              commune: immobilier.commune,
-              pays: immobilier.pays,
-              noParcelleGeneve: immobilier.noParcelleGeneve,
-              adresseComplete: immobilier.adresseComplete,
-              anneeConstruction: immobilier.anneeConstruction,
-              occupeDesLe: immobilier.occupeDesLe,
-              dateAchat: immobilier.dateAchat,
-              pourcentageProprietaire: immobilier.pourcentageProprietaire,
-              autreProprietaire: immobilier.autreProprietaire,
-              prixAchat: immobilier.prixAchat,
-              valeurLocativeBrut: immobilier.valeurLocativeBrut,
-              loyersEncaisses: immobilier.loyersEncaisses,
-              fraisEntretienDeductibles: immobilier.fraisEntretienDeductibles,
-              fo_bienImmobilier: immobilier.fo_bienImmobilier,
-              fo_attestationValeurLocative: immobilier.fo_attestationValeurLocative,
-              fo_taxeFonciereBiensEtranger: immobilier.fo_taxeFonciereBiensEtranger,
-              fo_factureEntretienImmeuble: immobilier.fo_factureEntretienImmeuble,
-            }
-
-            // Si l'immobilier a un ID, c'est une mise à jour
-            if (immobilier.immobilier_id) {
-              apiCalls.push(
-                axios.put(`http://127.0.0.1:8000/api/immobiliers/${immobilier.immobilier_id}`, immobilierApiData, {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                }),
-              )
-            } else {
-              // Sinon, c'est une nouvelle entrée
-              apiCalls.push(
-                axios.post("http://127.0.0.1:8000/api/immobiliers", immobilierApiData, {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                }),
-              )
-            }
-          }
-        }
-
-        // 3.12 Dettes
-        if (dettesData) {
-          const dettesApiData = {
-            declaration_id: declarationId,
-            prive_id: priveId,
-            ...dettesData,
-          }
-
-          console.log(dettesData)
-          console.log("ID " + dettesData.dettes_id)
-
-          // Si les dettes ont un ID, c'est une mise à jour
-          if (dettesData.dettes_id) {
-            apiCalls.push(
-              axios.put(`http://127.0.0.1:8000/api/interetsdettes/${dettesData.dettes_id}`, dettesApiData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }),
-            )
-          } else {
-            // Sinon, c'est une nouvelle entrée
-            apiCalls.push(
-              axios.post("http://127.0.0.1:8000/api/interetsdettes", dettesApiData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }),
-            )
-          }
-        }
-
-        // 3.13 Assurances
-        if (assurancesData) {
-          const assurancesApiData = {
-            declaration_id: declarationId,
-            prive_id: priveId,
-            ...assurancesData,
-          }
-
-          // Si les assurances ont un ID, c'est une mise à jour
-          if (assurancesData.indemnite_assurance_id) {
-            apiCalls.push(
-              axios.put(
-                `http://127.0.0.1:8000/api/indemnitesassurance/${assurancesData.indemnite_assurance_id}`,
-                assurancesApiData,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                },
-              ),
-            )
-          } else {
-            // Sinon, c'est une nouvelle entrée
-            apiCalls.push(
-              axios.post("http://127.0.0.1:8000/api/indemnitesassurances", assurancesApiData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }),
-            )
-          }
-        }
-
-        // 3.14 Autres déductions
-        if (autresDeductionsData) {
-          const autresDeductionsApiData = {
-            declaration_id: declarationId,
-            prive_id: priveId,
-            ...autresDeductionsData,
-          }
-
-          // Si les autres déductions ont un ID, c'est une mise à jour
-          if (autresDeductionsData.autre_deduction_id) {
-            apiCalls.push(
-              axios.put(
-                `http://127.0.0.1:8000/api/deductions/${autresDeductionsData.autre_deduction_id}`,
-                autresDeductionsApiData,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                },
-              ),
-            )
-          } else {
-            // Sinon, c'est une nouvelle entrée
-            apiCalls.push(
-              axios.post("http://127.0.0.1:8000/api/deductions", autresDeductionsApiData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }),
-            )
-          }
-        }
-
-        // 3.15 Autres informations
-        if (autresInformationsData) {
-          const autresInfosApiData = {
-            declaration_id: declarationId,
-            prive_id: priveId,
-            ...autresInformationsData,
-          }
-
-          // Si les autres informations ont un ID, c'est une mise à jour
-          if (autresInformationsData.autre_informations_id) {
-            apiCalls.push(
-              axios.put(
-                `http://127.0.0.1:8000/api/autresinformations/${autresInformationsData.autre_informations_id}`,
-                autresInfosApiData,
-                {
-                  headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                  },
-                },
-              ),
-            )
-          } else {
-            // Sinon, c'est une nouvelle entrée
-            apiCalls.push(
-              axios.post("http://127.0.0.1:8000/api/autresinformations", autresInfosApiData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              }),
-            )
-          }
-          
-        }
-        console.log("rubrique")
-          //rubrique
-          // 1. Récupérer les rubriques existantes pour cette déclaration
-          const rubriquesResponse = await axios.get(
-            `http://127.0.0.1:8000/api/rubriques/declaration/${declarationId}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          )
-          console.log(rubriquesResponse.data)
-          const existingRubriques: Rubrique[] = rubriquesResponse.data // tableau de rubriques
-
-          // Créer un mapping des rubriques existantes par type pour faciliter la recherche
-          const existingRubriquesMap: Record<string, Rubrique> = {}
-          existingRubriques.forEach((rubrique) => {
-            existingRubriquesMap[rubrique.type] = rubrique
-          })
-
-          // 2. Mapper les fo_* aux types de rubriques
-          const rubriquesMapping: Record<string, string> = {
-            fo_enfants: "Enfants",
-            fo_banques: "Banques",
-            fo_dettes: "Dettes",
-            fo_immobiliers: "Immobiliers",
-            fo_revenu: "Revenu",
-            fo_autrePersonneCharge: "Autres personnes à charge",
-            fo_rentier: "Rentier",
-            fo_assurances: "Assurances",
-            fo_autresDeductions: "Autres déductions",
-            fo_autresInformations: "Autres informations",
-            fo_titres: "Titres",
-          }
-
-          // 3. Créer ou mettre à jour les rubriques en fonction des fo_* activés
-          const rubriquesToCreate: Rubrique[] = []
-
-          for (const [foKey, foValue] of Object.entries(formSections)) {
-            if (foValue && rubriquesMapping[foKey]) {
-              const rubriqueName = rubriquesMapping[foKey]
-
-              // Vérifier si cette rubrique existe déjà
-              if (!existingRubriquesMap[foKey]) {
-                // La rubrique n'existe pas, la créer
-                rubriquesToCreate.push({
-                  declaration_id: declarationId,
-                  type: foKey,
-                  titre: rubriqueName,
-
-                })
-              }
-              // Si elle existe déjà, pas besoin de la recréer
-              console.log(rubriqueName + " rubrique qui clc")
-            }
-          }
-          console.log(rubriquesToCreate)
-
-          // 4. Créer les nouvelles rubriques
-          if (rubriquesToCreate.length > 0) {
-            for (const rubriqueData of rubriquesToCreate) {
-              console.log(rubriqueData)
-               axios.post("http://127.0.0.1:8000/api/rubriques", rubriqueData, {
+              axios.put(`http://127.0.0.1:8000/api/autrepersonneacharge/${personne.autre_personne_id}`, personneApiData, {
                 headers: {
                   Authorization: `Bearer ${token}`,
                   "Content-Type": "application/json",
                 },
               })
-            }
-            console.log(`${rubriquesToCreate.length} nouvelles rubriques créées`)
-          }
-
-          // 5. Identifier les rubriques à supprimer (celles qui existent mais dont le fo_* n'est plus activé)
-          const rubriquesToDelete = []
-
-          for (const rubrique of existingRubriques) {
-            const correspondingFoKey = rubrique.type
-            if (correspondingFoKey && !formSections[correspondingFoKey]) {
-              rubriquesToDelete.push(rubrique)
-            }
-          }
-
-          // 6. Supprimer les rubriques qui ne sont plus nécessaires
-          if (rubriquesToDelete.length > 0) {
-            console.log(`${rubriquesToDelete.length} rubriques à supprimer:`)
-            rubriquesToDelete.forEach((rubrique) => {
-              console.log(`- ${rubrique.titre} (ID: ${rubrique.rubrique_id})`)
-              axios.delete(`http://127.0.0.1:8000/api/rubriques/${rubrique.rubrique_id}`)
-            })
-          }
-          const deleteFoKeys = Object.keys(formSections).filter(
-  (key) => !formSections[key] && foToApiMap[key]
-)
-
-for (const foKey of deleteFoKeys) {
-  const endpoint = foToApiMap[foKey]
-  try {
-    await axios.delete(`http://127.0.0.1:8000/api/${endpoint}/prives/${priveId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    console.log(`Données supprimées pour ${foKey}`)
-  } catch (err) {
-    console.error(`Erreur suppression ${foKey}:`, err)
-  }
-}
-    // Supprimer le conjoint si l'état civil n'est plus marié ou pacsé
-    if (priveData.etatCivil !== "marie" && priveData.etatCivil !== "pacse") {
-      try{
-        const reponse = await axios.get(`http://127.0.0.1:8000/api/conjoints/prives/${priveId}`)
-          if(reponse){
-            await axios.delete(`http://127.0.0.1:8000/api/conjoints/prives/${priveId}`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        })}
-      }catch(error){
-        console.log(error)}
-}
-
-          try{
-            await onSubmitSuccess()}catch(error){
-            console.log(error)
-          }
-
-
-        // Exécuter tous les appels API en parallèle
-        try {
-          await Promise.all(apiCalls)
-          console.log("Toutes les données ont été envoyées avec succès")
-
-          // Rediriger vers "Mes déclarations"
-          router.push(`/declarations-client/${userId}`)
-        } catch (error) {
-          console.error("Erreur lors de l'envoi des données:", error)
-          if (axios.isAxiosError(error) && error.response) {
-            setError(error.response.data.message || "Une erreur est survenue lors de l'envoi des données.")
+            );
           } else {
-            setError("Une erreur est survenue lors de l'envoi des données. Veuillez réessayer.")
+            // Sinon, c'est une nouvelle entrée
+            apiCalls.push(
+              axios.post("http://127.0.0.1:8000/api/autrepersonneacharge", personneApiData, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              })
+            );
           }
         }
-      } else {
-        setError("Impossible de trouver votre profil. Veuillez contacter l'administrateur.")
       }
-    } catch (error) {
-      console.error("Erreur lors de la soumission du formulaire:", error)
 
-      if (axios.isAxiosError(error) && error.response) {
-        setError(error.response.data.message || "Une erreur est survenue lors de la soumission du formulaire.")
-      } else {
-        setError("Une erreur est survenue lors de la soumission du formulaire. Veuillez réessayer.")
+      console.log(revenuData)
+      // 3.4 Revenus
+      if (revenuData) {
+        const revenuApiData = {
+          declaration_id: declarationId,
+          prive_id: priveId,
+          ...revenuData,
+        };
+        
+
+        // Si le revenu a un ID, c'est une mise à jour
+        if (revenuData.revenu_id) {
+          apiCalls.push(
+            axios.put(`http://127.0.0.1:8000/api/revenus/${revenuData.revenu_id}`, revenuApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        } else {
+          // Sinon, c'est une nouvelle entrée
+          apiCalls.push(
+            axios.post("http://127.0.0.1:8000/api/revenus", revenuApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        }
       }
-    } finally {
-      setIsLoading(false)
+
+      // 3.5 Indépendants
+      if (independantsData) {
+        const independantApiData = {
+          declaration_id: declarationId,
+          prive_id: priveId,
+          ...independantsData,
+        };
+
+        // Si l'indépendant a un ID, c'est une mise à jour
+        if (independantsData) {
+          apiCalls.push(
+            axios.put(`http://127.0.0.1:8000/api/independants/${independantsData.activiteIndependante}`, independantApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        } else {
+          // Sinon, c'est une nouvelle entrée
+          apiCalls.push(
+            axios.post("http://127.0.0.1:8000/api/independants", independantApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        }
+      }
+
+      // 3.6 Indemnités assurance
+      if (indemnitesAssuranceData) {
+        const assuranceApiData = {
+          declaration_id: declarationId,
+          prive_id: priveId,
+          ...indemnitesAssuranceData,
+        };
+
+        // Si l'indemnité a un ID, c'est une mise à jour
+        if (indemnitesAssuranceData.indemnite_assurance_id) {
+          apiCalls.push(
+            axios.put(`http://127.0.0.1:8000/api/indemnitesassurances/${indemnitesAssuranceData.indemnite_assurance_id}`, assuranceApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        } else {
+          // Sinon, c'est une nouvelle entrée
+          apiCalls.push(
+            axios.post("http://127.0.0.1:8000/api/indemnitesassurances", assuranceApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        }
+      }
+
+      // 3.7 Rentier
+      if (rentierData) {
+        const rentierApiData = {
+          declaration_id: declarationId,
+          prive_id: priveId,
+          ...rentierData,
+        };
+
+        console.log('rentier '+rentierData.rentier_id)
+
+        // Si le rentier a un ID, c'est une mise à jour
+        if (rentierData.rentier_id) {
+          apiCalls.push(
+            axios.put(`http://127.0.0.1:8000/api/rentiers/${rentierData.rentier_id}`, rentierApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        } else {
+          // Sinon, c'est une nouvelle entrée
+          apiCalls.push(
+            axios.post("http://127.0.0.1:8000/api/rentiers", rentierApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        }
+      }
+
+      // 3.8 Autres revenus
+      if (autresRevenusData) {
+        const autresRevenusApiData = {
+          declaration_id: declarationId,
+          prive_id: priveId,
+          ...autresRevenusData,
+        };
+
+        // Si les autres revenus ont un ID, c'est une mise à jour
+        if (autresRevenusData) {
+          apiCalls.push(
+            axios.put(`http://127.0.0.1:8000/api/autresrevenus/${autresRevenusData.autresRevenus}`, autresRevenusApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        } else {
+          // Sinon, c'est une nouvelle entrée
+          apiCalls.push(
+            axios.post("http://127.0.0.1:8000/api/autresrevenus", autresRevenusApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        }
+      }
+
+      // 3.9 Banques
+      if (banquesData && banquesData.comptes && banquesData.comptes.length > 0) {
+        for (const compte of banquesData.comptes) {
+          const compteApiData = {
+            declaration_id: declarationId,
+            prive_id: priveId,
+            ...compte,
+          };
+
+          // Si le compte a un ID, c'est une mise à jour
+          if (compte) {
+            apiCalls.push(
+              axios.put(`http://127.0.0.1:8000/api/banques/${compte}`, compteApiData, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              })
+            );
+          } else {
+            // Sinon, c'est une nouvelle entrée
+            apiCalls.push(
+              axios.post("http://127.0.0.1:8000/api/banques", compteApiData, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              })
+            );
+          }
+        }
+      }
+
+      // 3.10 Titres
+      if (titresData) {
+        const titresApiData = {
+          declaration_id: declarationId,
+          prive_id: priveId,
+          ...titresData,
+        };
+
+        // Si les titres ont un ID, c'est une mise à jour
+        if (titresData.titre_id) {
+          apiCalls.push(
+            axios.put(`http://127.0.0.1:8000/api/titres/${titresData.titre_id}`, titresApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        } else {
+          // Sinon, c'est une nouvelle entrée
+          apiCalls.push(
+            axios.post("http://127.0.0.1:8000/api/titres", titresApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        }
+      }
+
+      // 3.11 Immobiliers
+      if (immobiliersData && immobiliersData.immobiliers && immobiliersData.immobiliers.length > 0) {
+        for (const immobilier of immobiliersData.immobiliers) {
+          const immobilierApiData = {
+            declaration_id: declarationId,
+            prive_id: priveId,
+            statut: immobilier.statut,
+            canton: immobilier.canton,
+            commune: immobilier.commune,
+            pays: immobilier.pays,
+            noParcelleGeneve: immobilier.noParcelleGeneve,
+            adresseComplete: immobilier.adresseComplete,
+            anneeConstruction: immobilier.anneeConstruction,
+            occupeDesLe: immobilier.occupeDesLe,
+            dateAchat: immobilier.dateAchat,
+            pourcentageProprietaire: immobilier.pourcentageProprietaire,
+            autreProprietaire: immobilier.autreProprietaire,
+            prixAchat: immobilier.prixAchat,
+            valeurLocativeBrut: immobilier.valeurLocativeBrut,
+            loyersEncaisses: immobilier.loyersEncaisses,
+            fraisEntretienDeductibles: immobilier.fraisEntretienDeductibles,
+            fo_bienImmobilier: immobilier.fo_bienImmobilier,
+            fo_attestationValeurLocative: immobilier.fo_attestationValeurLocative,
+            fo_taxeFonciereBiensEtranger: immobilier.fo_taxeFonciereBiensEtranger,
+            fo_factureEntretienImmeuble: immobilier.fo_factureEntretienImmeuble,
+          };
+
+          // Si l'immobilier a un ID, c'est une mise à jour
+          if (immobilier.immobilier_id) {
+            apiCalls.push(
+              axios.put(`http://127.0.0.1:8000/api/immobiliers/${immobilier.immobilier_id}`, immobilierApiData, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              })
+            );
+          } else {
+            // Sinon, c'est une nouvelle entrée
+            apiCalls.push(
+              axios.post("http://127.0.0.1:8000/api/immobiliers", immobilierApiData, {
+                headers: {
+                  Authorization: `Bearer ${token}`,
+                  "Content-Type": "application/json",
+                },
+              })
+            );
+          }
+        }
+      }
+
+      // 3.12 Dettes
+      if (dettesData) {
+        const dettesApiData = {
+          declaration_id: declarationId,
+          prive_id: priveId,
+          ...dettesData,
+        };
+        
+        console.log(dettesData)
+        console.log("ID "+dettesData.dettes_id)
+
+        // Si les dettes ont un ID, c'est une mise à jour
+        if (dettesData.dettes_id) {
+          apiCalls.push(
+            axios.put(`http://127.0.0.1:8000/api/interetsdettes/${dettesData.dettes_id}`, dettesApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        } else {
+          // Sinon, c'est une nouvelle entrée
+          apiCalls.push(
+            axios.post("http://127.0.0.1:8000/api/interetsdettes", dettesApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        }
+      }
+
+      // 3.13 Assurances
+      if (assurancesData) {
+        const assurancesApiData = {
+          declaration_id: declarationId,
+          prive_id: priveId,
+          ...assurancesData,
+        };
+
+        // Si les assurances ont un ID, c'est une mise à jour
+        if (assurancesData.indemnite_assurance_id) {
+          apiCalls.push(
+            axios.put(`http://127.0.0.1:8000/api/indemnitesassurance/${assurancesData.indemnite_assurance_id}`, assurancesApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        } else {
+          // Sinon, c'est une nouvelle entrée
+          apiCalls.push(
+            axios.post("http://127.0.0.1:8000/api/indemnitesassurance", assurancesApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        }
+      }
+
+      // 3.14 Autres déductions
+      if (autresDeductionsData) {
+        const autresDeductionsApiData = {
+          declaration_id: declarationId,
+          prive_id: priveId,
+          ...autresDeductionsData,
+        };
+
+        // Si les autres déductions ont un ID, c'est une mise à jour
+        if (autresDeductionsData.autre_deduction_id) {
+          apiCalls.push(
+            axios.put(`http://127.0.0.1:8000/api/autresdeductions/${autresDeductionsData.autre_deduction_id}`, autresDeductionsApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        } else {
+          // Sinon, c'est une nouvelle entrée
+          apiCalls.push(
+            axios.post("http://127.0.0.1:8000/api/autresdeductions", autresDeductionsApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        }
+      }
+
+      // 3.15 Autres informations
+      if (autresInformationsData) {
+        const autresInfosApiData = {
+          declaration_id: declarationId,
+          prive_id: priveId,
+          ...autresInformationsData,
+        };
+
+        // Si les autres informations ont un ID, c'est une mise à jour
+        if (autresInformationsData.autre_informations_id) {
+          apiCalls.push(
+            axios.put(`http://127.0.0.1:8000/api/autresinformations/${autresInformationsData.autre_informations_id}`, autresInfosApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        } else {
+          // Sinon, c'est une nouvelle entrée
+          apiCalls.push(
+            axios.post("http://127.0.0.1:8000/api/autresinformations", autresInfosApiData, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                "Content-Type": "application/json",
+              },
+            })
+          );
+        }
+          //rubrique
+        const response = await axios.get(
+        `http://127.0.0.1:8000/api/rubriques?declaration_id=${declarationId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+      const existingRubriques = response.data; // tableau de rubriques
+      
+      }
+
+      // Exécuter tous les appels API en parallèle
+      try {
+        await Promise.all(apiCalls)
+        console.log("Toutes les données ont été envoyées avec succès")
+
+        // Rediriger vers "Mes déclarations"
+        router.push(`/declarations-client/${userId}`)
+      } catch (error) {
+        console.error("Erreur lors de l'envoi des données:", error)
+        if (axios.isAxiosError(error) && error.response) {
+          setError(error.response.data.message || "Une erreur est survenue lors de l'envoi des données.")
+        } else {
+          setError("Une erreur est survenue lors de l'envoi des données. Veuillez réessayer.")
+        }
+      }
+    } else {
+      setError("Impossible de trouver votre profil. Veuillez contacter l'administrateur.")
     }
+  } catch (error) {
+    console.error("Erreur lors de la soumission du formulaire:", error)
+
+    if (axios.isAxiosError(error) && error.response) {
+      setError(error.response.data.message || "Une erreur est survenue lors de la soumission du formulaire.")
+    } else {
+      setError("Une erreur est survenue lors de la soumission du formulaire. Veuillez réessayer.")
+    }
+  } finally {
+    setIsLoading(false)
   }
+
+
+}
 
   // Afficher un écran de chargement pendant la récupération des données
   if (isDataLoading) {
@@ -1981,12 +2062,9 @@ for (const foKey of deleteFoKeys) {
         <div className="space-y-2">
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="fo_enfants"
+              id="hasEnfants"
               checked={hasEnfants || formSections.fo_enfants}
-                onCheckedChange={(checked) => {
-    setHasEnfants(checked as boolean);
-    handleSectionChange("fo_enfants", checked as boolean);
-  }}
+              onCheckedChange={(checked) => setHasEnfants(checked as boolean)}
             />
             <Label htmlFor="hasEnfants">Avez-vous des enfants à charge?</Label>
           </div>
@@ -1996,15 +2074,25 @@ for (const foKey of deleteFoKeys) {
         <div className="space-y-4">
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="fo_revenu"
-              checked={formSections.fo_revenu}
-              onCheckedChange={(checked) => handleSectionChange("fo_revenu", checked as boolean)}
+              id="fo_salarie"
+              checked={formSections.fo_salarie}
+              onCheckedChange={(checked) => handleSectionChange("fo_salarie", checked as boolean)}
             />
-            <Label htmlFor="fo_revenu" className="font-medium">
-              Percevez-vous un revenu, y compris d'une activité indépendante ?
+            <Label htmlFor="fo_salarie" className="font-medium">
+              Êtes-vous salarié?
             </Label>
           </div>
 
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="fo_independant"
+              checked={formSections.fo_independant}
+              onCheckedChange={(checked) => handleSectionChange("fo_independant", checked as boolean)}
+            />
+            <Label htmlFor="fo_independant" className="font-medium">
+              Êtes-vous indépendant?
+            </Label>
+          </div>
 
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -2017,6 +2105,16 @@ for (const foKey of deleteFoKeys) {
             </Label>
           </div>
 
+          <div className="flex items-center space-x-2">
+            <Checkbox
+              id="fo_autreRevenu"
+              checked={formSections.fo_autreRevenu}
+              onCheckedChange={(checked) => handleSectionChange("fo_autreRevenu", checked as boolean)}
+            />
+            <Label htmlFor="fo_autreRevenu" className="font-medium">
+              Avez-vous d&apos;autres revenus?
+            </Label>
+          </div>
 
           <div className="flex items-center space-x-2">
             <Checkbox
@@ -2053,11 +2151,11 @@ for (const foKey of deleteFoKeys) {
 
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="fo_assurances"
-              checked={formSections.fo_assurances}
-              onCheckedChange={(checked) => handleSectionChange("fo_assurances", checked as boolean)}
+              id="fo_assurance"
+              checked={formSections.fo_assurance}
+              onCheckedChange={(checked) => handleSectionChange("fo_assurance", checked as boolean)}
             />
-            <Label htmlFor="fo_assurances" className="font-medium">
+            <Label htmlFor="fo_assurance" className="font-medium">
               Avez-vous des assurances?
             </Label>
           </div>
@@ -2075,11 +2173,11 @@ for (const foKey of deleteFoKeys) {
 
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="fo_autresDeductions"
-              checked={formSections.fo_autresDeductions}
-              onCheckedChange={(checked) => handleSectionChange("fo_autresDeductions", checked as boolean)}
+              id="fo_autreDeduction"
+              checked={formSections.fo_autreDeduction}
+              onCheckedChange={(checked) => handleSectionChange("fo_autreDeduction", checked as boolean)}
             />
-            <Label htmlFor="fo_autresDeductions" className="font-medium">
+            <Label htmlFor="fo_autreDeduction" className="font-medium">
               Avez-vous d&apos;autres déductions?
             </Label>
           </div>
@@ -2096,11 +2194,11 @@ for (const foKey of deleteFoKeys) {
 
           <div className="flex items-center space-x-2">
             <Checkbox
-              id="fo_autresInformations"
-              checked={formSections.fo_autresInformations}
-              onCheckedChange={(checked) => handleSectionChange("fo_autresInformations", checked as boolean)}
+              id="fo_autreInformations"
+              checked={formSections.fo_autreInformations}
+              onCheckedChange={(checked) => handleSectionChange("fo_autreInformations", checked as boolean)}
             />
-            <Label htmlFor="fo_autresInformations" className="font-medium">
+            <Label htmlFor="fo_autreInformations" className="font-medium">
               Souhaitez-vous communiquer d'autres informations (dons, 3e pilier, cotisations AVS, handicap, etc.) ?
             </Label>
           </div>
@@ -2140,81 +2238,80 @@ for (const foKey of deleteFoKeys) {
   }
 
   // Rendu de l'étape 3: Informations des enfants (si a des enfants)
-const renderStep3 = () => {
-  if (!hasEnfants || !formSections.fo_enfants) {
-    // Si pas d'enfants et pas de section enfants demandée, passer directement à l'étape suivante
-    setTimeout(() => nextStep(), 0);
+  const renderStep3 = () => {
+    if (!hasEnfants && !formSections.fo_enfants) {
+      // Si pas d'enfants, passer directement à l'étape suivante
+      setTimeout(() => nextStep(), 0)
+      return (
+        <ProtectedPrive>
+          <div className="flex justify-center">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
+        </ProtectedPrive>
+      )
+    }
+
+    // Si nous avons des enfants mais que enfantsData n'est pas encore initialisé
+    if (!enfantsData && enfants.length > 0) {
+      // Convertir les enfants en objets Enfant complets
+      const enfantsComplets = enfants.map((enfant) => ({
+        nom: enfant.nom || "",
+        prenom: enfant.prenom || "",
+        dateNaissance: enfant.dateNaissance || "",
+        adresse: enfant.adresse || "",
+        codePostal: enfant.codePostal || "",
+        localite: enfant.localite || "",
+        noAVS: enfant.noAVS || "",
+        noContribuable: enfant.noContribuable || "",
+        revenuBrut: enfant.revenuBrut || "0",
+        fortuneNet: enfant.fortuneNet || "0",
+        avantAgeScolaire: false,
+        handicap: false,
+        domicileAvecParents: true,
+        parentsViventEnsemble: false,
+        gardeAlternee: false,
+        priseEnChargeFraisEgale: false,
+        revenuNetSuperieurAAutreParent: false,
+        fraisGarde: "0",
+        primeAssuranceMaladie: "0",
+        subsideAssuranceMaladie: "0",
+        fraisMedicaux: "0",
+        primeAssuranceAccident: "0",
+        allocationsFamilialesSuisse: "0",
+        montantInclusDansSalaireBrut: false,
+        allocationsFamilialesEtranger: "0",
+        fo_scolaire: false,
+        fo_scolaireStope: false,
+        fo_certificatSalaire: false,
+        fo_attestationFortune: false,
+        fo_preuveVersementPensionAlim: false,
+        fo_preuveEncaissementPensionAlim: false,
+        fo_avanceScarpa: false,
+        fo_fraisGardeEffectifs: false,
+        fo_attestationAMPrimesAnnuel: false,
+        fo_attestationAMFraisMedicaux: false,
+        fo_attestationPaiementAssuranceAccident: false,
+        _hasPensionAlimentaire: false,
+      }))
+
+      const initialEnfantsData = {
+        enfants: enfantsComplets,
+        pensionsAlimentaires: pensionsAlimentaires || [],
+      }
+      setEnfantsData(initialEnfantsData)
+    }
+
     return (
       <ProtectedPrive>
-        <div className="flex justify-center">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
+        <Enfants
+          data={enfantsData}
+          onUpdate={(newData) => setEnfantsData(newData)}
+          onNext={nextStep}
+          onPrev={prevStep}
+        />
       </ProtectedPrive>
-    );
+    )
   }
-
-  // Si nous avons des enfants OU que la section enfants est demandée
-  // Convertir les enfants en objets Enfant complets
-  const enfantsComplets = enfants.map((enfant) => ({
-    nom: enfant.nom || "",
-    prenom: enfant.prenom || "",
-    dateNaissance: enfant.dateNaissance || "",
-    adresse: enfant.adresse || "",
-    codePostal: enfant.codePostal || "",
-    localite: enfant.localite || "",
-    noAVS: enfant.noAVS || "",
-    noContribuable: enfant.noContribuable || "",
-    revenuBrut: enfant.revenuBrut || "0",
-    fortuneNet: enfant.fortuneNet || "0",
-    avantAgeScolaire: false,
-    handicap: false,
-    domicileAvecParents: true,
-    parentsViventEnsemble: false,
-    gardeAlternee: false,
-    priseEnChargeFraisEgale: false,
-    revenuNetSuperieurAAutreParent: false,
-    fraisGarde: "0",
-    primeAssuranceMaladie: "0",
-    subsideAssuranceMaladie: "0",
-    fraisMedicaux: "0",
-    primeAssuranceAccident: "0",
-    allocationsFamilialesSuisse: "0",
-    montantInclusDansSalaireBrut: false,
-    allocationsFamilialesEtranger: "0",
-    fo_scolaire: false,
-    fo_scolaireStope: false,
-    fo_certificatSalaire: false,
-    fo_attestationFortune: false,
-    fo_preuveVersementPensionAlim: false,
-    fo_preuveEncaissementPensionAlim: false,
-    fo_avanceScarpa: false,
-    fo_fraisGardeEffectifs: false,
-    fo_attestationAMPrimesAnnuel: false,
-    fo_attestationAMFraisMedicaux: false,
-    fo_attestationPaiementAssuranceAccident: false,
-    _hasPensionAlimentaire: false,
-  }));
-
-  // Initialiser les données seulement si elles n'existent pas encore
-  if (!enfantsData) {
-    const initialEnfantsData = {
-      enfants: enfantsComplets,
-      pensionsAlimentaires: pensionsAlimentaires || [],
-    };
-    setEnfantsData(initialEnfantsData);
-  }
-
-  return (
-    <ProtectedPrive>
-      <Enfants
-        data={enfantsData || { enfants: [], pensionsAlimentaires: [] }}
-        onUpdate={(newData) => setEnfantsData(newData)}
-        onNext={nextStep}
-        onPrev={prevStep}
-      />
-    </ProtectedPrive>
-  );
-};
   // Rendu de l'étape 4: Autres personnes à charge
 
   const renderStep4 = () => (
@@ -2235,45 +2332,65 @@ const renderStep3 = () => {
     </ProtectedPrive>
   )
 
-
-
-  // Rendu de l'étape 14: Assurances
+  // Rendu de l'étape 6: Indépendant
   const renderStep6 = () => (
     <ProtectedPrive>
-      <Assurances
-        data={assurancesData}
-        onUpdate={(newData) => setAssurancesData(newData)}
+      <Independants
+        data={independantsData}
+        onUpdate={(newData) => setIndependantsData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
     </ProtectedPrive>
   )
-  
+
+  // Rendu de l'étape 7: Indemnités assurance
+  const renderStep7 = () => (
+    <ProtectedPrive>
+      <IndemnitesAssurance
+        data={indemnitesAssuranceData}
+        onUpdate={(newData) => setIndemnitesAssuranceData(newData)}
+        onNext={nextStep}
+        onPrev={prevStep}
+      />
+    </ProtectedPrive>
+  )
 
   // Rendu de l'étape 8: Rentier
-  const renderStep7 = () => (
+  const renderStep8 = () => (
     <ProtectedPrive>
       <Rentier data={rentierData} onUpdate={(newData) => setRentierData(newData)} onNext={nextStep} onPrev={prevStep} />
     </ProtectedPrive>
   )
 
+  // Rendu de l'étape 9: Autres revenus
+  const renderStep9 = () => (
+    <ProtectedPrive>
+      <AutresRevenus
+        data={autresRevenusData}
+        onUpdate={(newData) => setAutresRevenusData(newData)}
+        onNext={nextStep}
+        onPrev={prevStep}
+      />
+    </ProtectedPrive>
+  )
 
   // Rendu de l'étape 10: Banques
-  const renderStep8 = () => (
+  const renderStep10 = () => (
     <ProtectedPrive>
       <Banques data={banquesData} onUpdate={(newData) => setBanquesData(newData)} onNext={nextStep} onPrev={prevStep} />
     </ProtectedPrive>
   )
 
   // Rendu de l'étape 11: Titres
-  const renderStep9 = () => (
+  const renderStep11 = () => (
     <ProtectedPrive>
       <Titres data={titresData} onUpdate={(newData) => setTitresData(newData)} onNext={nextStep} onPrev={prevStep} />
     </ProtectedPrive>
   )
 
   // Rendu de l'étape 12: Immobiliers
-  const renderStep10 = () => (
+  const renderStep12 = () => (
     <ProtectedPrive>
       <Immobiliers
         data={immobiliersData}
@@ -2285,16 +2402,26 @@ const renderStep3 = () => {
   )
 
   // Rendu de l'étape 13: Dettes
-  const renderStep11 = () => (
+  const renderStep13 = () => (
     <ProtectedPrive>
       <Dettes data={dettesData} onUpdate={(newData) => setDettesData(newData)} onNext={nextStep} onPrev={prevStep} />
     </ProtectedPrive>
   )
 
-
+  // Rendu de l'étape 14: Assurances
+  const renderStep14 = () => (
+    <ProtectedPrive>
+      <Assurances
+        data={assurancesData}
+        onUpdate={(newData) => setAssurancesData(newData)}
+        onNext={nextStep}
+        onPrev={prevStep}
+      />
+    </ProtectedPrive>
+  )
 
   // Rendu de l'étape 15: Autres déductions
-  const renderStep12 = () => (
+  const renderStep15 = () => (
     <ProtectedPrive>
       <AutresDeductions
         data={autresDeductionsData}
@@ -2306,7 +2433,7 @@ const renderStep3 = () => {
   )
 
   // Rendu de l'étape 16: Autres informations
-  const renderStep13 = () => (
+  const renderStep16 = () => (
     <ProtectedPrive>
       <AutresInformations
         data={autresInformationsData}
@@ -2318,7 +2445,7 @@ const renderStep3 = () => {
   )
 
   // Rendu de l'étape 18: Récapitulatif et confirmation
-  const renderStep14 = () => (
+  const renderStep18 = () => (
     <ProtectedPrive>
       <div className="space-y-6">
         <h3 className="text-lg font-medium">Récapitulatif de votre déclaration</h3>
@@ -2460,16 +2587,17 @@ const renderStep3 = () => {
             <AccordionTrigger>Rubriques sélectionnées</AccordionTrigger>
             <AccordionContent>
               <ul className="list-disc pl-5 space-y-1">
-                {formSections.fo_revenu && <li>Salarié</li>}
+                {formSections.fo_salarie && <li>Salarié</li>}
                 {formSections.fo_independant && <li>Indépendant</li>}
                 {formSections.fo_rentier && <li>Rentier</li>}
+                {formSections.fo_autreRevenu && <li>Autres revenus</li>}
                 {formSections.fo_banques && <li>Banques</li>}
                 {formSections.fo_immobiliers && <li>Immobiliers</li>}
                 {formSections.fo_dettes && <li>Dettes</li>}
-                {formSections.fo_assurances && <li>Assurances</li>}
+                {formSections.fo_assurance && <li>Assurances</li>}
                 {formSections.fo_autrePersonneCharge && <li>Autres personnes à charge</li>}
-                {formSections.fo_autresDeductions && <li>Autres déductions</li>}
-                {formSections.fo_autresInformations && <li>Autres informations</li>}
+                {formSections.fo_autreDeduction && <li>Autres déductions</li>}
+                {formSections.fo_autreInformations && <li>Autres informations</li>}
               </ul>
             </AccordionContent>
           </AccordionItem>
@@ -2527,6 +2655,12 @@ const renderStep3 = () => {
         return renderStep13()
       case 14:
         return renderStep14()
+      case 15:
+        return renderStep15()
+      case 16:
+        return renderStep16()
+      case 18:
+        return renderStep18()
       default:
         return renderStep1()
     }

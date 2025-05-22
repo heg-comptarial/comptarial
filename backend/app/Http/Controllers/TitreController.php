@@ -90,4 +90,27 @@ class TitreController extends Controller
         $titre->delete();
         return response()->json(['message' => 'Resource deleted successfully']);
     }
+    public function getByPriveId($prive_id)
+{
+    $titres = Titre::where('prive_id', $prive_id)->get();
+
+    if ($titres->isEmpty()) {
+        return response()->json(['message' => 'Aucun titre trouvé pour ce privé'], 404);
+    }
+
+    return response()->json($titres);
+}
+public function destroyByPriveId($prive_id)
+{
+    $deleted = Titre::where('prive_id', $prive_id)->delete();
+
+    if ($deleted === 0) {
+        return response()->noContent();
+    }
+
+    return response()->json([
+        'message' => 'Toutes les informations associées à ce privé ont été supprimées',
+        'count' => $deleted
+    ]);
+}
 }

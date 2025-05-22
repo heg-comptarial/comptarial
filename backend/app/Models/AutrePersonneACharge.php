@@ -8,9 +8,12 @@ use Illuminate\Database\Eloquent\Model;
 class AutrePersonneACharge extends Model
 {
     use HasFactory;
+    public $timestamps = false; // Désactive les timestamps
 
     // Nom de la table associée
     protected $table = 'autrepersonneacharge';
+    protected $primaryKey = 'autre_personne_id';
+
 
     // Attributs pouvant être remplis en masse
     protected $fillable = [

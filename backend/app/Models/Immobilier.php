@@ -10,7 +10,9 @@ class Immobilier extends Model
     use HasFactory;
 
     // Nom de la table associée
-    protected $table = 'immobilier';
+    protected $table = 'immobilier';    
+    protected $primaryKey = 'immobilier_id';
+
 
     // Désactiver les timestamps automatiques
     public $timestamps = false;

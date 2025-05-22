@@ -11,6 +11,7 @@ class IndemniteAssurance extends Model
 
     // Nom de la table associée
     protected $table = 'indemniteassurance';
+    protected $primaryKey = 'indemnite_assurance_id';
 
     // Désactiver les timestamps automatiques
     public $timestamps = false;

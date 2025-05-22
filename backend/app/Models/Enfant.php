@@ -35,6 +35,7 @@ class Enfant extends Model
 	use HasFactory;
 	protected $table = 'enfants';
 	public $timestamps = false;
+	protected $primaryKey = 'enfant_id';
 
 	protected $casts = [
 		'prive_id' => 'int',

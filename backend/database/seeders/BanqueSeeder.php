@@ -12,7 +12,7 @@ class BanqueSeeder extends Seeder
         DB::table('banque')->insert([
             [
                 'prive_id' => 3,
-                'fo_attestationFinAnnee' => true,
+                'nb_compte' => 2,
             ],
         ]);
     }

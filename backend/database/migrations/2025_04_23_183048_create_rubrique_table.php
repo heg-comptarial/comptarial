@@ -15,6 +15,7 @@ return new class extends Migration
             $table->bigIncrements('rubrique_id');
             $table->unsignedBigInteger('declaration_id')->index('declaration_id');
             $table->string('titre');
+            $table->string('type')->nullable();
         });
     }
 

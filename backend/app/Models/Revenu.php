@@ -12,6 +12,7 @@ class Revenu extends Model
     // Nom de la table associée
     protected $table = 'revenu';
 
+    protected $primaryKey = 'revenu_id';
     // Désactiver les timestamps automatiques
     public $timestamps = false;
 

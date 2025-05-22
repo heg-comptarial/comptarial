@@ -11,6 +11,8 @@ class InteretDettes extends Model
 
     // Nom de la table associée
     protected $table = 'interetdettes';
+    protected $primaryKey = 'dettes_id';
+
 
     // Désactiver les timestamps automatiques
     public $timestamps = false;
