@@ -73,6 +73,9 @@ Route::apiResource('commentaires', CommentaireController::class);
 
 // Routes pour les rubriques
 Route::apiResource('rubriques', RubriqueController::class);
+Route::get('/rubriques/declaration/{declarationID}', [RubriqueController::class, 'getRubriqueByDeclarationID']);
+
+
 
 // Routes pour les déclarations
 Route::apiResource('declarations', DeclarationController::class);
@@ -94,45 +97,83 @@ Route::get('/prives/complet/{userId}', [PriveController::class, 'getFormulairesP
 
 // Routes pour les conjoints
 Route::apiResource('conjoints', ConjointController::class);
+Route::get('/conjoints/prives/{priveId}', [ConjointController::class, 'getByPriveId']);
+Route::delete('/conjoints/prives/{priveId}', [ConjointController::class, 'destroyByPriveId']);
+
+
 
 // Routes pour les enfants
 Route::apiResource('enfants', EnfantController::class);
+Route::delete('enfants/prives/{priveId}', [EnfantController::class, 'destroyByPriveId']);
+// Route::delete('enfants/prenom/{prenom}', [EnfantController::class, 'destroyByName']);
+
+
+
 
 // Routes pour les entreprises
 Route::apiResource('entreprises', EntrepriseController::class);
 
 // Route pour autreinformations
-Route::apiResource('autreinformations', AutreInformationsController::class);
+Route::apiResource('autresinformations', AutreInformationsController::class);
+Route::get('/autresinformations/prives/{priveId}', [AutreInformationsController::class, 'getByPriveId']);
+Route::delete('/autresinformations/prives/{priveId}', [AutreInformationsController::class, 'destroyByPriveId']);
+
+
 
 // Route pour autre personne a charge
 Route::apiResource('autrepersonneacharge', AutrePersonneAChargeController::class);
+Route::get('/autrepersonneacharge/prives/{priveId}', [AutrePersonneAChargeController::class, 'getByPriveId']);
+Route::delete('/autrepersonneacharge/prives/{priveId}', [AutrePersonneAChargeController::class, 'destroyByPriveId']);
+
+
 
 // Route pour les banques
 Route::apiResource('/banques', BanqueController::class);
+Route::get('/banques/prives/{priveId}', [BanqueController::class, 'getByPriveId']);
+Route::delete('/banques/prives/{priveId}', [BanqueController::class, 'destroyByPriveId']);
+
 
 // Route pour les deductions
 Route::apiResource('/deductions', DeductionController::class);
+Route::get('/deductions/prives/{priveId}', [DeductionController::class, 'getByPriveId']);
+Route::delete('/deductions/prives/{priveId}', [DeductionController::class, 'destroyByPriveId']);
+
 
 // Route pour les immobiliers
 Route::apiResource('/immobiliers', ImmobilierController::class);
+Route::get('/immobiliers/prives/{priveId}', [ImmobilierController::class, 'getByPriveId']);
+Route::delete('/immobiliers/prives/{priveId}', [ImmobilierController::class, 'destroyByPriveId']);
 
 // Route pour les indemnites d'assurance
 Route::apiResource('/indemnitesassurances', IndemniteAssuranceController::class);
+Route::get('/indemnitesassurance/prives/{priveId}', [IndemniteAssuranceController::class, 'getByPriveId']);
+Route::delete('/indemnitesassurance/prives/{priveId}', [IndemniteAssuranceController::class, 'destroyByPriveId']);
 
 // Route pour les interets dettes 
 Route::apiResource('/interetsdettes', InteretDettesController::class);
+Route::get('/interetsdettes/prives/{priveId}', [InteretDettesController::class, 'getByPriveId']);
+Route::delete('/interetsdettes/prives/{priveId}', [InteretDettesController::class, 'destroyByPriveId']);
 
 // Route pour les pensions alimentaires
 Route::apiResource('/pensionsalimentaires', PensionAlimentaireController::class);
+Route::get('/pensionsalimentaires/enfants/{enfantId}',[PensionAlimentaireController::class,'getByEnfantId']);
+Route::delete('/pensionsalimentaires/enfants/{enfantId}',[PensionAlimentaireController::class,'destroyByEnfantId']);
+
 
 // Route pour les rentiers
 Route::apiResource('/rentiers', RentierController::class);
+Route::get('/rentiers/prives/{priveId}', [RentierController::class, 'getByPriveId']);
+Route::delete('/rentiers/prives/{priveId}', [RentierController::class, 'destroyByPriveId']);
 
 // Route pour les revenus
 Route::apiResource('/revenus', RevenuController::class);
+Route::get('/revenus/prives/{priveId}', [RevenuController::class, 'getByPriveId']);
+Route::delete('/revenus/prives/{priveId}', [RevenuController::class, 'destroyByPriveId']);
 
 // Route pour les titres
 Route::apiResource('/titres', TitreController::class);
+Route::get('/titres/prives/{priveId}', [TitreController::class, 'getByPriveId']);
+Route::delete('/titres/prives/{priveId}', [TitreController::class, 'destroyByPriveId']);
 
 // Route pour les autres personnes à charge
 Route::apiResource('/autrepersonnesacharges', AutrePersonneAChargeController::class);

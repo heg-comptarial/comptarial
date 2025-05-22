@@ -15,6 +15,18 @@ class DeductionController extends Controller
         $deductions = Deduction::all();
         return response()->json($deductions);
     }
+    public function getByPriveId($prive_id)
+{
+    $deductions = Deduction::where('prive_id', $prive_id)->firstOrFail();
+        return response()->json(data: $deductions);
+
+
+    if ($deductions->isEmpty()) {
+        return response()->json(['message' => 'Aucune déduction trouvée pour ce privé'], 404);
+    }
+
+}
+
 
     /**
      * Store a newly created resource in storage.
@@ -98,4 +110,18 @@ class DeductionController extends Controller
         $deduction->delete();
         return response()->json(['message' => 'Resource deleted successfully']);
     }
+    public function destroyByPriveId($prive_id)
+{
+    $deleted = Deduction::where('prive_id', $prive_id)->delete();
+
+    if ($deleted === 0) {
+        return response()->noContent();
+    }
+
+    return response()->json([
+        'message' => 'Toutes les informations associées à ce privé ont été supprimées',
+        'count' => $deleted
+    ]);
+}
+
 }

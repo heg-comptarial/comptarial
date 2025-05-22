@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input"
 import { Loader2, Plus, Trash2 } from "lucide-react"
 import axios from "axios"
 import PensionAlimentaire, { type PensionAlimentaireData } from "@/components/formulaires/pension-alimentaire"
+import { ConfigurationServicePlaceholders } from "aws-sdk/lib/config_service_placeholders"
 
 interface EnfantsProps {
   data: EnfantsData | null
@@ -20,7 +21,7 @@ interface EnfantsProps {
 }
 
 export interface Enfant {
-  id?: number
+  enfant_id?: number
   prive_id?: number
   nom: string
   prenom: string
@@ -81,7 +82,7 @@ export default function Enfants({ data, onUpdate, onNext, onPrev }: EnfantsProps
       // Ajouter la propriété temporaire _hasPensionAlimentaire pour l'UI
       const enfantsWithPensionFlag = data.enfants.map((enfant, index) => {
         const hasPension = data.pensionsAlimentaires.some(
-          (pension) => pension.enfant_id === index || pension.enfant_id === enfant.id,
+          (pension) => pension.enfant_id === index || pension.enfant_id === enfant.enfant_id,
         )
         return { ...enfant, _hasPensionAlimentaire: hasPension }
       })
@@ -145,22 +146,29 @@ export default function Enfants({ data, onUpdate, onNext, onPrev }: EnfantsProps
     }))
   }
 
-  // Supprimer un enfant
-  const removeEnfant = (index: number) => {
-    const updatedEnfants = [...formData.enfants]
-    updatedEnfants.splice(index, 1)
+// Supprimer un enfant et sa pension alimentaire
+const removeEnfant = async (index: number) => {
+  const enfant = formData.enfants[index];
+  const token = localStorage.getItem("auth_token")!;
 
-    // Supprimer également les pensions alimentaires associées
-    const updatedPensions = formData.pensionsAlimentaires.filter(
-      (pension) => pension.enfant_id !== index && pension.enfant_id !== formData.enfants[index].id,
+  await Promise.all([
+    enfant._hasPensionAlimentaire && 
+      axios.delete(`http://127.0.0.1:8000/api/pensionsalimentaires/enfants/${enfant.enfant_id || index}`, { 
+        headers: { Authorization: `Bearer ${token}` } 
+      }),
+    axios.delete(`http://127.0.0.1:8000/api/enfants/${enfant.enfant_id}`, { 
+      headers: { Authorization: `Bearer ${token}` } 
+    })
+  ]);
+
+  setFormData(prev => ({
+    enfants: prev.enfants.filter((_, i) => i !== index),
+    pensionsAlimentaires: prev.pensionsAlimentaires.filter(
+      p => p.enfant_id !== (enfant.enfant_id || index)
     )
-
-    setFormData((prev) => ({
-      ...prev,
-      enfants: updatedEnfants,
-      pensionsAlimentaires: updatedPensions,
-    }))
-  }
+  }));
+};
+  
 
   // Mettre à jour un enfant
   const updateEnfant = (index: number, field: keyof Enfant, value: string | boolean) => {
@@ -176,43 +184,64 @@ export default function Enfants({ data, onUpdate, onNext, onPrev }: EnfantsProps
   }
 
   // Mettre à jour le statut de la pension alimentaire
-  const updateHasPensionAlimentaire = (index: number, hasPension: boolean) => {
-    // Mettre à jour le flag temporaire dans l'enfant
-    const updatedEnfants = [...formData.enfants]
-    updatedEnfants[index] = {
-      ...updatedEnfants[index],
-      _hasPensionAlimentaire: hasPension,
-    }
+const updateHasPensionAlimentaire = (index: number, hasPension: boolean) => {
+  const updatedEnfants = [...formData.enfants]
+  let updatedPensions = [...formData.pensionsAlimentaires]
 
-    // Si on désactive la pension, supprimer les données de pension pour cet enfant
-    let updatedPensions = [...formData.pensionsAlimentaires]
-    if (!hasPension) {
-      updatedPensions = updatedPensions.filter(
-        (pension) => pension.enfant_id !== index && pension.enfant_id !== formData.enfants[index].id,
-      )
-    } else if (!updatedPensions.some((p) => p.enfant_id === index || p.enfant_id === formData.enfants[index].id)) {
-      // Si on active la pension et qu'il n'y a pas encore de données, en créer une par défaut
-      updatedPensions.push({
-        enfant_id: formData.enfants[index].id || index,
-        statut: "verse",
-        montantContribution: "0",
-        nom: "",
-        prenom: "",
-        noContribuable: "",
-        preuveVersement: false,
-      })
-    }
+  const enfant = formData.enfants[index]
+  const enfantId = enfant.enfant_id || index
 
-    setFormData((prev) => ({
-      ...prev,
-      enfants: updatedEnfants,
-      pensionsAlimentaires: updatedPensions,
-    }))
+  updatedEnfants[index] = {
+    ...updatedEnfants[index],
+    _hasPensionAlimentaire: hasPension,
   }
+
+  if (!hasPension) {
+    // ❌ Supprimer les pensions et mettre les preuves à false
+    updatedPensions = updatedPensions.filter(
+      (p) => p.enfant_id !== index && p.enfant_id !== enfant.enfant_id
+    )
+    updatedEnfants[index].fo_preuveVersementPensionAlim = false
+    updatedEnfants[index].fo_preuveEncaissementPensionAlim = false
+  } else if (
+    !updatedPensions.some(
+      (p) => p.enfant_id === enfantId
+    )
+  ) {
+    // ✅ Ajouter une pension par défaut si elle n'existe pas
+const defaultPension: PensionAlimentaireData = {
+  enfant_id: enfantId,
+  statut: "verse",
+  montantContribution: "0",
+  nom: "",
+  prenom: "",
+  noContribuable: "",
+}
+
+    updatedPensions.push(defaultPension)
+
+    // ✅ Définir les fo_ en fonction du statut par défaut
+    updatedEnfants[index].fo_preuveVersementPensionAlim = defaultPension.statut === "verse"
+    updatedEnfants[index].fo_preuveEncaissementPensionAlim = defaultPension.statut === "recu"
+  } else {
+    // ✅ Si la pension existe déjà, mettre à jour les fo_ en fonction de son statut
+    const existing = updatedPensions.find((p) => p.enfant_id === enfantId)
+
+    updatedEnfants[index].fo_preuveVersementPensionAlim = existing?.statut === "verse"
+    updatedEnfants[index].fo_preuveEncaissementPensionAlim = existing?.statut === "recu"
+  }
+
+  setFormData((prev) => ({
+    ...prev,
+    enfants: updatedEnfants,
+    pensionsAlimentaires: updatedPensions,
+  }))
+}
+
 
   // Mettre à jour les données de pension alimentaire
   const updatePensionAlimentaire = (index: number, pensionData: PensionAlimentaireData) => {
-    const enfantId = formData.enfants[index].id || index
+    const enfantId = formData.enfants[index].enfant_id || index
     const updatedPensions = [...formData.pensionsAlimentaires]
 
     // Trouver l'index de la pension existante pour cet enfant
@@ -236,8 +265,8 @@ export default function Enfants({ data, onUpdate, onNext, onPrev }: EnfantsProps
     const updatedEnfants = [...formData.enfants]
     updatedEnfants[index] = {
       ...updatedEnfants[index],
-      fo_preuveVersementPensionAlim: pensionData.statut === "verse" && pensionData.preuveVersement,
-      fo_preuveEncaissementPensionAlim: pensionData.statut === "recu" && pensionData.preuveVersement,
+      fo_preuveVersementPensionAlim: pensionData.statut === "verse" ,
+      fo_preuveEncaissementPensionAlim: pensionData.statut === "recu",
     }
 
     setFormData((prev) => ({
@@ -249,7 +278,7 @@ export default function Enfants({ data, onUpdate, onNext, onPrev }: EnfantsProps
 
   // Obtenir les données de pension pour un enfant
   const getPensionData = (index: number): PensionAlimentaireData | null => {
-    const enfantId = formData.enfants[index].id || index
+    const enfantId = formData.enfants[index].enfant_id || index
     const pension = formData.pensionsAlimentaires.find((p) => p.enfant_id === enfantId || p.enfant_id === index)
     return pension || null
   }
@@ -685,7 +714,7 @@ export default function Enfants({ data, onUpdate, onNext, onPrev }: EnfantsProps
                       </div>
                     </div>
 
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id={`fo_preuveVersementPensionAlim-${index}`}
@@ -698,9 +727,9 @@ export default function Enfants({ data, onUpdate, onNext, onPrev }: EnfantsProps
                           Preuve versement pension alimentaire
                         </Label>
                       </div>
-                    </div>
+                    </div> */}
 
-                    <div className="space-y-2">
+                    {/* <div className="space-y-2">
                       <div className="flex items-center space-x-2">
                         <Checkbox
                           id={`fo_preuveEncaissementPensionAlim-${index}`}
@@ -713,7 +742,7 @@ export default function Enfants({ data, onUpdate, onNext, onPrev }: EnfantsProps
                           Preuve encaissement pension alimentaire
                         </Label>
                       </div>
-                    </div>
+                    </div> */}
 
                     <div className="space-y-2">
                       <div className="flex items-center space-x-2">

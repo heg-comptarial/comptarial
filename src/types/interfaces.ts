@@ -82,17 +82,56 @@ export interface Prive {
   fo_autreInformations: boolean;
 }
 
-export interface Enfant {
-  nom: string;
-  prenom: string;
-  dateNaissance: string;
-  adresse: string;
-  codePostal: string;
-  localite: string;
-  noAVS: string;
-  noContribuable: string;
-  revenuBrut: string;
-  fortuneNet: string;
+ interface Enfant {
+  id?: number
+  prive_id?: number
+  nom: string
+  prenom: string
+  dateNaissance: string
+  adresse: string
+  codePostal: string
+  localite: string
+  noAVS: string
+  noContribuable: string
+  revenuBrut: string
+  fortuneNet: string
+  avantAgeScolaire: boolean
+  handicap: boolean
+  domicileAvecParents: boolean
+  parentsViventEnsemble: boolean
+  gardeAlternee: boolean
+  priseEnChargeFraisEgale: boolean
+  revenuNetSuperieurAAutreParent: boolean
+  fraisGarde: string
+  primeAssuranceMaladie: string
+  subsideAssuranceMaladie: string
+  fraisMedicaux: string
+  primeAssuranceAccident: string
+  allocationsFamilialesSuisse: string
+  montantInclusDansSalaireBrut: boolean
+  allocationsFamilialesEtranger: string
+  fo_scolaire: boolean
+  fo_scolaireStope: boolean
+  fo_certificatSalaire: boolean
+  fo_attestationFortune: boolean
+  fo_preuveVersementPensionAlim: boolean
+  fo_preuveEncaissementPensionAlim: boolean
+  fo_avanceScarpa: boolean
+  fo_fraisGardeEffectifs: boolean
+  fo_attestationAMPrimesAnnuel: boolean
+  fo_attestationAMFraisMedicaux: boolean
+  fo_attestationPaiementAssuranceAccident: boolean
+  _hasPensionAlimentaire?: boolean
+}
+
+ interface PensionAlimentaireData {
+  enfant_id?: number
+  statut: "verse" | "recu"
+  montantContribution: string
+  nom: string
+  prenom: string
+  noContribuable: string
+  preuveVersement: boolean
 }
 
 interface PriveData {

@@ -23,7 +23,7 @@ class BanqueController extends Controller
     {
         $validatedData = $request->validate([
             'prive_id' => 'required|integer',
-            'fo_attestationFinAnnee' => 'required|boolean',
+            'nb_compte' => 'required|integer',
         ]);
 
         $banque = Banque::create($validatedData);
@@ -57,7 +57,7 @@ class BanqueController extends Controller
 
         $validatedData = $request->validate([
             'prive_id' => 'sometimes|integer',
-            'fo_attestationFinAnnee' => 'sometimes|boolean',
+            'nb_compte' => 'sometimes|integer',
         ]);
 
         $banque->update($validatedData);
@@ -78,4 +78,24 @@ class BanqueController extends Controller
         $banque->delete();
         return response()->json(['message' => 'Resource deleted successfully']);
     }
+    public function getByPriveId($prive_id)
+{
+    $banques = Banque::where('prive_id', $prive_id)->firstOrFail();
+    return response()->json($banques);
+    
+
+}
+public function destroyByPriveId($prive_id)
+{
+    $deleted = Banque::where('prive_id', $prive_id)->delete();
+
+    if ($deleted === 0) {
+        return response()->noContent();
+    }
+
+    return response()->json([
+        'message' => 'Toutes les informations associées à ce privé ont été supprimées',
+        'count' => $deleted
+    ]);
+}
 }

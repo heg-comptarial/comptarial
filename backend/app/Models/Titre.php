@@ -12,6 +12,8 @@ class Titre extends Model
     // Nom de la table associée
     protected $table = 'titre';
 
+    protected $primaryKey = 'titre_id';
+
     // Désactiver les timestamps automatiques
     public $timestamps = false;
 
