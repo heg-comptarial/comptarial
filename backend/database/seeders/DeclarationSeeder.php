@@ -117,6 +117,15 @@ class DeclarationSeeder extends Seeder
                 'statut' => 'pending',
                 'annee' => '2024',
                 'dateCreation' => now(),
+            ],
+            [
+                // boran.uzun@etu.hesge.ch
+                'user_id' => 10,
+                'impots' => null,
+                'titre' => 'Déclaration',
+                'statut' => 'pending',
+                'annee' => '2024',
+                'dateCreation' => now(),
             ]
         ]);
     }
