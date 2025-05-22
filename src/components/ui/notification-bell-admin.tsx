@@ -248,7 +248,9 @@ export function NotificationBellAdmin({ userId, adminId }: { userId: number; adm
                   onClick={() => handleNotificationClick(notification)}
                 >
                   <div className="flex justify-between items-start mb-1">
-                    <p className="text-sm font-medium pr-6">{notification.contenu.replace(/\(Client ID: \d+\)/, "").trim()}</p>
+                    <p className="text-sm font-medium pr-6">
+                        {notification.contenu.replace(/\s*\(Client ID:.*?\)/g, "").trim()}
+                    </p>
                     {!notification.isRead && (
                       <Badge variant="secondary" className="ml-2">
                         Nouveau
