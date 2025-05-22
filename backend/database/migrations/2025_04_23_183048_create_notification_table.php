@@ -19,6 +19,7 @@ return new class extends Migration
             $table->boolean('isRead')->default(false); 
             $table->string('resource_type')->nullable();
             $table->unsignedBigInteger('resource_id')->nullable();
+            $table->unsignedBigInteger('target_user_id')->nullable();
         });
     }
 

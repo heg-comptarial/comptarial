@@ -110,7 +110,10 @@ class NotificationController extends Controller
             'user_id' => $user->user_id,
             'contenu' => "{$adminName} a commenté votre document '{$document->nom}'",
             'dateCreation' => Carbon::now(),
-            'isRead' => false
+            'isRead' => false,
+            'resource_type' => 'document', // Type de ressource = document
+            'resource_id' => $document->doc_id, // ID de la ressource = ID du document
+            'comment' => $request->contenu // Ajouter le contenu du commentaire
         ]);
         
         return response()->json($notification, 201);
@@ -336,13 +339,22 @@ class NotificationController extends Controller
         foreach ($admins as $admin) {
             if (!$admin->user) continue;
             
+            // Modifier le contenu pour inclure l'ID du client
+            $contenu = $request->contenu;
+            
+            // Ajouter l'ID du client au format "Client ID: X" s'il n'est pas déjà présent
+            if (!str_contains($contenu, "Client ID: {$user->user_id}")) {
+                $contenu .= " (Client ID: {$user->user_username})";
+            }
+            
             $notification = Notification::create([
                 'user_id' => $admin->user->user_id,
-                'contenu' => $request->contenu,
+                'contenu' => $contenu,
                 'dateCreation' => Carbon::now(),
                 'isRead' => false,
                 'resource_type' => $request->resource_type,
                 'resource_id' => $request->resource_id,
+                'target_user_id' => $user->user_id, // Ajouter l'ID de l'utilisateur cible
             ]);
             
             $notifications[] = $notification;
@@ -386,6 +398,7 @@ class NotificationController extends Controller
                 'isRead' => false,
                 'resource_type' => 'declaration',
                 'resource_id' => $declaration->declaration_id,
+                'target_user_id' => $user->user_id, // Ajouter l'ID de l'utilisateur cible
             ]);
             
             $notifications[] = $notification;
@@ -433,6 +446,7 @@ class NotificationController extends Controller
                 'isRead' => false,
                 'resource_type' => 'document',
                 'resource_id' => $document->doc_id,
+                'target_user_id' => $user->user_id, // Ajouter l'ID de l'utilisateur cible
             ]);
             
             $notifications[] = $notification;

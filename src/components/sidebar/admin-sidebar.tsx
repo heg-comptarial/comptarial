@@ -7,7 +7,8 @@ import { Command, Frame, LifeBuoy, Map, PieChart, Shield, SquareUserRound } from
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
 import { NavUserAdmin } from "@/components/sidebar/nav-user-admin";
-import { NotificationBell } from "@/components/ui/notification-bell";
+import { NotificationBellAdmin } from "@/components/ui/notification-bell-admin";
+
 import {
   Sidebar,
   SidebarContent,
@@ -104,7 +105,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
           </SidebarMenu>
           
           {/* Ajout de la cloche de notification */}
-          {userId && <NotificationBell userId={userId} />}
+          {userId && <NotificationBellAdmin userId={userId} adminId={userId} />}
         </div>
         <SidebarSeparator />
         

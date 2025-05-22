@@ -23,11 +23,10 @@ interface Notification {
   isRead?: boolean
   resource_type?: string
   resource_id?: number
-  // Champ pour stocker l'ID de l'utilisateur concerné (client)
   target_user_id?: number
 }
 
-export function NotificationBell({ userId }: { userId: number }) {
+export function NotificationBellAdmin({ userId, adminId }: { userId: number; adminId: number }) {
   const router = useRouter()
   const [notifications, setNotifications] = useState<Notification[]>([])
   const [unreadCount, setUnreadCount] = useState(0)
@@ -41,11 +40,11 @@ export function NotificationBell({ userId }: { userId: number }) {
     }
 
     try {
-      console.log("Récupération des notifications pour l'utilisateur:", userId)
+      console.log("Récupération des notifications pour l'administrateur:", userId)
       const response = await axios.get(
         `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/${userId}/notifications`,
       )
-      //console.log("Notifications reçues:", response.data)
+      // console.log("Notifications reçues:", response.data)
       setNotifications(response.data)
       setUnreadCount(response.data.filter((notif: Notification) => !notif.isRead).length)
     } catch (error) {
@@ -149,108 +148,65 @@ export function NotificationBell({ userId }: { userId: number }) {
       markAsRead(notification.notification_id)
     }
 
-    // Naviguer vers la ressource concernée si les informations sont disponibles
-    if (notification.resource_type && notification.resource_id) {
-      setIsOpen(false) // Fermer le popover
+    // Fermer le popover
+    setIsOpen(false)
 
-      // Déterminer si l'utilisateur est un administrateur ou un client
-      const userRole = localStorage.getItem("userRole") || sessionStorage.getItem("userRole")
-      const isAdmin = userRole === "admin"
+    console.log("=== NOTIFICATION ADMIN CLICK DEBUG ===")
+    console.log("Notification complète:", notification)
+    console.log("Admin ID:", adminId)
 
-      console.log("Rôle utilisateur:", userRole)
-      console.log("Est admin:", isAdmin)
-      console.log("Notification:", notification)
+    // Extraire l'ID client de la notification
+    let clientId = notification.target_user_id
 
-      // Construire l'URL en fonction du type de ressource
-      let url = ""
-
-      if (isAdmin) {
-        // Pour les administrateurs
-        // Récupérer l'ID admin (l'ID de l'utilisateur connecté)
-        const adminId = userId || 1 // Utiliser l'ID passé au composant ou 1 par défaut
-
-        // Déterminer l'ID du client concerné par la notification
-        let clientId = notification.target_user_id
-
-        // Si target_user_id n'est pas disponible, essayer d'extraire l'ID du client du contenu
-        if (!clientId) {
-          // Exemple: "Nouveau document 'facture.pdf' ajouté par Client (ID: 7)"
-          const match = notification.contenu.match(/$$ID: (\d+)$$/)
-          if (match && match[1]) {
-            clientId = Number.parseInt(match[1])
-          }
-        }
-
-        // Si on n'a toujours pas d'ID client, utiliser resource_id comme fallback
-        if (!clientId && notification.resource_type === "user") {
-          clientId = notification.resource_id
-        }
-
-        console.log("ID admin:", adminId)
-        console.log("ID client:", clientId)
-
-        // Si on n'a pas d'ID client, rediriger vers le tableau de bord admin
-        if (!clientId) {
-          url = `/admin/${adminId}`
-          console.log("URL générée (sans ID client):", url)
-        } else {
-          // Construire l'URL selon le format correct pour l'admin
-          switch (notification.resource_type) {
-            case "document":
-              url = `/admin/${adminId}/client/${clientId}?document=${notification.resource_id}`
-              break
-            case "declaration":
-              url = `/admin/${adminId}/client/${clientId}?declaration=${notification.resource_id}`
-              break
-            case "user":
-              url = `/admin/${adminId}/client/${clientId}`
-              break
-            default:
-              url = `/admin/${adminId}`
-          }
-          console.log("URL générée (admin):", url)
-        }
+    // Si target_user_id n'est pas disponible, essayer d'extraire l'ID du contenu
+    if (!clientId) {
+      // Rechercher spécifiquement "Client ID: X" dans le contenu
+      const clientIdMatch = notification.contenu.match(/Client ID: (\d+)/)
+      if (clientIdMatch && clientIdMatch[1]) {
+        clientId = Number.parseInt(clientIdMatch[1])
+        // console.log("ID client extrait du contenu (format Client ID):", clientId)
       } else {
-        // Pour les clients
-        // Utiliser l'ID de l'utilisateur connecté
-        const clientId = userId
-
-        console.log("ID client:", clientId)
-
-        // Construire l'URL selon le format pour le client
-        switch (notification.resource_type) {
-          case "document":
-            url = `/declarations-client/${clientId}?document=${notification.resource_id}`
-            break
-          case "declaration":
-            url = `/declarations-client/${clientId}?declaration=${notification.resource_id}`
-            break
-          case "comptabilite":
-          case "tva":
-          case "salaires":
-          case "administration":
-          case "fiscalite":
-          case "divers":
-            url = `/declarations-client/${clientId}?type=${encodeURIComponent(notification.resource_type)}`
-            break
-          default:
-            url = `/dashboard/${clientId}`
+        // Fallback à l'ancienne méthode
+        const idMatch = notification.contenu.match(/$$ID: (\d+)$$/)
+        if (idMatch && idMatch[1]) {
+          clientId = Number.parseInt(idMatch[1])
+          // console.log("ID client extrait du contenu (format ID):", clientId)
         }
-        console.log("URL générée (client):", url)
-      }
-
-      // Vérifier que l'URL ne contient pas "null" ou "undefined"
-      if (url.includes("null") || url.includes("undefined")) {
-        console.error("URL invalide générée:", url)
-        toast.error("Impossible d'accéder à cette ressource")
-        return
-      }
-
-      if (url) {
-        console.log("Navigation vers:", url)
-        router.push(url)
       }
     }
+
+    console.log("ID client final:", clientId)
+
+    // Construire l'URL pour l'admin
+    let url = ""
+
+    if (clientId) {
+      // Format de l'URL admin: /admin/{adminId}/client/{clientId}
+      url = `/admin/${adminId}/client/${clientId}`
+
+      // Ajouter des paramètres supplémentaires si nécessaire
+      if (notification.resource_type === "document" && notification.resource_id) {
+        url += `?document=${notification.resource_id}`
+      } else if (notification.resource_type === "declaration" && notification.resource_id) {
+        url += `?declaration=${notification.resource_id}`
+      }
+    } else {
+      // Si on n'a pas d'ID client, rediriger vers le tableau de bord admin
+      url = `/admin/${adminId}`
+    }
+
+    console.log("URL finale générée:", url)
+
+    // Vérifier que l'URL ne contient pas "null" ou "undefined"
+    if (url.includes("null") || url.includes("undefined")) {
+      console.error("URL invalide générée:", url)
+      toast.error("Impossible d'accéder à cette ressource")
+      return
+    }
+
+    // Naviguer vers l'URL
+    console.log("Navigation vers:", url)
+    router.push(url)
   }
 
   const handleOpen = (open: boolean) => {
@@ -271,7 +227,7 @@ export function NotificationBell({ userId }: { userId: number }) {
       </PopoverTrigger>
       <PopoverContent className="w-[500px] p-0" align="start">
         <div className="flex items-center justify-between p-4">
-          <h3 className="font-medium">Notifications</h3>
+          <h3 className="font-medium">Notifications Admin</h3>
           <div className="flex gap-2">
             {unreadCount > 0 && (
               <Button variant="ghost" size="sm" onClick={markAllAsRead}>
@@ -324,19 +280,19 @@ export function NotificationBell({ userId }: { userId: number }) {
           )}
         </ScrollArea>
         {notifications.length > 0 && (
-          <div className="flex justify-end px-4 py-2">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={deleteAllNotifications}
-               disabled={isDeleting}
-              className="text-destructive hover:text-destructive"
-            >
-              <Trash2 className="h-4 w-4 mr-1" />
-                Tout supprimer
-            </Button>
-          </div>
-            )}
+            <div className="flex justify-end px-4 py-2">
+                <Button
+                variant="ghost"
+                size="sm"
+                onClick={deleteAllNotifications}
+                disabled={isDeleting}
+                className="text-destructive hover:text-destructive"
+                >
+                <Trash2 className="h-4 w-4 mr-1" />
+                    Tout supprimer
+                </Button>
+            </div>
+        )}
       </PopoverContent>
     </Popover>
   )

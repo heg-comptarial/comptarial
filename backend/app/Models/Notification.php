@@ -43,6 +43,7 @@ class Notification extends Model
 		'isRead',
 		'resource_type',
         'resource_id',
+		'target_user_id',
 	];
 
 	public function user()
