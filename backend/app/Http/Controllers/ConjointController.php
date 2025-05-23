@@ -17,17 +17,21 @@ class ConjointController extends Controller
     public function store(Request $request)
     {
         // Valide les données
-        $request->validate([
-            'prive_id' => 'required|exists:prive,prive_id',
-            'nom' => 'required|string|max:255',
-            'prenom' => 'required|string|max:255',
-            'nationalite' => 'required|string|max:255',
-            'dateNaissance' => 'required|date',
-            'localite' => 'required|string|max:255',
-            'adresse' => 'required|string|max:255',
-            'codePostal' => 'required|string|max:10',
-            'situationProfessionnelle' => 'required|string|max:255',
-        ]);
+$request->validate([
+    'prive_id' => 'required|exists:prive,prive_id',
+    'nom' => 'required|string|max:255',
+    'prenom' => 'required|string|max:255',
+    'email' => 'nullable|email|max:255',
+    'localite' => 'required|string|max:255',
+    'adresse' => 'required|string|max:255',
+    'codePostal' => 'required|string|max:10',
+    'numeroTelephone' => 'nullable|string|max:20',
+    'etatCivil' => 'nullable|string|max:255',
+    'dateNaissance' => 'required|date',
+    'nationalite' => 'required|string|max:255',
+    'professionExercee' => 'required|string|max:255',
+    'contributionReligieuse' => 'nullable|string|max:255',
+]);
 
         // Crée un nouveau conjoint
         $conjoint = Conjoint::create($request->all());
@@ -44,16 +48,21 @@ class ConjointController extends Controller
     public function update(Request $request, $id)
     {
         // Valide les données
-        $request->validate([
-            'nom' => 'string|max:255',
-            'prenom' => 'string|max:255',
-            'nationalite' => 'string|max:255',
-            'dateNaissance' => 'date',
-            'localite' => 'string|max:255',
-            'adresse' => 'string|max:255',
-            'codePostal' => 'string|max:10',
-            'situationProfessionnelle' => 'string|max:255',
-        ]);
+$request->validate([
+    'nom' => 'string|max:255',
+    'prenom' => 'string|max:255',
+    'email' => 'email|max:255',
+    'localite' => 'string|max:255',
+    'adresse' => 'string|max:255',
+    'codePostal' => 'string|max:10',
+    'numeroTelephone' => 'string|max:20',
+    'etatCivil' => 'string|max:255',
+    'dateNaissance' => 'date',
+    'nationalite' => 'string|max:255',
+    'professionExercee' => 'string|max:255',
+    'contributionReligieuse' => 'string|max:255',
+]);
+
 
         // Met à jour un conjoint
         $conjoint = Conjoint::findOrFail($id);

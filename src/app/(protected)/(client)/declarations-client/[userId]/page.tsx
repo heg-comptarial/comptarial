@@ -216,8 +216,10 @@ for (const [field, value] of Object.entries(userPrive || {})) {
   }, [userId, router]);
 
 
-  const handleYearChange = (year: number) => setSelectedYear(year.toString());
-
+const handleYearChange = (year: number) => {
+  setSelectedYear(year.toString());
+  setShowForm(false); // Ferme le formulaire lors du changement
+};
   const handleFilesSelected = (rubriqueId: number, files: File[]) => {
     setSelectedFiles((prev) => [
       ...prev,
@@ -401,22 +403,22 @@ for (const [field, value] of Object.entries(userPrive || {})) {
 )}
   </div>
 </div>
-      {showForm && (
-        <div className="my-6">
-          <FormulaireDeclaration
-            mode="edit"
-            priveId={priveId}
-            onSubmitSuccess={async () => {
-              try {
-                await refreshDeclaration()
-                setShowForm(false)
-                toast.success("Formulaire soumis avec succès")
-                return true
-              } catch (error) {
-                console.error("Erreur lors de la fermeture du formulaire:", error)
-                return false
-              }
-            }}
+{showForm && declaration?.statut === "pending" && (
+  <div className="my-6">
+    <FormulaireDeclaration
+      mode="edit"
+      priveId={priveId}
+      onSubmitSuccess={async () => {
+        try {
+          await refreshDeclaration()
+          setShowForm(false)
+          toast.success("Formulaire soumis avec succès")
+          return true
+        } catch (error) {
+          console.error("Erreur lors de la fermeture du formulaire:", error)
+          return false
+        }
+      }}
           />
         </div>
       )}

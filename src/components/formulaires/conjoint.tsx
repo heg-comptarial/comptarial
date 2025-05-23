@@ -30,41 +30,49 @@ export interface ConjointData {
   dateNaissance: string
   nationalite: string
   professionExercee: string
-  contributionReligieuse: string
-}
+  contributionReligieuse:
+    | "Église Catholique Chrétienne"
+    | "Église Catholique Romaine"
+    | "Église Protestante"
+    | "Aucune organisation religieuse"
+  }
 
 export default function Conjoint({ data, onUpdate, onNext, onPrev }: ConjointProps) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [formData, setFormData] = useState<ConjointData>({
-    nom: "",
-    prenom: "",
-    email: "",
-    localite: "",
-    adresse: "",
-    codePostal: "",
-    numeroTelephone: "",
-    etatCivil: "Marié-e",
-    dateNaissance: "",
-    nationalite: "",
-    professionExercee: "",
-    contributionReligieuse: "Aucune organisation religieuse",
-  })
+    nom: data?.nom || "",
+    prenom: data?.prenom || "",
+    email: data?.email || "",
+    localite: data?.localite || "",
+    adresse: data?.adresse || "",
+    codePostal: data?.codePostal || "",
+    numeroTelephone: data?.numeroTelephone || "",
+    etatCivil: data?.etatCivil || "Marié-e",
+    dateNaissance: data?.dateNaissance || "",
+    nationalite: data?.nationalite || "",
+    professionExercee: data?.professionExercee || "",
+    contributionReligieuse: data?.contributionReligieuse || "Aucune organisation religieuse",
+  });
 
   // Initialiser les données du formulaire si elles existent
-  useEffect(() => {
-    if (data) {
-      setFormData(data)
+useEffect(() => {
+  if (data) {
+    // Vérifie et merge uniquement si data est complet
+      setFormData(prev => ({
+        ...prev,
+        ...data,
+        // Force le type pour contributionReligieuse
+        contributionReligieuse: data.contributionReligieuse as ContributionReligieuse
+      }));
     }
   }, [data])
 
   // Gérer les changements dans le formulaire
   const handleChange = (field: keyof ConjointData, value: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      [field]: value,
-    }))
-  }
+    setFormData(prev => ({ ...prev, [field]: value }));
+    if (onUpdate) onUpdate({ ...formData, [field]: value });
+  };
 
   // Soumettre le formulaire
   const handleSubmit = async (e: React.FormEvent) => {
@@ -94,6 +102,14 @@ export default function Conjoint({ data, onUpdate, onNext, onPrev }: ConjointPro
       setIsLoading(false)
     }
   }
+
+  const contributions = [
+  "Église Catholique Chrétienne",
+  "Église Catholique Romaine",
+  "Église Protestante",
+  "Aucune organisation religieuse",
+] as const
+type ContributionReligieuse = typeof contributions[number]
 
   return (
     <div className="space-y-6">
@@ -199,20 +215,21 @@ export default function Conjoint({ data, onUpdate, onNext, onPrev }: ConjointPro
 
             <div className="space-y-2">
               <Label htmlFor="contributionReligieuse">Contribution religieuse</Label>
-              <Select
-                value={formData.contributionReligieuse}
-                onValueChange={(value) => handleChange("contributionReligieuse", value)}
-              >
-                <SelectTrigger id="contributionReligieuse">
-                  <SelectValue placeholder="Sélectionnez la contribution religieuse" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="Église Catholique Chrétienne">Église Catholique Chrétienne</SelectItem>
-                  <SelectItem value="Église Catholique Romaine">Église Catholique Romaine</SelectItem>
-                  <SelectItem value="Église Protestante">Église Protestante</SelectItem>
-                  <SelectItem value="Aucune organisation religieuse">Aucune organisation religieuse</SelectItem>
-                </SelectContent>
-              </Select>
+<Select
+  value={formData.contributionReligieuse}
+  onValueChange={(value) => handleChange("contributionReligieuse", value)}
+>
+  <SelectTrigger>
+    <SelectValue placeholder="Sélectionnez..." />
+  </SelectTrigger>
+  <SelectContent>
+    {contributions.map(item => (
+      <SelectItem key={item} value={item}>
+        {item}
+      </SelectItem>
+    ))}
+  </SelectContent>
+</Select>
             </div>
 
             <div className="space-y-2">

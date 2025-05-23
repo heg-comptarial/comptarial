@@ -70,7 +70,7 @@ class RubriqueController extends Controller
         $rubrique = Rubrique::where('declaration_id', $id)->get();
 
     if ($rubrique->isEmpty()) {
-        return response()->json(['message' => 'Aucun revenu trouvé pour ce privé'], 404);
+        return response()->json(['message' => 'Aucun rubrique trouvé pour ce privé'], 404);
     }
 
     return response()->json($rubrique);

@@ -1,7 +1,5 @@
 "use client"
 
-import type React from "react"
-
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent } from "@/components/ui/card"
@@ -55,44 +53,51 @@ export default function Revenu({ data, onUpdate, onNext, onPrev }: RevenuProps) 
     fo_etatFinancier: false,
   })
 
-  // Initialiser les données du formulaire si elles existent
+  // Initialiser les données du formulaire
   useEffect(() => {
     if (data) {
       setFormData(data)
     }
   }, [data])
 
-  // Gérer les changements dans le formulaire
   const handleChange = (field: keyof RevenuData, value: boolean | string) => {
-    setFormData((prev) => ({
+    setFormData(prev => ({
       ...prev,
       [field]: value,
     }))
   }
 
-  // Soumettre le formulaire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError(null)
     setIsLoading(true)
 
     try {
-      const token = localStorage.getItem("auth_token")
-      if (!token) {
-        throw new Error("Vous devez être connecté pour effectuer cette action.")
+      // Validation des dates si interruption de travail est cochée
+      if (formData.interruptionsTravailNonPayees) {
+        if (!formData.interuptionsTravailNonPayeesDebut || !formData.interuptionsTravailNonPayeesFin) {
+          throw new Error("Veuillez renseigner les dates de début et fin d'interruption")
+        }
+        
+        const debut = new Date(formData.interuptionsTravailNonPayeesDebut)
+        const fin = new Date(formData.interuptionsTravailNonPayeesFin)
+        
+        if (debut > fin) {
+          throw new Error("La date de fin doit être postérieure à la date de début")
+        }
       }
 
       // Mettre à jour les données dans le composant parent
       onUpdate(formData)
-
+      
       // Passer à l'étape suivante
       onNext()
     } catch (error) {
-      console.error("Erreur lors de la soumission du formulaire:", error)
-      if (axios.isAxiosError(error) && error.response) {
-        setError(error.response.data.message || "Une erreur est survenue lors de la soumission du formulaire.")
+      console.error("Erreur lors de la soumission:", error)
+      if (error instanceof Error) {
+        setError(error.message)
       } else {
-        setError("Une erreur est survenue lors de la soumission du formulaire. Veuillez réessayer.")
+        setError("Une erreur inattendue est survenue")
       }
     } finally {
       setIsLoading(false)
@@ -104,167 +109,181 @@ export default function Revenu({ data, onUpdate, onNext, onPrev }: RevenuProps) 
       <h3 className="text-lg font-medium">Revenus</h3>
       <form onSubmit={handleSubmit}>
         <Card>
-          <CardContent className="pt-6 space-y-4">
+          <CardContent className="pt-6 space-y-6">
+            {/* Section Revenus principaux */}
             <div className="space-y-4">
-              <h4 className="font-medium">Sources de revenus</h4>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="indemnites"
-                  checked={formData.indemnites}
-                  onCheckedChange={(checked) => handleChange("indemnites", checked as boolean)}
-                />
-                <Label htmlFor="indemnites" className="font-medium">
-                  Avez-vous perçu des indemnités (chômage, maladie, accident, maternité)?
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="interruptionsTravailNonPayees"
-                  checked={formData.interruptionsTravailNonPayees}
-                  onCheckedChange={(checked) => handleChange("interruptionsTravailNonPayees", checked as boolean)}
-                />
-                <Label htmlFor="interruptionsTravailNonPayees" className="font-medium">
-                  Avez-vous eu des interruptions de travail non payées?
-                </Label>
-              </div>
-
-              {formData.interruptionsTravailNonPayees && (
-                <div className="grid grid-cols-2 gap-4 ml-6">
-                  <div className="space-y-2">
-                    <Label htmlFor="interuptionsTravailNonPayeesDebut">Date de début</Label>
-                    <Input
-                      id="interuptionsTravailNonPayeesDebut"
-                      type="date"
-                      value={formData.interuptionsTravailNonPayeesDebut}
-                      onChange={(e) => handleChange("interuptionsTravailNonPayeesDebut", e.target.value)}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="interuptionsTravailNonPayeesFin">Date de fin</Label>
-                    <Input
-                      id="interuptionsTravailNonPayeesFin"
-                      type="date"
-                      value={formData.interuptionsTravailNonPayeesFin}
-                      onChange={(e) => handleChange("interuptionsTravailNonPayeesFin", e.target.value)}
-                    />
-                  </div>
+              <h4 className="font-medium text-base">Sources de revenus</h4>
+              
+              <div className="space-y-4">
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="indemnites"
+                    checked={formData.indemnites}
+                    onCheckedChange={(checked) => handleChange("indemnites", checked as boolean)}
+                  />
+                  <Label htmlFor="indemnites" className="font-normal">
+                    Indemnités (chômage, maladie, accident, maternité)
+                  </Label>
                 </div>
-              )}
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="activiteIndependante"
-                  checked={formData.activiteIndependante}
-                  onCheckedChange={(checked) => handleChange("activiteIndependante", checked as boolean)}
-                />
-                <Label htmlFor="activiteIndependante" className="font-medium">
-                  Exercez-vous une activité indépendante?
-                </Label>
-              </div>
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="interruptionsTravailNonPayees"
+                    checked={formData.interruptionsTravailNonPayees}
+                    onCheckedChange={(checked) => handleChange("interruptionsTravailNonPayees", checked as boolean)}
+                  />
+                  <Label htmlFor="interruptionsTravailNonPayees" className="font-normal">
+                    Interruptions de travail non payées
+                  </Label>
+                </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="prestationsSociales"
-                  checked={formData.prestationsSociales}
-                  onCheckedChange={(checked) => handleChange("prestationsSociales", checked as boolean)}
-                />
-                <Label htmlFor="prestationsSociales" className="font-medium">
-                  Percevez-vous des prestations sociales (AVS/AI, LPP, Assurance militaire, Étrangères, Autres)?
-                </Label>
-              </div>
+                {formData.interruptionsTravailNonPayees && (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 ml-8">
+                    <div className="space-y-2">
+                      <Label htmlFor="interuptionsTravailNonPayeesDebut">Date de début</Label>
+                      <Input
+                        id="interuptionsTravailNonPayeesDebut"
+                        type="date"
+                        value={formData.interuptionsTravailNonPayeesDebut}
+                        onChange={(e) => handleChange("interuptionsTravailNonPayeesDebut", e.target.value)}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="interuptionsTravailNonPayeesFin">Date de fin</Label>
+                      <Input
+                        id="interuptionsTravailNonPayeesFin"
+                        type="date"
+                        value={formData.interuptionsTravailNonPayeesFin}
+                        onChange={(e) => handleChange("interuptionsTravailNonPayeesFin", e.target.value)}
+                      />
+                    </div>
+                  </div>
+                )}
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="subsidesAssuranceMaladie"
-                  checked={formData.subsidesAssuranceMaladie}
-                  onCheckedChange={(checked) => handleChange("subsidesAssuranceMaladie", checked as boolean)}
-                />
-                <Label htmlFor="subsidesAssuranceMaladie" className="font-medium">
-                  Recevez-vous des subsides d&apos;assurance maladie?
-                </Label>
-              </div>
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="activiteIndependante"
+                    checked={formData.activiteIndependante}
+                    onCheckedChange={(checked) => handleChange("activiteIndependante", checked as boolean)}
+                  />
+                  <Label htmlFor="activiteIndependante" className="font-normal">
+                    Activité indépendante
+                  </Label>
+                </div>
 
-              <h4 className="font-medium pt-4">Documents disponibles</h4>
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="fo_certificatSalaire"
-                  checked={formData.fo_certificatSalaire}
-                  onCheckedChange={(checked) => handleChange("fo_certificatSalaire", checked as boolean)}
-                />
-                <Label htmlFor="fo_certificatSalaire" className="font-medium">
-                  Avez-vous un certificat de salaire?
-                </Label>
-              </div>
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="prestationsSociales"
+                    checked={formData.prestationsSociales}
+                    onCheckedChange={(checked) => handleChange("prestationsSociales", checked as boolean)}
+                  />
+                  <Label htmlFor="prestationsSociales" className="font-normal">
+                    Prestations sociales (AVS/AI, LPP, Assurance militaire, etc.)
+                  </Label>
+                </div>
 
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="fo_renteViagere"
-                  checked={formData.fo_renteViagere}
-                  onCheckedChange={(checked) => handleChange("fo_renteViagere", checked as boolean)}
-                />
-                <Label htmlFor="fo_renteViagere" className="font-medium">
-                  Percevez-vous une rente viagère?
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="fo_allocationLogement"
-                  checked={formData.fo_allocationLogement}
-                  onCheckedChange={(checked) => handleChange("fo_allocationLogement", checked as boolean)}
-                />
-                <Label htmlFor="fo_allocationLogement" className="font-medium">
-                  Recevez-vous une allocation de logement?
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="fo_preuveEncaissementSousLoc"
-                  checked={formData.fo_preuveEncaissementSousLoc}
-                  onCheckedChange={(checked) => handleChange("fo_preuveEncaissementSousLoc", checked as boolean)}
-                />
-                <Label htmlFor="fo_preuveEncaissementSousLoc" className="font-medium">
-                  Avez-vous des preuves d&apos;encaissement de sous-location?
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="fo_gainsAccessoires"
-                  checked={formData.fo_gainsAccessoires}
-                  onCheckedChange={(checked) => handleChange("fo_gainsAccessoires", checked as boolean)}
-                />
-                <Label htmlFor="fo_gainsAccessoires" className="font-medium">
-                  Avez-vous des gains accessoires (jusqu&apos;à 2300 CHF non soumis à AVS)?
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="fo_attestationAutresRevenus"
-                  checked={formData.fo_attestationAutresRevenus}
-                  onCheckedChange={(checked) => handleChange("fo_attestationAutresRevenus", checked as boolean)}
-                />
-                <Label htmlFor="fo_attestationAutresRevenus" className="font-medium">
-                  Avez-vous des attestations d&apos;autres revenus?
-                </Label>
-              </div>
-
-              <div className="flex items-center space-x-2">
-                <Checkbox
-                  id="fo_etatFinancier"
-                  checked={formData.fo_etatFinancier}
-                  onCheckedChange={(checked) => handleChange("fo_etatFinancier", checked as boolean)}
-                />
-                <Label htmlFor="fo_etatFinancier" className="font-medium">
-                  Disposez-vous d&apos;un état financier (pour indépendants)?
-                </Label>
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="subsidesAssuranceMaladie"
+                    checked={formData.subsidesAssuranceMaladie}
+                    onCheckedChange={(checked) => handleChange("subsidesAssuranceMaladie", checked as boolean)}
+                  />
+                  <Label htmlFor="subsidesAssuranceMaladie" className="font-normal">
+                    Subsides d'assurance maladie
+                  </Label>
+                </div>
               </div>
             </div>
 
-            {error && <p className="text-red-500 text-sm">{error}</p>}
+            {/* Section Documents */}
+            <div className="space-y-4">
+              <h4 className="font-medium text-base">Documents disponibles</h4>
+              
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="fo_certificatSalaire"
+                    checked={formData.fo_certificatSalaire}
+                    onCheckedChange={(checked) => handleChange("fo_certificatSalaire", checked as boolean)}
+                  />
+                  <Label htmlFor="fo_certificatSalaire" className="font-normal">
+                    Certificat de salaire
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="fo_renteViagere"
+                    checked={formData.fo_renteViagere}
+                    onCheckedChange={(checked) => handleChange("fo_renteViagere", checked as boolean)}
+                  />
+                  <Label htmlFor="fo_renteViagere" className="font-normal">
+                    Rente viagère
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="fo_allocationLogement"
+                    checked={formData.fo_allocationLogement}
+                    onCheckedChange={(checked) => handleChange("fo_allocationLogement", checked as boolean)}
+                  />
+                  <Label htmlFor="fo_allocationLogement" className="font-normal">
+                    Allocation de logement
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="fo_preuveEncaissementSousLoc"
+                    checked={formData.fo_preuveEncaissementSousLoc}
+                    onCheckedChange={(checked) => handleChange("fo_preuveEncaissementSousLoc", checked as boolean)}
+                  />
+                  <Label htmlFor="fo_preuveEncaissementSousLoc" className="font-normal">
+                    Preuves d'encaissement de sous-location
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="fo_gainsAccessoires"
+                    checked={formData.fo_gainsAccessoires}
+                    onCheckedChange={(checked) => handleChange("fo_gainsAccessoires", checked as boolean)}
+                  />
+                  <Label htmlFor="fo_gainsAccessoires" className="font-normal">
+                    Gains accessoires (jusqu'à 2300 CHF non soumis à AVS)
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="fo_attestationAutresRevenus"
+                    checked={formData.fo_attestationAutresRevenus}
+                    onCheckedChange={(checked) => handleChange("fo_attestationAutresRevenus", checked as boolean)}
+                  />
+                  <Label htmlFor="fo_attestationAutresRevenus" className="font-normal">
+                    Attestations d'autres revenus
+                  </Label>
+                </div>
+
+                <div className="flex items-center space-x-3">
+                  <Checkbox
+                    id="fo_etatFinancier"
+                    checked={formData.fo_etatFinancier}
+                    onCheckedChange={(checked) => handleChange("fo_etatFinancier", checked as boolean)}
+                  />
+                  <Label htmlFor="fo_etatFinancier" className="font-normal">
+                    État financier (pour indépendants)
+                  </Label>
+                </div>
+              </div>
+            </div>
+
+            {error && (
+              <div className="p-4 text-sm text-red-700 bg-red-100 rounded-lg">
+                {error}
+              </div>
+            )}
           </CardContent>
         </Card>
 
@@ -276,7 +295,7 @@ export default function Revenu({ data, onUpdate, onNext, onPrev }: RevenuProps) 
             {isLoading ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                Chargement...
+                Enregistrement...
               </>
             ) : (
               "Continuer"

@@ -166,8 +166,11 @@ interface ConjointData {
   dateNaissance: string
   nationalite: string
   professionExercee: string
-  contributionReligieuse: string // Changé de type union à string
-}
+  contributionReligieuse:
+  | "Église Catholique Chrétienne"
+  | "Église Catholique Romaine"
+  | "Église Protestante"
+  | "Aucune organisation religieuse"}
 
 // Pour l'interface Enfant, rendons toutes les propriétés optionnelles requises
 interface Enfant {
@@ -341,11 +344,11 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
     fo_immobiliers: false,
     fo_revenu: false,
     fo_autrePersonneCharge: false,
-    fo_independant: false,
     fo_rentier: false,
     fo_assurances: false,
     fo_autresDeductions: false,
     fo_autresInformations: false,
+    fo_titres:false,
   })
 
   const etapesMap: { [key: string]: number } = {
@@ -390,7 +393,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
   fo_immobiliers: "immobiliers",
   fo_dettes: "interetsdettes",
   fo_assurances: "indemnitesassurance",
-  fo_autresDeductions: "autresdeductions",
+  fo_autresDeductions: "deductions",
   fo_autresInformations: "autresinformations",
   fo_enfants: "enfants",
 }
@@ -510,6 +513,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                       Authorization: `Bearer ${token}`,
                     },
                   })
+                  console.log("bhbhbhb "+JSON.stringify(conjointResponse.data[0].contributionReligieuse))
 
                   if (conjointResponse.data && conjointResponse.data.length > 0) {
                     const conjoint = conjointResponse.data[0]
@@ -534,6 +538,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                   console.error("Erreur lors de la récupération des données du conjoint:", error)
                 }
               }
+
 
               // Vérifier et pré-remplir les informations des enfants
               if (priveResponse.data.enfants && priveResponse.data.enfants.length > 0) {
@@ -670,6 +675,39 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                     }
                   }
 
+                  // Récupérer les données de revenu
+                  if (priveResponse.data.fo_revenu) {
+                    try {
+                      const revenuResponse = await axios.get(`http://127.0.0.1:8000/api/revenus/prives/${priveId}`, {
+                        headers: {
+                          Authorization: `Bearer ${token}`,
+                        },
+                      });
+
+                      if (revenuResponse.data && revenuResponse.data.length > 0) {
+                        const revenu = revenuResponse.data[0];
+                        setRevenuData({
+                          revenu_id: revenu.revenu_id,
+                          indemnites: revenu.indemnites || false,
+                          interruptionsTravailNonPayees: revenu.interruptionsTravailNonPayees || false,
+                          interuptionsTravailNonPayeesDebut: formatDate(revenu.interuptionsTravailNonPayeesDebut) || "",
+                          interuptionsTravailNonPayeesFin: formatDate(revenu.interuptionsTravailNonPayeesFin) || "",
+                          activiteIndependante: revenu.activiteIndependante || false,
+                          prestationsSociales: revenu.prestationsSociales || false,
+                          subsidesAssuranceMaladie: revenu.subsidesAssuranceMaladie || false,
+                          fo_certificatSalaire: revenu.fo_certificatSalaire || false,
+                          fo_renteViagere: revenu.fo_renteViagere || false,
+                          fo_allocationLogement: revenu.fo_allocationLogement || false,
+                          fo_preuveEncaissementSousLoc: revenu.fo_preuveEncaissementSousLoc || false,
+                          fo_gainsAccessoires: revenu.fo_gainsAccessoires || false,
+                          fo_attestationAutresRevenus: revenu.fo_attestationAutresRevenus || false,
+                          fo_etatFinancier: revenu.fo_etatFinancier || false,
+                        });
+                      }
+                    } catch (error) {
+                      console.error("Erreur lors de la récupération des données de revenu:", error);
+                    }
+                  }
 
                   // Récupérer les données de rentier
                   if (priveResponse.data.fo_rentier) {
@@ -803,7 +841,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                         },
                       )
                       console.log(dettesResponse)
-                                            console.log(dettesResponse.data)
+                                            console.log("AAA "+dettesResponse.data)
 
 
                       if (dettesResponse.data && dettesResponse.data.length > 0) {
@@ -968,118 +1006,6 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
     setFormSections((prev) => ({ ...prev, [name]: checked }))
   }
 
-  // Ajouter un enfant
-  const addEnfant = () => {
-    const newEnfant: Enfant = {
-      nom: "",
-      prenom: "",
-      dateNaissance: "",
-      adresse: "",
-      codePostal: "",
-      localite: "",
-      noAVS: "",
-      noContribuable: "",
-      revenuBrut: "0",
-      fortuneNet: "0",
-      avantAgeScolaire: false,
-      handicap: false,
-      domicileAvecParents: true,
-      parentsViventEnsemble: false,
-      gardeAlternee: false,
-      priseEnChargeFraisEgale: false,
-      revenuNetSuperieurAAutreParent: false,
-      fraisGarde: "0",
-      primeAssuranceMaladie: "0",
-      subsideAssuranceMaladie: "0",
-      fraisMedicaux: "0",
-      primeAssuranceAccident: "0",
-      allocationsFamilialesSuisse: "0",
-      montantInclusDansSalaireBrut: false,
-      allocationsFamilialesEtranger: "0",
-      fo_scolaire: false,
-      fo_scolaireStope: false,
-      fo_certificatSalaire: false,
-      fo_attestationFortune: false,
-      fo_preuveVersementPensionAlim: false,
-      fo_preuveEncaissementPensionAlim: false,
-      fo_avanceScarpa: false,
-      fo_fraisGardeEffectifs: false,
-      fo_attestationAMPrimesAnnuel: false,
-      fo_attestationAMFraisMedicaux: false,
-      fo_attestationPaiementAssuranceAccident: false,
-      _hasPensionAlimentaire: false,
-    }
-
-    setEnfants([...enfants, newEnfant])
-
-    // Mettre à jour également enfantsData si nécessaire
-    if (enfantsData) {
-      setEnfantsData({
-        enfants: [...enfantsData.enfants, newEnfant],
-        pensionsAlimentaires: enfantsData.pensionsAlimentaires,
-      })
-    } else {
-      // Créer un nouveau tableau d'enfants complets
-      const enfantsComplets = enfants.map((enfant) => ({
-        nom: enfant.nom || "",
-        prenom: enfant.prenom || "",
-        dateNaissance: enfant.dateNaissance || "",
-        adresse: enfant.adresse || "",
-        codePostal: enfant.codePostal || "",
-        localite: enfant.localite || "",
-        noAVS: enfant.noAVS || "",
-        noContribuable: enfant.noContribuable || "",
-        revenuBrut: enfant.revenuBrut || "0",
-        fortuneNet: enfant.fortuneNet || "0",
-        avantAgeScolaire: false,
-        handicap: false,
-        domicileAvecParents: true,
-        parentsViventEnsemble: false,
-        gardeAlternee: false,
-        priseEnChargeFraisEgale: false,
-        revenuNetSuperieurAAutreParent: false,
-        fraisGarde: "0",
-        primeAssuranceMaladie: "0",
-        subsideAssuranceMaladie: "0",
-        fraisMedicaux: "0",
-        primeAssuranceAccident: "0",
-        allocationsFamilialesSuisse: "0",
-        montantInclusDansSalaireBrut: false,
-        allocationsFamilialesEtranger: "0",
-        fo_scolaire: false,
-        fo_scolaireStope: false,
-        fo_certificatSalaire: false,
-        fo_attestationFortune: false,
-        fo_preuveVersementPensionAlim: false,
-        fo_preuveEncaissementPensionAlim: false,
-        fo_avanceScarpa: false,
-        fo_fraisGardeEffectifs: false,
-        fo_attestationAMPrimesAnnuel: false,
-        fo_attestationAMFraisMedicaux: false,
-        fo_attestationPaiementAssuranceAccident: false,
-        _hasPensionAlimentaire: false,
-      }))
-
-      setEnfantsData({
-        enfants: [...enfantsComplets, newEnfant],
-        pensionsAlimentaires: [],
-      })
-    }
-  }
-
-  // Mettre à jour les informations d'un enfant
-  const updateEnfant = (index: number, field: string, value: string) => {
-    const updatedEnfants = [...enfants]
-    updatedEnfants[index] = { ...updatedEnfants[index], [field]: value }
-    setEnfants(updatedEnfants)
-  }
-
-  // Supprimer un enfant
-  const removeEnfant = (index: number) => {
-    const updatedEnfants = [...enfants]
-    updatedEnfants.splice(index, 1)
-    setEnfants(updatedEnfants)
-  }
 
   // Passer à l'étape suivante
   const nextStep = () => {
@@ -1139,6 +1065,9 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
     } else {
       setStep(1) // Si aucune autre étape précédente n'existe, revenir à l'étape 1
     }
+  }
+  const tester = ()=>{
+    console.log(conjointData)
   }
 
   // Soumission du formulaire
@@ -1310,6 +1239,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                 })
                 enfantId = enfantResponse.data.enfant_id
               }
+              console.log(enfant)
 
                 //Supprimer la pension si _hasPensionAlimentaire est false
               if (!enfant._hasPensionAlimentaire && enfantId) {
@@ -1654,7 +1584,7 @@ if (banquesData) {
           if (assurancesData.indemnite_assurance_id) {
             apiCalls.push(
               axios.put(
-                `http://127.0.0.1:8000/api/indemnitesassurance/${assurancesData.indemnite_assurance_id}`,
+                `http://127.0.0.1:8000/api/indemnitesassurances/${assurancesData.indemnite_assurance_id}`,
                 assurancesApiData,
                 {
                   headers: {
@@ -1749,15 +1679,144 @@ if (banquesData) {
         }
         console.log("rubrique")
           //rubrique
-          // 1. Récupérer les rubriques existantes pour cette déclaration
-          const rubriquesResponse = await axios.get(
-            `http://127.0.0.1:8000/api/rubriques/declaration/${declarationId}`,
-            {
-              headers: { Authorization: `Bearer ${token}` },
-            },
-          )
-          console.log(rubriquesResponse.data)
-          const existingRubriques: Rubrique[] = rubriquesResponse.data // tableau de rubriques
+          if (mode === "create") {
+  // Mode création : on crée uniquement les rubriques nécessaires à partir de formSections
+  const rubriquesMapping: Record<string, string> = {
+    fo_enfants: "Enfants",
+    fo_banques: "Banques",
+    fo_dettes: "Dettes",
+    fo_immobiliers: "Immobiliers",
+    fo_revenu: "Revenu",
+    fo_autrePersonneCharge: "Autres personnes à charge",
+    fo_rentier: "Rentier",
+    fo_assurances: "Assurances",
+    fo_autresDeductions: "Autres déductions",
+    fo_autresInformations: "Autres informations",
+    fo_titres: "Titres",
+  }
+
+  const rubriquesToCreate: Rubrique[] = []
+
+  for (const [foKey, foValue] of Object.entries(formSections)) {
+    if (foValue && rubriquesMapping[foKey]) {
+      rubriquesToCreate.push({
+        declaration_id: declarationId,
+        type: foKey,
+        titre: rubriquesMapping[foKey],
+      })
+    }
+  }
+  if(priveData.etatCivil == "marie" || priveData.etatCivil=="pacse"){
+    rubriquesToCreate.push({
+        declaration_id: declarationId,
+        type: priveData.etatCivil,
+        titre: "Conjoint(e)",    })
+  }
+
+  // Création des rubriques en backend
+  for (const rubriqueData of rubriquesToCreate) {
+    try {
+      await axios.post("http://127.0.0.1:8000/api/rubriques", rubriqueData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+      console.log(`Rubrique créée : ${rubriqueData.titre}`)
+    } catch (err) {
+      console.error(`Erreur lors de la création de ${rubriqueData.titre}`, err)
+    }
+  }
+
+  console.log(`${rubriquesToCreate.length} rubriques créées.`)
+
+} else if(mode=="edit"){
+  let rubriquesResponse
+  let existingRubriques: Rubrique[] = []
+
+  try {
+    rubriquesResponse = await axios.get(
+      `http://127.0.0.1:8000/api/rubriques/declaration/${declarationId}`,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      },
+    )
+
+    if (Array.isArray(rubriquesResponse.data)) {
+      existingRubriques = rubriquesResponse.data
+    } else {
+      console.warn("Réponse inattendue lors de la récupération des rubriques", rubriquesResponse.data)
+    }
+  } catch (err) {
+    console.warn("Erreur lors de la récupération des rubriques, on suppose aucune rubrique existante", err)
+    // existingRubriques reste []
+  }
+  
+  // Cas spécial: pas de rubriques existantes (comme en mode création)
+  if (existingRubriques.length === 0){
+  const rubriquesMapping: Record<string, string> = {
+    fo_enfants: "Enfants",
+    fo_banques: "Banques",
+    fo_dettes: "Dettes",
+    fo_immobiliers: "Immobiliers",
+    fo_revenu: "Revenu",
+    fo_autrePersonneCharge: "Autres personnes à charge",
+    fo_rentier: "Rentier",
+    fo_assurances: "Assurances",
+    fo_autresDeductions: "Autres déductions",
+    fo_autresInformations: "Autres informations",
+    fo_titres: "Titres",
+    marie:"Conjoint(e)",
+    pacse:"Conjoint(e)"
+  }
+
+    const rubriquesToCreate: Rubrique[] = [];
+
+    // 1. Création basée sur formSections
+    for (const [foKey, foValue] of Object.entries(formSections)) {
+      if (foValue && rubriquesMapping[foKey]) {
+        rubriquesToCreate.push({
+          declaration_id: declarationId,
+          type: foKey,
+          titre: rubriquesMapping[foKey]
+        });
+      }
+    }
+   // 2. Gestion spécifique état civil - Vérification avant création
+    const etatCivil = priveData.etatCivil;
+    if (etatCivil === "marie" || etatCivil === "pacse") {
+      const conjointRubriqueExists = existingRubriques.some(
+        r => r.type === etatCivil || r.titre === "Conjoint(e)"
+      );
+      
+      if (!conjointRubriqueExists) {
+        rubriquesToCreate.push({
+          declaration_id: declarationId,
+          type: etatCivil,
+          titre: rubriquesMapping[etatCivil]
+        });
+      }
+    }
+console.log("TTT "+JSON.stringify(rubriquesToCreate))
+  // Création des rubriques en backend
+  for (const rubriqueData of rubriquesToCreate) {
+    try {
+      await axios.post("http://127.0.0.1:8000/api/rubriques", rubriqueData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      })
+      console.log(`Rubrique créée : ${rubriqueData.titre}`)
+    } catch (err) {
+      console.error(`Erreur lors de la création de ${rubriqueData.titre}`, err)
+    }
+  }
+
+  console.log(`${rubriquesToCreate.length} rubriques créées.`)
+
+          }else{          console.log("existe "+rubriquesResponse)
+          
 
           // Créer un mapping des rubriques existantes par type pour faciliter la recherche
           const existingRubriquesMap: Record<string, Rubrique> = {}
@@ -1778,29 +1837,37 @@ if (banquesData) {
             fo_autresDeductions: "Autres déductions",
             fo_autresInformations: "Autres informations",
             fo_titres: "Titres",
-          }
+    marie:"Conjoint(e)",
+    pacse:"Conjoint(e)"          }
 
           // 3. Créer ou mettre à jour les rubriques en fonction des fo_* activés
           const rubriquesToCreate: Rubrique[] = []
 
           for (const [foKey, foValue] of Object.entries(formSections)) {
-            if (foValue && rubriquesMapping[foKey]) {
-              const rubriqueName = rubriquesMapping[foKey]
+  if (foValue && rubriquesMapping[foKey]) {
+    const rubriqueName = rubriquesMapping[foKey]
+    
+    if (!existingRubriquesMap[foKey]) {
+      rubriquesToCreate.push({
+        declaration_id: declarationId,
+        type: foKey,
+        titre: rubriqueName
+      })
+    }
+  }
+}
 
-              // Vérifier si cette rubrique existe déjà
-              if (!existingRubriquesMap[foKey]) {
-                // La rubrique n'existe pas, la créer
-                rubriquesToCreate.push({
-                  declaration_id: declarationId,
-                  type: foKey,
-                  titre: rubriqueName,
-
-                })
-              }
-              // Si elle existe déjà, pas besoin de la recréer
-              console.log(rubriqueName + " rubrique qui clc")
-            }
-          }
+// 3. Ajout spécifique pour état civil
+const etatCivil = priveData.etatCivil;
+if ((etatCivil === "marie" || etatCivil === "pacse") && 
+    !existingRubriquesMap[etatCivil] && 
+    !rubriquesToCreate.some(r => r.type === etatCivil)) {
+  rubriquesToCreate.push({
+    declaration_id: declarationId,
+    type: etatCivil,
+    titre: rubriquesMapping[etatCivil]
+  })
+}
           console.log(rubriquesToCreate)
 
           // 4. Créer les nouvelles rubriques
@@ -1820,21 +1887,41 @@ if (banquesData) {
           // 5. Identifier les rubriques à supprimer (celles qui existent mais dont le fo_* n'est plus activé)
           const rubriquesToDelete = []
 
-          for (const rubrique of existingRubriques) {
-            const correspondingFoKey = rubrique.type
-            if (correspondingFoKey && !formSections[correspondingFoKey]) {
-              rubriquesToDelete.push(rubrique)
-            }
-          }
+for (const rubrique of existingRubriques) {
+  const correspondingFoKey = rubrique.type;
+  
+  // Vérifier si la rubrique doit être exclue de la suppression
+  const isProtectedRubrique = (
+    (priveData.etatCivil === "marie" || priveData.etatCivil === "pacse") && 
+    (correspondingFoKey === "fo_enfants" || correspondingFoKey === "fo_autrePersonneCharge")
+  );
 
-          // 6. Supprimer les rubriques qui ne sont plus nécessaires
-          if (rubriquesToDelete.length > 0) {
-            console.log(`${rubriquesToDelete.length} rubriques à supprimer:`)
-            rubriquesToDelete.forEach((rubrique) => {
-              console.log(`- ${rubrique.titre} (ID: ${rubrique.rubrique_id})`)
-              axios.delete(`http://127.0.0.1:8000/api/rubriques/${rubrique.rubrique_id}`)
-            })
-          }
+  if (correspondingFoKey && !formSections[correspondingFoKey] && !isProtectedRubrique) {
+    rubriquesToDelete.push(rubrique);
+  }
+}
+
+// 6. Supprimer les rubriques qui ne sont plus nécessaires
+if (rubriquesToDelete.length > 0) {
+  console.log(`${rubriquesToDelete.length} rubriques à supprimer:`);
+for (const rubrique of existingRubriques) {
+  const correspondingFoKey = rubrique.type;
+  const isConjointRubrique = rubrique.type === "marie" || rubrique.type === "pacse";
+  const isProtected = (etatCivil === "marie" || etatCivil === "pacse") && 
+                     (isConjointRubrique || correspondingFoKey === "fo_enfants" || 
+                      correspondingFoKey === "fo_autrePersonneCharge");
+
+  if (!isProtected && correspondingFoKey && !formSections[correspondingFoKey]) {
+    try {
+      await axios.delete(`http://127.0.0.1:8000/api/rubriques/${rubrique.rubrique_id}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+    } catch (error) {
+      console.error(`Erreur suppression ${rubrique.titre}:`, error);
+    }
+  }
+}
+}
           const deleteFoKeys = Object.keys(formSections).filter(
   (key) => !formSections[key] && foToApiMap[key]
 )
@@ -1851,7 +1938,10 @@ for (const foKey of deleteFoKeys) {
   } catch (err) {
     console.error(`Erreur suppression ${foKey}:`, err)
   }
+}}
+
 }
+          
     // Supprimer le conjoint si l'état civil n'est plus marié ou pacsé
     if (priveData.etatCivil !== "marie" && priveData.etatCivil !== "pacse") {
       try{
@@ -2109,6 +2199,8 @@ for (const foKey of deleteFoKeys) {
         <Button onClick={nextStep} className="w-full">
           Continuer
         </Button>
+
+        <button onClick={tester}>TEST</button>
       </div>
     </ProtectedPrive>
   )
@@ -2575,3 +2667,5 @@ const renderStep3 = () => {
     </ProtectedPrive>
   )
 }
+
+
