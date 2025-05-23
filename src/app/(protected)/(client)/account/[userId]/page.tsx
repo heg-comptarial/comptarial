@@ -24,41 +24,71 @@ function ResetPassword() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    
-    // Validation basique
-    if (newPassword !== confirmPassword) {
-      alert("Les nouveaux mots de passe ne correspondent pas");
+const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  const token = localStorage.getItem("auth_token");
+
+
+  if (newPassword !== confirmPassword) {
+    alert("Les nouveaux mots de passe ne correspondent pas");
+    return;
+  }
+
+  const userId = localStorage.getItem("user_id"); // Assure-toi que l'user_id est bien stocké
+  if (!userId) {
+    alert("Utilisateur non identifié");
+    return;
+  }
+
+  try {
+    // 1. Vérification du mot de passe actuel
+    const check = await fetch("http://127.0.0.1:8000/api/users/check-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
+
+      },
+      body: JSON.stringify({
+        user_id: parseInt(userId),
+        currentPassword,
+      }),
+    });
+
+    if (!check.ok) {
+      alert("Mot de passe actuel incorrect");
       return;
     }
 
-    try {
-      // Ici, vous devrez remplacer par votre appel API réel
-      const response = await fetch(`http://127.0.0.1:8000/api/users/change-password`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          currentPassword,
-          newPassword
-        }),
-      });
+    // 2. Mise à jour du mot de passe
+    const update = await fetch("http://127.0.0.1:8000/api/users/change-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Authorization": `Bearer ${token}`,
 
-      if (!response.ok) {
-        throw new Error("Échec de la mise à jour du mot de passe");
-      }
+        
+      },
+      body: JSON.stringify({
+        user_id: parseInt(userId),
+        newPassword,
+      }),
+    });
 
-      alert("Mot de passe mis à jour avec succès !");
-      setCurrentPassword("");
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour du mot de passe:", error);
-      alert("Une erreur est survenue lors de la mise à jour du mot de passe");
+    if (!update.ok) {
+      throw new Error("Échec de la mise à jour");
     }
-  };
+
+    alert("Mot de passe mis à jour avec succès !");
+    setCurrentPassword("");
+    setNewPassword("");
+    setConfirmPassword("");
+  } catch (err) {
+    console.error("Erreur:", err);
+    alert("Une erreur est survenue");
+  }
+};
+
 
   return (
     <Card>

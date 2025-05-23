@@ -55,6 +55,11 @@ Route::post('/users/{id}/approve', [UserController::class, 'approveUser']);
 Route::get('/users-with-pending-declarations', [UserController::class, 'usersWithPendingDeclarations']);
 
 Route::get('users', [UserController::class, 'search']);
+// Vérifier si le mot de passe actuel est correct
+Route::post('/users/check-password', [UserController::class, 'checkPassword'])->middleware("auth:sanctum");
+
+// Mettre à jour le mot de passe d'un utilisateur
+Route::post('/users/change-password', [UserController::class, 'updatePassword'])->middleware("auth:sanctum");
 
 
 

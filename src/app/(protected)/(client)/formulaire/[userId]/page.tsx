@@ -840,9 +840,6 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                           },
                         },
                       )
-                      console.log(dettesResponse)
-                                            console.log("AAA "+dettesResponse.data)
-
 
                       if (dettesResponse.data && dettesResponse.data.length > 0) {
                         const dettes = dettesResponse.data[0]
@@ -1066,9 +1063,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
       setStep(1) // Si aucune autre étape précédente n'existe, revenir à l'étape 1
     }
   }
-  const tester = ()=>{
-    console.log(conjointData)
-  }
+
 
   // Soumission du formulaire
   const handleSubmit = async (e: React.FormEvent) => {
@@ -2200,7 +2195,6 @@ for (const foKey of deleteFoKeys) {
           Continuer
         </Button>
 
-        <button onClick={tester}>TEST</button>
       </div>
     </ProtectedPrive>
   )
