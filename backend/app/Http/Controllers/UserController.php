@@ -13,6 +13,8 @@ use App\Mail\RegistrationRejectedMail;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Hash;
+
 
 class UserController extends Controller
 {
@@ -441,6 +443,39 @@ class UserController extends Controller
             'results' => $results
         ]);
     }
+public function checkPassword(Request $request)
+{
+    $request->validate([
+        'user_id' => 'required|integer',
+        'currentPassword' => 'required|string',
+    ]);
+
+    $user = User::find($request->user_id);
+
+    if (!$user || !Hash::check($request->currentPassword, $user->motDePasse)) {
+        return response()->json(['message' => 'Mot de passe incorrect'], 403);
+    }
+
+    return response()->json(['message' => 'Mot de passe correct'], 200);
+}
+public function updatePassword(Request $request)
+{
+    $request->validate([
+        'user_id' => 'required|integer',
+        'newPassword' => 'required|string|min:8',
+    ]);
+
+    $user = User::find($request->user_id);
+
+    if (!$user) {
+        return response()->json(['message' => 'Utilisateur non trouvé'], 404);
+    }
+
+    $user->motDePasse = Hash::make($request->newPassword);
+    $user->save();
+
+    return response()->json(['message' => 'Mot de passe mis à jour avec succès'], 200);
+}
 
 }
 

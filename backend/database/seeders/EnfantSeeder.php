@@ -41,7 +41,7 @@ class EnfantSeeder extends Seeder
                 'fo_scolaireStope' => false,
                 'fo_certificatSalaire' => false,
                 'fo_attestationFortune' => false,                  
-                'fo_preuveVersementPensionAlim' => false,
+                'fo_preuveVersementPensionAlim' => true,
                 'fo_preuveEncaissementPensionAlim' => false,
                 'fo_avanceScarpa' => false,
                 'fo_fraisGardeEffectifs' => false,

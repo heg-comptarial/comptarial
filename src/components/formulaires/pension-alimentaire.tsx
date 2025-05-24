@@ -44,7 +44,6 @@ export default function PensionAlimentaire({
   useEffect(() => {
     if (data) {
       setFormData(data)
-      console.log("TT e "+data)
     } else {
       // Réinitialiser avec l'ID de l'enfant
       setFormData({
