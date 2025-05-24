@@ -27,27 +27,19 @@ function ResetPassword() {
 const handleSubmit = async (e: React.FormEvent) => {
   e.preventDefault();
   const token = localStorage.getItem("auth_token");
-
-
-  if (newPassword !== confirmPassword) {
-    alert("Les nouveaux mots de passe ne correspondent pas");
-    return;
-  }
-
-  const userId = localStorage.getItem("user_id"); // Assure-toi que l'user_id est bien stocké
+  const userId = localStorage.getItem("user_id");
   if (!userId) {
     alert("Utilisateur non identifié");
     return;
   }
 
+  // 1. Vérification du mot de passe actuel auprès de l’API
   try {
-    // 1. Vérification du mot de passe actuel
     const check = await fetch("http://127.0.0.1:8000/api/users/check-password", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
-
       },
       body: JSON.stringify({
         user_id: parseInt(userId),
@@ -60,14 +52,33 @@ const handleSubmit = async (e: React.FormEvent) => {
       return;
     }
 
-    // 2. Mise à jour du mot de passe
+    // 2. Vérification : nouveau mot de passe différent de l'ancien
+    if (currentPassword === newPassword) {
+      alert("Le nouveau mot de passe doit être différent de l'ancien.");
+      return;
+    }
+
+    // 3. Vérification : confirmation
+    if (newPassword !== confirmPassword) {
+      alert("Les nouveaux mots de passe ne correspondent pas");
+      return;
+    }
+
+    // 4. Vérification : complexité du mot de passe
+    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+    if (!passwordRegex.test(newPassword)) {
+      alert(
+        "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial."
+      );
+      return;
+    }
+
+    // 5. Mise à jour du mot de passe
     const update = await fetch("http://127.0.0.1:8000/api/users/change-password", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         "Authorization": `Bearer ${token}`,
-
-        
       },
       body: JSON.stringify({
         user_id: parseInt(userId),

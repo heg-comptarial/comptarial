@@ -54,10 +54,13 @@ const fetchConfig = {
 };
 
 export default function Dashboard() {
+  const [clients, setClients] = useState<User[]>([]);
+  const [demandes, setDemandes] = useState<User[]>([]);
   const [users, setUsers] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [activeTab, setActiveTab] = useState("general");
+  const [activeTab, setActiveTab] = useState("clients");
+  const [clientsFilter, setClientsFilter] = useState<"all" | "pendingDeclarations">("all");
   const params = useParams();
   const userId = Number(params?.userId);
   const router = useRouter();
@@ -73,7 +76,9 @@ export default function Dashboard() {
         throw new Error(`HTTP error! Status: ${response.status}`);
 
       const data = await response.json();
-      setUsers(data);
+      console.log("Demandes reçues:", data);
+      setDemandes(data); // stocke les demandes
+      setUsers(data);    // affiche dans le tableau
     } catch (error) {
       toast.error(
         "Une erreur est survenue, veuillez vérifier votre connexion internet",
@@ -98,7 +103,8 @@ export default function Dashboard() {
         throw new Error(`HTTP error! Status: ${response.status}`);
 
       const data = await response.json();
-      setUsers(data);
+      setClients(data); // stocke les clients
+      setUsers(data);   // affiche dans le tableau
     } catch (error) {
       toast.error(
         "Une erreur est survenue, veuillez vérifier votre connexion internet",
@@ -198,6 +204,9 @@ export default function Dashboard() {
         // En cas d'erreur, recharger la liste pour restaurer l'état
         throw new Error(`HTTP error! Status: ${response.status}`);
       }
+
+      // Ajoute cette ligne pour mettre à jour la liste des demandes et donc le badge :
+      fetchPendingUsers();
 
       // Pas besoin de recharger la liste car nous avons déjà mis à jour l'UI
     } catch (error) {
@@ -326,7 +335,7 @@ export default function Dashboard() {
 
       // Recharger uniquement si nécessaire
       if (activeTab === "demandes") {
-        fetchPendingUsers(); // Recharge uniquement les utilisateurs en attente
+        fetchPendingUsers(); // Recharge la liste des demandes
       }
     } catch (error) {
       toast.error("Erreur lors de la mise à jour du statut", {
@@ -337,10 +346,23 @@ export default function Dashboard() {
     }
   };
 
-  // Charger les demandes au montage de la page
   useEffect(() => {
-    fetchPendingUsers();
-  }, []); // Le tableau vide [] signifie que cet effet s'exécute uniquement au montage
+    // Déclenche la recherche automatiquement à chaque modification de searchTerm
+    const delayDebounce = setTimeout(() => {
+      if (searchTerm.trim() === "") {
+        // Recharge la liste selon l'onglet actif si la recherche est vide
+        if (activeTab === "demandes") {
+          fetchPendingUsers();
+        } else if (activeTab === "clients") {
+          fetchApprovedUsers();
+        }
+      } else {
+        searchUsers();
+      }
+    }, 400); // 400ms pour éviter trop d'appels API
+
+    return () => clearTimeout(delayDebounce);
+  }, [searchTerm, activeTab]);
 
   return (
     <ProtectedRouteAdmin>
@@ -351,27 +373,35 @@ export default function Dashboard() {
         </h1>
 
         <Tabs
-          defaultValue="demandes"
+          defaultValue="clients"
           className="w-full"
           onValueChange={handleTabChange}
         >
           <TabsList className="mb-6">
-            <TabsTrigger value="demandes">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Mes Demandes
-            </TabsTrigger>
             <TabsTrigger value="clients">
               <Users className="h-4 w-4 mr-2" />
               Mes Clients
             </TabsTrigger>
+            <TabsTrigger value="demandes">
+              <UserPlus className="h-4 w-4 mr-2" />
+              Mes Demandes
+              {demandes.length > 0 && (
+                <span
+                  className="ml-2 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-xs font-semibold px-2 py-0.5"
+                  style={{ minWidth: 24 }}
+                >
+                  {demandes.length}
+                </span>
+              )}
+            </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="demandes">
+          <TabsContent value="clients">
             <Card>
               <CardContent className="pt-6">
                 <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-medium">Nouvelles demandes</h2>
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-medium">Liste des clients</h2>
                     <div className="relative">
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
@@ -383,9 +413,114 @@ export default function Dashboard() {
                         onKeyDown={(e) => e.key === "Enter" && searchUsers()}
                       />
                     </div>
-                    <Button size="sm" onClick={searchUsers}>
-                      Rechercher
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant={clientsFilter === "all" ? "default" : "outline"}
+                      onClick={() => {
+                        fetchApprovedUsers();
+                        setClientsFilter("all");
+                      }}
+                      disabled={loading}
+                    >
+                      {loading ? "Chargement..." : "Tous les clients"}
                     </Button>
+                    <Button
+                      size="sm"
+                      variant={clientsFilter === "pendingDeclarations" ? "default" : "outline"}
+                      onClick={() => {
+                        fetchUsersWithPendingDeclarations();
+                        setClientsFilter("pendingDeclarations");
+                      }}
+                      disabled={loading}
+                    >
+                      {loading ? "Chargement..." : "Déclarations en attente"}
+                    </Button>
+                  </div>
+                </div>
+
+                {loading ? (
+                  <div className="flex justify-center py-8">
+                    Chargement des clients...
+                  </div>
+                ) : (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>ID</TableHead>
+                        <TableHead>Nom</TableHead>
+                        <TableHead>Email</TableHead>
+                        <TableHead>Téléphone</TableHead>
+                        <TableHead>Localité</TableHead>
+                        <TableHead>Rôle</TableHead>
+                        <TableHead>Date de création</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead className="text-right">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {users.length > 0 ? (
+                        users.map((user) => (
+                          <TableRow key={user.user_id}>
+                            <TableCell>{user.user_id}</TableCell>
+                            <TableCell>{user.nom}</TableCell>
+                            <TableCell>{user.email}</TableCell>
+                            <TableCell>{user.numeroTelephone}</TableCell>
+                            <TableCell>{user.localite}</TableCell>
+                            <TableCell>{user.role}</TableCell>
+                            <TableCell>
+                              {new Date(user.dateCreation).toLocaleDateString()}
+                            </TableCell>
+                            <TableCell>{getStatusBadge(user.statut)}</TableCell>
+                            <TableCell className="text-right space-x-1">
+                              <Button
+                                variant="outline"
+                                size="sm"
+                                onClick={() =>
+                                  router.push(
+                                    `/admin/${userId}/client/${user.user_id}`
+                                  )
+                                }
+                              >
+                                Voir détails
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={9} className="text-center py-4">
+                            Aucun client trouvé
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                )}
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="demandes">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="flex justify-between items-center mb-4">
+                  <div className="flex items-center gap-4">
+                    <h2 className="text-xl font-medium">Nouvelles demandes</h2>
+                    <div className="relative">
+                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+                      <Input
+                        type="search"
+                        placeholder="Rechercher..."
+                        className="pl-8 w-[200px]"
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => e.key === "Enter" && searchUsers()}
+                      />
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
                     <Button
                       size="sm"
                       variant="outline"
@@ -462,107 +597,6 @@ export default function Dashboard() {
                         <TableRow>
                           <TableCell colSpan={9} className="text-center py-4">
                             Aucune demande en attente
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                )}
-              </CardContent>
-            </Card>
-          </TabsContent>
-
-          <TabsContent value="clients">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-center mb-4">
-                  <h2 className="text-xl font-medium">Liste des clients</h2>
-                  <div className="flex items-center gap-2">
-                    <div className="relative">
-                      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        type="search"
-                        placeholder="Rechercher..."
-                        className="pl-8 w-[200px]"
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                        onKeyDown={(e) => e.key === "Enter" && searchUsers()}
-                      />
-                    </div>
-                    <Button size="sm" onClick={searchUsers}>
-                      Rechercher
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={fetchApprovedUsers}
-                      disabled={loading}
-                    >
-                      {loading ? "Chargement..." : "Tous les clients"}
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={fetchUsersWithPendingDeclarations}
-                      disabled={loading}
-                    >
-                      {loading ? "Chargement..." : "Declarations en attente"}
-                    </Button>
-                  </div>
-                </div>
-
-                {loading ? (
-                  <div className="flex justify-center py-8">
-                    Chargement des clients...
-                  </div>
-                ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Nom</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Téléphone</TableHead>
-                        <TableHead>Localité</TableHead>
-                        <TableHead>Rôle</TableHead>
-                        <TableHead>Date de création</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.length > 0 ? (
-                        users.map((user) => (
-                          <TableRow key={user.user_id}>
-                            <TableCell>{user.user_id}</TableCell>
-                            <TableCell>{user.nom}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>{user.numeroTelephone}</TableCell>
-                            <TableCell>{user.localite}</TableCell>
-                            <TableCell>{user.role}</TableCell>
-                            <TableCell>
-                              {new Date(user.dateCreation).toLocaleDateString()}
-                            </TableCell>
-                            <TableCell>{getStatusBadge(user.statut)}</TableCell>
-                            <TableCell className="text-right space-x-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  router.push(
-                                    `/admin/${userId}/client/${user.user_id}`
-                                  )
-                                }
-                              >
-                                Voir détails
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={9} className="text-center py-4">
-                            Aucun client trouvé
                           </TableCell>
                         </TableRow>
                       )}
