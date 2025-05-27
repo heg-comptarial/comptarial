@@ -57,6 +57,7 @@ export default function Dashboard() {
   const [clients, setClients] = useState<User[]>([]);
   const [demandes, setDemandes] = useState<User[]>([]);
   const [users, setUsers] = useState<User[]>([]);
+  const [pendingDeclarations, setPendingDeclarations] = useState<User[]>([]);
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("clients");
@@ -250,7 +251,7 @@ export default function Dashboard() {
         throw new Error(`HTTP error! Status: ${response.status}`);
 
       const json = await response.json();
-      setUsers(json.data); // on suppose que tu veux stocker uniquement la propriété "data"
+      setPendingDeclarations(json.data); // stocke la liste une fois
     } catch (error) {
       toast.error(
         "Erreur lors du chargement des utilisateurs avec déclarations pending",
@@ -297,22 +298,20 @@ export default function Dashboard() {
   const handleTabChange = (value: string) => {
     setActiveTab(value);
     setSearchTerm("");
-
     if (value === "demandes") {
-      fetchPendingUsers();
+      setUsers(demandes);
     } else if (value === "clients") {
-      fetchApprovedUsers();
+      setUsers(clients);
     }
   };
 
   const updateUserStatus = async (userId: number, newStatus: string) => {
-    const previousUsers = users; // Sauvegarde de l'état actuel
+    const previousDemandes = demandes;
+    const previousUsers = users;
 
     try {
-      // Supprime immédiatement l'utilisateur de la liste pour un effet optimiste
-      setUsers((prevUsers) =>
-        prevUsers.filter((user) => user.user_id !== userId)
-      );
+      setDemandes((prev) => prev.filter((user) => user.user_id !== userId));
+      setUsers((prev) => prev.filter((user) => user.user_id !== userId));
 
       // Envoi de la requête au backend
       const response = await fetch(`${API_URL}/users/${userId}`, {
@@ -328,46 +327,106 @@ export default function Dashboard() {
         );
       }
 
-      // toast.success("Statut mis à jour avec succès", {
-      //   description: "L'utilisateur a été mis à jour.",
-      //   icon: <CheckCircle className="h-5 w-5" />,
-      // });
-
-      // Recharger uniquement si nécessaire
-      if (activeTab === "demandes") {
-        fetchPendingUsers(); // Recharge la liste des demandes
+      // Optionnel : ajouter à la liste des clients si besoin
+      if (newStatus === "approved") {
+        const approvedUser = previousDemandes.find((u) => u.user_id === userId);
+        if (approvedUser) setClients((prev) => [...prev, { ...approvedUser, statut: "approved" }]);
       }
     } catch (error) {
+      setDemandes(previousDemandes);
+      setUsers(previousUsers);
       toast.error("Erreur lors de la mise à jour du statut", {
         description: error instanceof Error ? error.message : String(error),
         icon: <AlertCircle className="h-5 w-5" />,
       });
-      setUsers(previousUsers); // Rétablir la liste en cas d'échec
     }
   };
 
   useEffect(() => {
-    // Déclenche la recherche automatiquement à chaque modification de searchTerm
-    const delayDebounce = setTimeout(() => {
-      if (searchTerm.trim() === "") {
-        // Recharge la liste selon l'onglet actif si la recherche est vide
-        if (activeTab === "demandes") {
-          fetchPendingUsers();
-        } else if (activeTab === "clients") {
-          fetchApprovedUsers();
-        }
-      } else {
-        searchUsers();
-      }
-    }, 400); // 400ms pour éviter trop d'appels API
+    // Charge toutes les listes une seule fois au montage
+    const fetchAll = async () => {
+      setLoading(true);
+      try {
+        const [clientsRes, demandesRes, pendingDeclarationsRes] = await Promise.all([
+          fetch(`${API_URL}/users/status/approved`, fetchConfig),
+          fetch(`${API_URL}/users/status/pending`, fetchConfig),
+          fetch(`${API_URL}/users-with-pending-declarations`, fetchConfig),
+        ]);
+        if (!clientsRes.ok || !demandesRes.ok || !pendingDeclarationsRes.ok)
+          throw new Error("Erreur lors du chargement des données");
 
-    return () => clearTimeout(delayDebounce);
-  }, [searchTerm, activeTab]);
+        const clientsData = await clientsRes.json();
+        const demandesData = await demandesRes.json();
+        const pendingDeclarationsData = await pendingDeclarationsRes.json();
+
+        setClients(clientsData);
+        setDemandes(demandesData);
+        setPendingDeclarations(pendingDeclarationsData.data);
+
+        setUsers(activeTab === "demandes" ? demandesData : clientsData);
+      } catch (error) {
+        toast.error("Erreur lors du chargement initial", {
+          description: error instanceof Error ? error.message : String(error),
+          icon: <AlertCircle className="h-5 w-5" />,
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchAll();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    // Détermine la source selon l'onglet actif
+    const source = activeTab === "demandes" ? demandes : clients;
+    if (!searchTerm.trim()) {
+      setUsers(source);
+      return;
+    }
+    const lower = searchTerm.toLowerCase();
+    setUsers(
+      source.filter(
+        (user) =>
+          user.nom.toLowerCase().includes(lower) ||
+          user.email.toLowerCase().includes(lower) ||
+          user.numeroTelephone.toLowerCase().includes(lower) ||
+          user.localite.toLowerCase().includes(lower)
+      )
+    );
+  }, [searchTerm, activeTab, clients, demandes]);
+
+  const renderDemandesNotification = () => {
+    if (demandes.length === 0) return null;
+    return (
+      <span
+        className="ml-2 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-xs font-semibold px-2 py-0.5"
+        style={{ minWidth: 24 }}
+      >
+        {demandes.length}
+      </span>
+    );
+  };
+
+  // Pastille pour le rôle
+  const RoleBadge = ({ role }: { role: string }) => (
+    <span
+      className={
+        "ml-2 px-2 py-0.5 rounded-full text-xs font-semibold " +
+        (role === "entreprise"
+          ? "bg-blue-100 text-blue-800"
+          : "bg-green-100 text-green-800")
+      }
+    >
+      {role === "entreprise" ? "Entreprise" : "Privé"}
+    </span>
+  );
 
   return (
     <ProtectedRouteAdmin>
       <Toaster position="bottom-right" richColors closeButton />
-      <div className="container mx-auto py-10 px-4 max-w-full">
+      <div className="container mx-auto px-4 max-w-full">
         <h1 className="text-2xl font-semibold mb-8">
           Tableau de bord administrateur
         </h1>
@@ -378,36 +437,28 @@ export default function Dashboard() {
           onValueChange={handleTabChange}
         >
           <TabsList className="mb-6">
-            <TabsTrigger value="clients">
+            <TabsTrigger value="clients" className="cursor-pointer">
               <Users className="h-4 w-4 mr-2" />
               Mes Clients
             </TabsTrigger>
-            <TabsTrigger value="demandes">
+            <TabsTrigger value="demandes" className="cursor-pointer">
               <UserPlus className="h-4 w-4 mr-2" />
               Mes Demandes
-              {demandes.length > 0 && (
-                <span
-                  className="ml-2 inline-flex items-center justify-center rounded-full bg-red-600 text-white text-xs font-semibold px-2 py-0.5"
-                  style={{ minWidth: 24 }}
-                >
-                  {demandes.length}
-                </span>
-              )}
+              {renderDemandesNotification()}
             </TabsTrigger>
           </TabsList>
 
           <TabsContent value="clients">
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-2">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-medium">Liste des clients</h2>
                     <div className="relative">
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="search"
                         placeholder="Rechercher..."
-                        className="pl-8 w-[200px]"
+                        className="pl-8 w-[400px]"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && searchUsers()}
@@ -419,10 +470,11 @@ export default function Dashboard() {
                       size="sm"
                       variant={clientsFilter === "all" ? "default" : "outline"}
                       onClick={() => {
-                        fetchApprovedUsers();
+                        setUsers(clients);
                         setClientsFilter("all");
                       }}
                       disabled={loading}
+                      className="cursor-pointer"
                     >
                       {loading ? "Chargement..." : "Tous les clients"}
                     </Button>
@@ -430,10 +482,11 @@ export default function Dashboard() {
                       size="sm"
                       variant={clientsFilter === "pendingDeclarations" ? "default" : "outline"}
                       onClick={() => {
-                        fetchUsersWithPendingDeclarations();
+                        setUsers(pendingDeclarations);
                         setClientsFilter("pendingDeclarations");
                       }}
                       disabled={loading}
+                      className="cursor-pointer"
                     >
                       {loading ? "Chargement..." : "Déclarations en attente"}
                     </Button>
@@ -448,44 +501,29 @@ export default function Dashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Nom</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Téléphone</TableHead>
-                        <TableHead>Localité</TableHead>
-                        <TableHead>Rôle</TableHead>
-                        <TableHead>Date de création</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="px-6 py-4">Nom</TableHead>
+                        <TableHead className="px-6 py-4">Email</TableHead>
+                        <TableHead className="px-6 py-4">Téléphone</TableHead>
+                        <TableHead className="px-6 py-4">Localité</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {users.length > 0 ? (
                         users.map((user) => (
-                          <TableRow key={user.user_id}>
-                            <TableCell>{user.user_id}</TableCell>
-                            <TableCell>{user.nom}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>{user.numeroTelephone}</TableCell>
-                            <TableCell>{user.localite}</TableCell>
-                            <TableCell>{user.role}</TableCell>
-                            <TableCell>
-                              {new Date(user.dateCreation).toLocaleDateString()}
+                          <TableRow
+                            key={user.user_id}
+                            onClick={() => router.push(`/admin/${userId}/client/${user.user_id}`)}
+                            className="cursor-pointer hover:bg-muted transition-colors"
+                          >
+                            <TableCell className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                {user.nom}
+                                <RoleBadge role={user.role} />
+                              </div>
                             </TableCell>
-                            <TableCell>{getStatusBadge(user.statut)}</TableCell>
-                            <TableCell className="text-right space-x-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() =>
-                                  router.push(
-                                    `/admin/${userId}/client/${user.user_id}`
-                                  )
-                                }
-                              >
-                                Voir détails
-                              </Button>
-                            </TableCell>
+                            <TableCell className="px-6 py-4">{user.email}</TableCell>
+                            <TableCell className="px-6 py-4">{user.numeroTelephone}</TableCell>
+                            <TableCell className="px-6 py-4">{user.localite}</TableCell>
                           </TableRow>
                         ))
                       ) : (
@@ -504,31 +542,20 @@ export default function Dashboard() {
 
           <TabsContent value="demandes">
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-2">
                 <div className="flex justify-between items-center mb-4">
                   <div className="flex items-center gap-4">
-                    <h2 className="text-xl font-medium">Nouvelles demandes</h2>
                     <div className="relative">
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="search"
                         placeholder="Rechercher..."
-                        className="pl-8 w-[200px]"
+                        className="pl-8 w-[400px]"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && searchUsers()}
                       />
                     </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={fetchPendingUsers}
-                      disabled={loading}
-                    >
-                      {loading ? "Chargement..." : "Toutes les demandes"}
-                    </Button>
                   </div>
                 </div>
 
@@ -540,41 +567,34 @@ export default function Dashboard() {
                   <Table>
                     <TableHeader>
                       <TableRow>
-                        <TableHead>ID</TableHead>
-                        <TableHead>Nom</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Téléphone</TableHead>
-                        <TableHead>Localité</TableHead>
-                        <TableHead>Rôle</TableHead>
-                        <TableHead>Date de création</TableHead>
-                        <TableHead>Statut</TableHead>
-                        <TableHead className="text-right">Actions</TableHead>
+                        <TableHead className="px-6 py-4">Nom</TableHead>
+                        <TableHead className="px-6 py-4">Email</TableHead>
+                        <TableHead className="px-6 py-4">Téléphone</TableHead>
+                        <TableHead className="px-6 py-4">Localité</TableHead>
+                        <TableHead className="text-right"></TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {users.length > 0 ? (
                         users.map((user) => (
                           <TableRow key={user.user_id}>
-                            <TableCell>{user.user_id}</TableCell>
-                            <TableCell>{user.nom}</TableCell>
-                            <TableCell>{user.email}</TableCell>
-                            <TableCell>{user.numeroTelephone}</TableCell>
-                            <TableCell>{user.localite}</TableCell>
-                            <TableCell>{user.role}</TableCell>
-                            <TableCell>
-                              {new Date(user.dateCreation).toLocaleDateString()}
+                            <TableCell className="px-6 py-4">
+                              <div className="flex items-center gap-2">
+                                {user.nom}
+                                <RoleBadge role={user.role} />
+                              </div>
                             </TableCell>
-                            <TableCell>{getStatusBadge(user.statut)}</TableCell>
+                            <TableCell className="px-6 py-4">{user.email}</TableCell>
+                            <TableCell className="px-6 py-4">{user.numeroTelephone}</TableCell>
+                            <TableCell className="px-6 py-4">{user.localite}</TableCell>
+                            {/* ...autres colonnes si besoin... */}
                             <TableCell className="text-right space-x-1">
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
+                                className="cursor-pointer bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
                                 onClick={() => {
-                                  // Mettre à jour le statut de l'utilisateur (en passant "approved")
                                   updateUserStatus(user.user_id, "approved");
-
-                                  // Puis, associer l'utilisateur à l'entité correspondante (Prive ou Entreprise)
                                   approveUser(user.user_id, user.role);
                                 }}
                               >
@@ -583,10 +603,8 @@ export default function Dashboard() {
                               <Button
                                 variant="outline"
                                 size="sm"
-                                className="bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
-                                onClick={() =>
-                                  deleteUser(user.user_id, user.nom)
-                                }
+                                className="cursor-pointer bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
+                                onClick={() => deleteUser(user.user_id, user.nom)}
                               >
                                 Refuser
                               </Button>
