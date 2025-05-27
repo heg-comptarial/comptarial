@@ -216,7 +216,7 @@ export function NotificationBellAdmin({ userId, adminId }: { userId: number; adm
   return (
     <Popover open={isOpen} onOpenChange={handleOpen}>
       <PopoverTrigger asChild>
-        <Button variant="ghost" size="icon" className="relative">
+        <Button variant="ghost" size="icon" className="relative cursor-pointer">
           <Bell className="h-5 w-5" />
           {unreadCount > 0 && (
             <Badge className="absolute -top-1 -right-1 px-1.5 py-0.5 min-w-[1.25rem] h-5 flex items-center justify-center">
