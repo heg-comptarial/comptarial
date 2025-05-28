@@ -225,7 +225,10 @@ export function NotificationBellAdmin({ userId, adminId }: { userId: number; adm
           )}
         </Button>
       </PopoverTrigger>
-      <PopoverContent className="w-[500px] p-0" align="start">
+      <PopoverContent
+        className="w-full max-w-sm mx-auto p-0"
+        align="center"
+      >
         <div className="flex items-center justify-between p-4">
           <h3 className="font-medium">Notifications Admin</h3>
           <div className="flex gap-2">
@@ -238,7 +241,7 @@ export function NotificationBellAdmin({ userId, adminId }: { userId: number; adm
           </div>
         </div>
         <Separator />
-        <ScrollArea className="h-[300px]">
+        <ScrollArea className="h-[220px]">
           {notifications.length > 0 ? (
             <div className="flex flex-col">
               {notifications.map((notification) => (

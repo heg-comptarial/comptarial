@@ -9,6 +9,7 @@ import { NavMain } from "@/components/sidebar/nav-main";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
 import { NavUserAdmin } from "@/components/sidebar/nav-user-admin";
 import { NotificationBellAdmin } from "@/components/ui/notification-bell-admin";
+import { useSidebar } from "@/components/ui/sidebar";
 
 import {
   Sidebar,
@@ -25,6 +26,7 @@ import { useParams } from "next/navigation";
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const params = useParams();
   const userId = Number(params?.userId);
+  const { close } = useSidebar(); // Récupère la fonction close
 
   // Récupération des infos utilisateur depuis l'API
   const [user, setUser] = React.useState<{ name: string; email: string; avatar?: string }>({
@@ -101,13 +103,20 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
     ],
   };
 
+  // Fonction utilitaire pour fermer la sidebar sur mobile
+  const handleMenuClick = () => {
+    if (window.innerWidth < 640) 
+      console.log("Closing sidebar on mobile");
+      close(); // sm breakpoint
+  };
+
   return (
     <Sidebar variant="inset" {...props} collapsible="icon">
       <SidebarHeader>
         <div className="flex items-center justify-between py-2">
           <SidebarMenu>
             <SidebarMenuItem>
-              <SidebarMenuButton size="lg" asChild>
+              <SidebarMenuButton size="lg" asChild onClick={handleMenuClick}>
                 <Link href={`/admin/${userId}`} passHref>
                   <div className="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
                     <Command className="size-4" />
@@ -124,8 +133,19 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
         <SidebarSeparator />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
-        <NavSecondary items={data.navSecondary} className="mt-auto" />
+        <NavMain
+          items={data.navMain.map(item => ({
+            ...item,
+            onClick: handleMenuClick,
+          }))}
+        />
+        <NavSecondary
+          items={data.navSecondary.map(item => ({
+            ...item,
+            onClick: handleMenuClick,
+          }))}
+          className="mt-auto"
+        />
       </SidebarContent>
       <SidebarFooter>
         <NavUserAdmin user={data.user} />
