@@ -3,6 +3,7 @@
 import * as React from "react";
 import Link from "next/link";
 import { Command, Frame, LifeBuoy, Map, PieChart, Shield, SquareUserRound } from 'lucide-react';
+import axios from "axios";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
@@ -22,30 +23,46 @@ import {
 import { useParams } from "next/navigation";
 
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
-  const params = useParams()
-  const userId = Number(params?.userId)
+  const params = useParams();
+  const userId = Number(params?.userId);
+
+  // Récupération des infos utilisateur depuis l'API
+  const [user, setUser] = React.useState<{ name: string; email: string; avatar?: string }>({
+    name: "",
+    email: "",
+    avatar: "",
+  });
+
+  React.useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await axios.get(
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/${userId}`
+        );
+        setUser({
+          name: response.data.nom || response.data.name || "Admin",
+          email: response.data.email,
+          avatar: response.data.avatar || "/images/avatar.png",
+        });
+      } catch (error) {
+        setUser({
+          name: "Admin inconnu",
+          email: "",
+          avatar: "/images/avatar.png",
+        });
+      }
+    };
+
+    if (userId) fetchUser();
+  }, [userId]);
 
   const data = {
-    user: {
-      name: "Username",
-      email: "Email",
-      avatar: "public/images/avatar.png",
-    },
+    user,
     navMain: [
       {
         title: "Mon compte",
         url: `/account-admin/${userId}`,
-        icon: SquareUserRound,
-        items: [
-          {
-            title: "Paramètres",
-            url: "/settings",
-          },
-          {
-            title: "Déconnexion",
-            url: "/logout",
-          },
-        ],
+        icon: SquareUserRound
       },
       {
         title: "Dashboard",
@@ -87,7 +104,7 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
   return (
     <Sidebar variant="inset" {...props} collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center justify-between px-4 py-2">
+        <div className="flex items-center justify-between py-2">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
@@ -97,18 +114,14 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">Comptarial</span>
-                    <span className="truncate text-xs">Fiduciaire</span>
                   </div>
                 </Link>
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-          
-          {/* Ajout de la cloche de notification */}
           {userId && <NotificationBellAdmin userId={userId} adminId={userId} />}
         </div>
         <SidebarSeparator />
-        
       </SidebarHeader>
       <SidebarContent>
         <NavMain items={data.navMain} />

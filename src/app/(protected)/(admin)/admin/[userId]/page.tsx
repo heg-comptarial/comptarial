@@ -301,6 +301,7 @@ export default function Dashboard() {
     if (value === "demandes") {
       setUsers(demandes);
     } else if (value === "clients") {
+      setClientsFilter("all"); // <-- Ajoute ceci pour réinitialiser le filtre
       setUsers(clients);
     }
   };
@@ -451,21 +452,21 @@ export default function Dashboard() {
           <TabsContent value="clients">
             <Card>
               <CardContent className="pt-2">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
+                <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="relative w-full sm:w-auto">
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="search"
                         placeholder="Rechercher..."
-                        className="pl-8 w-[400px]"
+                        className="pl-8 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && searchUsers()}
                       />
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
                     <Button
                       size="sm"
                       variant={clientsFilter === "all" ? "default" : "outline"}
@@ -474,7 +475,7 @@ export default function Dashboard() {
                         setClientsFilter("all");
                       }}
                       disabled={loading}
-                      className="cursor-pointer"
+                      className="w-full sm:w-auto"
                     >
                       {loading ? "Chargement..." : "Tous les clients"}
                     </Button>
@@ -486,7 +487,7 @@ export default function Dashboard() {
                         setClientsFilter("pendingDeclarations");
                       }}
                       disabled={loading}
-                      className="cursor-pointer"
+                      className="w-full sm:w-auto"
                     >
                       {loading ? "Chargement..." : "Déclarations en attente"}
                     </Button>
@@ -498,43 +499,45 @@ export default function Dashboard() {
                     Chargement des clients...
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="px-6 py-4">Nom</TableHead>
-                        <TableHead className="px-6 py-4">Email</TableHead>
-                        <TableHead className="px-6 py-4">Téléphone</TableHead>
-                        <TableHead className="px-6 py-4">Localité</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.length > 0 ? (
-                        users.map((user) => (
-                          <TableRow
-                            key={user.user_id}
-                            onClick={() => router.push(`/admin/${userId}/client/${user.user_id}`)}
-                            className="cursor-pointer hover:bg-muted transition-colors"
-                          >
-                            <TableCell className="px-6 py-4">
-                              <div className="flex items-center gap-2">
-                                {user.nom}
-                                <RoleBadge role={user.role} />
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-6 py-4">{user.email}</TableCell>
-                            <TableCell className="px-6 py-4">{user.numeroTelephone}</TableCell>
-                            <TableCell className="px-6 py-4">{user.localite}</TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
+                  <div className="w-full overflow-x-auto">
+                    <Table className="min-w-[700px]">
+                      <TableHeader>
                         <TableRow>
-                          <TableCell colSpan={9} className="text-center py-4">
-                            Aucun client trouvé
-                          </TableCell>
+                          <TableHead className="px-2 py-2">Nom</TableHead>
+                          <TableHead className="px-2 py-2">Email</TableHead>
+                          <TableHead className="px-2 py-2">Téléphone</TableHead>
+                          <TableHead className="px-2 py-2">Localité</TableHead>
                         </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                      </TableHeader>
+                      <TableBody>
+                        {users.length > 0 ? (
+                          users.map((user) => (
+                            <TableRow
+                              key={user.user_id}
+                              onClick={() => router.push(`/admin/${userId}/client/${user.user_id}`)}
+                              className="cursor-pointer hover:bg-muted transition-colors"
+                            >
+                              <TableCell className="px-2 py-2">
+                                <div className="flex items-center gap-2">
+                                  {user.nom}
+                                  <RoleBadge role={user.role} />
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-2 py-2">{user.email}</TableCell>
+                              <TableCell className="px-2 py-2">{user.numeroTelephone}</TableCell>
+                              <TableCell className="px-2 py-2">{user.localite}</TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={9} className="text-center py-4">
+                              Aucun client trouvé
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -543,14 +546,14 @@ export default function Dashboard() {
           <TabsContent value="demandes">
             <Card>
               <CardContent className="pt-2">
-                <div className="flex justify-between items-center mb-4">
-                  <div className="flex items-center gap-4">
-                    <div className="relative">
+                <div className="flex flex-col gap-2 mb-4 sm:flex-row sm:items-center sm:justify-between">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <div className="relative w-full sm:w-auto">
                       <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                       <Input
                         type="search"
                         placeholder="Rechercher..."
-                        className="pl-8 w-[400px]"
+                        className="pl-8 w-full max-w-xs sm:max-w-md md:max-w-lg lg:max-w-xl"
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && searchUsers()}
@@ -564,62 +567,66 @@ export default function Dashboard() {
                     Chargement des demandes...
                   </div>
                 ) : (
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead className="px-6 py-4">Nom</TableHead>
-                        <TableHead className="px-6 py-4">Email</TableHead>
-                        <TableHead className="px-6 py-4">Téléphone</TableHead>
-                        <TableHead className="px-6 py-4">Localité</TableHead>
-                        <TableHead className="text-right"></TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {users.length > 0 ? (
-                        users.map((user) => (
-                          <TableRow key={user.user_id}>
-                            <TableCell className="px-6 py-4">
-                              <div className="flex items-center gap-2">
-                                {user.nom}
-                                <RoleBadge role={user.role} />
-                              </div>
-                            </TableCell>
-                            <TableCell className="px-6 py-4">{user.email}</TableCell>
-                            <TableCell className="px-6 py-4">{user.numeroTelephone}</TableCell>
-                            <TableCell className="px-6 py-4">{user.localite}</TableCell>
-                            {/* ...autres colonnes si besoin... */}
-                            <TableCell className="text-right space-x-1">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="cursor-pointer bg-green-50 text-green-700 hover:bg-green-100 border-green-200"
-                                onClick={() => {
-                                  updateUserStatus(user.user_id, "approved");
-                                  approveUser(user.user_id, user.role);
-                                }}
-                              >
-                                Accepter
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                className="cursor-pointer bg-red-50 text-red-700 hover:bg-red-100 border-red-200"
-                                onClick={() => deleteUser(user.user_id, user.nom)}
-                              >
-                                Refuser
-                              </Button>
+                  // Le tableau doit être dans ce conteneur scrollable
+                  <div className="w-full overflow-x-auto">
+                    <Table className="min-w-[700px]">
+                      <TableHeader>
+                        <TableRow>
+                          <TableHead className="px-2 py-2">Nom</TableHead>
+                          <TableHead className="px-2 py-2">Email</TableHead>
+                          <TableHead className="px-2 py-2">Téléphone</TableHead>
+                          <TableHead className="px-2 py-2">Localité</TableHead>
+                          <TableHead className="text-right px-2 py-2"></TableHead>
+                        </TableRow>
+                      </TableHeader>
+                      <TableBody>
+                        {users.length > 0 ? (
+                          users.map((user) => (
+                            <TableRow key={user.user_id}>
+                              <TableCell className="px-2 py-2">
+                                <div className="flex items-center gap-2">
+                                  {user.nom}
+                                  <RoleBadge role={user.role} />
+                                </div>
+                              </TableCell>
+                              <TableCell className="px-2 py-2">{user.email}</TableCell>
+                              <TableCell className="px-2 py-2">{user.numeroTelephone}</TableCell>
+                              <TableCell className="px-2 py-2">{user.localite}</TableCell>
+                              <TableCell className="text-right px-2 py-2">
+                                <div className="flex flex-col gap-2 min-w-[120px] sm:flex-row sm:justify-end sm:items-center">
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer bg-green-50 text-green-700 hover:bg-green-100 border-green-200 w-full sm:w-auto"
+                                    onClick={() => {
+                                      updateUserStatus(user.user_id, "approved");
+                                      approveUser(user.user_id, user.role);
+                                    }}
+                                  >
+                                    Accepter
+                                  </Button>
+                                  <Button
+                                    variant="outline"
+                                    size="sm"
+                                    className="cursor-pointer bg-red-50 text-red-700 hover:bg-red-100 border-red-200 w-full sm:w-auto"
+                                    onClick={() => deleteUser(user.user_id, user.nom)}
+                                  >
+                                    Refuser
+                                  </Button>
+                                </div>
+                              </TableCell>
+                            </TableRow>
+                          ))
+                        ) : (
+                          <TableRow>
+                            <TableCell colSpan={9} className="text-center py-4">
+                              Aucune demande en attente
                             </TableCell>
                           </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={9} className="text-center py-4">
-                            Aucune demande en attente
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
+                        )}
+                      </TableBody>
+                    </Table>
+                  </div>
                 )}
               </CardContent>
             </Card>

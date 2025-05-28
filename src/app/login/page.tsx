@@ -129,7 +129,7 @@ export default function LoginPage() {
                   href="forgot-password"
                   className="text-sm text-primary hover:underline"
                 >
-                  Mot oublié?
+                  Mot de passe oublié?
                 </Link>
               </div>
             </div>
