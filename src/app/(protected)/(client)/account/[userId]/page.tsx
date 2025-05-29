@@ -1,347 +1,271 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import { JSX, useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useParams } from "next/navigation";
-import { NotificationService } from "@/services/notification-service"
 import { notFound } from "next/navigation";
-
-
-
-function ResetPassword() {
-  const [currentPassword, setCurrentPassword] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-
-const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
-  const token = localStorage.getItem("auth_token");
-  const userId = localStorage.getItem("user_id");
-  if (!userId) {
-    alert("Utilisateur non identifié");
-    return;
-  }
-
-  // 1. Vérification du mot de passe actuel auprès de l’API
-  try {
-    const check = await fetch("http://127.0.0.1:8000/api/users/check-password", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        user_id: parseInt(userId),
-        currentPassword,
-      }),
-    });
-
-    if (!check.ok) {
-      alert("Mot de passe actuel incorrect");
-      return;
-    }
-
-    // 2. Vérification : nouveau mot de passe différent de l'ancien
-    if (currentPassword === newPassword) {
-      alert("Le nouveau mot de passe doit être différent de l'ancien.");
-      return;
-    }
-
-    // 3. Vérification : confirmation
-    if (newPassword !== confirmPassword) {
-      alert("Les nouveaux mots de passe ne correspondent pas");
-      return;
-    }
-
-    // 4. Vérification : complexité du mot de passe
-    const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
-    if (!passwordRegex.test(newPassword)) {
-      alert(
-        "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial."
-      );
-      return;
-    }
-
-    // 5. Mise à jour du mot de passe
-    const update = await fetch("http://127.0.0.1:8000/api/users/change-password", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        "Authorization": `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        user_id: parseInt(userId),
-        newPassword,
-      }),
-    });
-
-    if (!update.ok) {
-      throw new Error("Échec de la mise à jour");
-    }
-
-    alert("Mot de passe mis à jour avec succès !");
-    setCurrentPassword("");
-    setNewPassword("");
-    setConfirmPassword("");
-  } catch (err) {
-    console.error("Erreur:", err);
-    alert("Une erreur est survenue");
-  }
-};
-
-
-  return (
-    <Card>
-      <CardHeader>
-        <CardTitle>Changer votre mot de passe</CardTitle>
-        <CardDescription>
-          Pour modifier votre mot de passe, veuillez saisir votre mot de passe actuel puis le nouveau.
-        </CardDescription>
-      </CardHeader>
-      <CardContent>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-2">
-            <Label htmlFor="currentPassword">Mot de passe actuel</Label>
-            <Input
-              id="currentPassword"
-              type="password"
-              value={currentPassword}
-              onChange={(e) => setCurrentPassword(e.target.value)}
-              placeholder="Entrez votre mot de passe actuel"
-              required
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="newPassword">Nouveau mot de passe</Label>
-            <Input
-              id="newPassword"
-              type="password"
-              value={newPassword}
-              onChange={(e) => setNewPassword(e.target.value)}
-              placeholder="Entrez votre nouveau mot de passe"
-              required
-            />
-            <p className="text-xs text-gray-500">
-              Le mot de passe doit contenir au moins 8 caractères, une majuscule,
-              un chiffre et un caractère spécial.
-            </p>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
-            <Input
-              id="confirmPassword"
-              type="password"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              placeholder="Confirmez votre nouveau mot de passe"
-              required
-            />
-          </div>
-
-          <Button type="submit" className="w-full">
-            Mettre à jour le mot de passe
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  );
-}
+import { Utilisateur } from "@/types/interfaces";
+import { toast, Toaster } from "sonner";
 
 export default function AccountPage() {
   const params = useParams();
   const userId = Number(params?.userId);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<Utilisateur | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState<any>(null);
-  const [userName, setUserName] = useState<string>("");
-    const [authentifie, setAuthentifie] = useState<boolean | null>(true);
+  const [editedData, setEditedData] = useState<Utilisateur | null>(null);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [authentifie, setAuthentifie] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    setAuthentifie(null); // Initialiser à null pour indiquer le chargement
-    const fetchUser = async () => {
-      const token = localStorage.getItem("auth_token");
-      try {
-        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) {
-          setAuthentifie(false); // Utiliser notFound() pour gérer les erreurs 404
-        }
-        const data = await res.json();
-        console.log("Données utilisateur récupérées :", data);
-        const { ...filtered } = data;
-        setUserData(filtered);
-        setEditedData(filtered);
-        setUserName(filtered.nom || "Utilisateur");
-        setAuthentifie(true);
-      } catch {
-        setAuthentifie(false); // Utiliser notFound() pour gérer les erreurs de récupération
+  const fetchUser = useCallback(async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      setAuthentifie(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) {
+        setAuthentifie(false);
+        return;
       }
-    };
-
-    fetchUser();
+      const data = await res.json();
+      setUserData(data);
+      setEditedData(data);
+      setAuthentifie(true);
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des données utilisateur :",
+        error
+      );
+      setAuthentifie(false);
+    }
   }, [userId]);
 
-    if (authentifie === null) {
-    // Affiche un loader ou rien du tout pendant le chargement
-    return;
+  useEffect(() => {
+    if (userId) {
+      fetchUser();
     }
+  }, [userId, fetchUser]);
 
-    if (!authentifie) {
-    notFound();
-    }
+  // Bloc d'authentification à placer juste avant le rendu
+  if (authentifie === null) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p>Chargement...</p>
+      </div>
+    );
+  }
 
-  const handleInputChange = (section: string, field: string, value: any) => {
-    setEditedData((prev: any) => {
-      if (section === "personal") {
-        return {
-          ...prev,
-          [field]: value,
-        };
-      }
-  
-      return {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: value,
-        },
-      };
-    });
+  if (!authentifie) {
+    return notFound();
+  }
+
+  const handleInputChange = <K extends keyof Utilisateur>(
+    field: K,
+    value: Utilisateur[K]
+  ) => {
+    setEditedData((prev) =>
+      prev
+        ? {
+            ...prev,
+            [field]: value,
+          }
+        : null
+    );
   };
 
-  const handleSectionUpdate = async (section: string) => {
-    try {
-      let endpoint = "";
-      let payload = {};
-
-      if (section === "personal") {
-        const token = localStorage.getItem("auth_token");
-        const endpoint = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-        });
-        payload = {
-          nom: editedData.nom,
-          email: editedData.email,
-          localite: editedData.localite,
-          adresse: editedData.adresse,
-          codePostal: editedData.codePostal,
-          numeroTelephone: editedData.numeroTelephone,
-        };
-      } else if (section === "prive") {
-        if (!userData.prives) {
-          console.warn("La section 'prive' est absente, aucune mise à jour effectuée.");
-          return;
-        }
-        endpoint = `http://127.0.0.1:8000/api/prives/${userData.prives.prive_id}`;
-        payload = editedData.prives;
-      }
-
-      if (endpoint) {
-        await fetch(endpoint, {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(payload),
-        });
-      }
-    } catch (error) {
-      console.error(`Erreur lors de la mise à jour de la section "${section}" :`, error);
-      throw error;
+  const handleSectionUpdate = async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      throw new Error("Token d'authentification manquant");
     }
+
+    const endpoint = `http://127.0.0.1:8000/api/users/${userId}`;
+    const payload = {
+      nom: editedData?.nom,
+      email: editedData?.email,
+      localite: editedData?.localite,
+      adresse: editedData?.adresse,
+      codePostal: editedData?.codePostal,
+      numeroTelephone: editedData?.numeroTelephone,
+    };
+
+    const response = await fetch(endpoint, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Erreur HTTP: ${response.status}`);
+    }
+
+    return await response.json();
   };
 
   const handleSaveAll = async () => {
+    setIsSaving(true);
     try {
-      await handleSectionUpdate("personal");
-      await handleSectionUpdate("prive");
+      const updatedUser = await handleSectionUpdate();
 
-      // Envoyer une notification aux administrateurs
-      try {
-        await NotificationService.createAdminNotification(
-          userId,
-          `${userName} a mis à jour ses informations personnelles`,
-          "user",
-          userId,
-        )
-      } catch (notifError) {
-        console.error("Erreur lors de l'envoi de la notification:", notifError)
-        // Ne pas bloquer le processus si la notification échoue
-      }
-  
-      alert("Toutes les modifications ont été enregistrées avec succès !");
+      // Mettre à jour les données locales avec la réponse du serveur
+      setUserData(updatedUser);
+      setEditedData(updatedUser);
+
+      toast.success(
+        "Toutes les modifications ont été enregistrées avec succès !"
+      );
       setIsEditing(false);
+
+      await fetchUser();
+      window.location.reload();
     } catch (error) {
-      console.error("Erreur lors de l'enregistrement des modifications :", error);
-      alert("Une erreur est survenue lors de l'enregistrement des modifications.");
+      console.error(
+        "Erreur lors de l'enregistrement des modifications :",
+        error
+      );
+      toast.error(
+        `Une erreur est survenue lors de l'enregistrement des modifications: ${error}`
+      );
+    } finally {
+      setIsSaving(false);
     }
   };
 
-  const renderInput = (label: string, id: string, value: any, section: string) => {
-    const isBoolean = typeof value === "boolean";
-  
+  const handlePasswordChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      toast.error("Token d'authentification manquant");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      // 1. Vérification de l'ancien mot de passe auprès de l'API
+      const check = await fetch(
+        "http://127.0.0.1:8000/api/users/check-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            currentPassword,
+          }),
+        }
+      );
+
+      if (!check.ok) {
+        toast.error("Mot de passe actuel incorrect");
+        return;
+      }
+
+      // 2. Vérification : nouveau mot de passe différent de l'ancien
+      if (currentPassword === newPassword) {
+        toast.error("Le nouveau mot de passe doit être différent de l'ancien");
+        return;
+      }
+
+      // 3. Vérification : confirmation
+      if (newPassword !== confirmPassword) {
+        toast.error("Les nouveaux mots de passe ne correspondent pas");
+        return;
+      }
+
+      // 4. Vérification : complexité du mot de passe
+      const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
+      if (!passwordRegex.test(newPassword)) {
+        toast.error(
+          "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial."
+        );
+        return;
+      }
+
+      // 5. Changement du mot de passe
+      const update = await fetch(
+        "http://127.0.0.1:8000/api/users/change-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            newPassword,
+          }),
+        }
+      );
+
+      if (!update.ok) {
+        toast.error(
+          "Une erreur est survenue lors de la mise à jour du mot de passe"
+        );
+        return;
+      }
+
+      toast.success("Mot de passe mis à jour avec succès !");
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (err) {
+      console.error("Erreur:", err);
+      toast.error(
+        `Une erreur est survenue lors du changement de mot de passe: ${err}`
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleCancelEdit = () => {
+    setEditedData(userData); // Réinitialiser les données
+    setIsEditing(false); // Quitter le mode édition
+  };
+
+  const renderInput = (
+    label: string,
+    id: string,
+    value: string | number | undefined
+  ) => {
     return (
       <div key={id} className="flex flex-col space-y-1">
         <Label htmlFor={id} className="capitalize">
           {label}
         </Label>
-  
         {!isEditing ? (
-          isBoolean ? (
-            <p>{value ? "Oui" : "Non"}</p>
-          ) : (
-            <p>{value || "—"}</p>
-          )
-        ) : isBoolean ? (
-          <Checkbox
-            id={id}
-            checked={value}
-            onChange={(e) =>
-              handleInputChange(section, id, (e.target as HTMLInputElement).checked)
-            }
-          />
-        ) : id === "etatCivil" ? (
-          <select
-            id={id}
-            value={value || ""}
-            onChange={(e) =>
-              handleInputChange(section, id, e.target.value)
-            }
-            className="border rounded px-2 py-1"
-          >
-            <option value="Célibataire">Célibataire</option>
-            <option value="Marié(e)">Marié(e)</option>
-            <option value="Pacsé(e)">Pacsé(e)</option>
-            <option value="Divorcé(e)">Divorcé(e)</option>
-            <option value="Veuf/Veuve">Veuf/Veuve</option>
-          </select>
+          <p className="py-2 px-3 bg-gray-50 rounded-md min-h-[40px] flex items-center">
+            {value || "—"}
+          </p>
         ) : (
           <Input
             id={id}
             value={value || ""}
             onChange={(e) =>
-              handleInputChange(section, id, e.target.value)
+              handleInputChange(id as keyof Utilisateur, e.target.value)
             }
           />
         )}
@@ -349,87 +273,119 @@ export default function AccountPage() {
     );
   };
 
-  const renderSection = (title: string, inputs: JSX.Element[]) => (
+  const renderPersonalSection = () => {
+    if (!editedData) return null;
+
+    const { nom, email, localite, adresse, codePostal, numeroTelephone } =
+      editedData;
+
+    return (
+      <Card>
+        <CardHeader>
+          <CardTitle>Informations personnelles</CardTitle>
+        </CardHeader>
+        <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {renderInput("Nom", "nom", nom)}
+          {renderInput("Email", "email", email)}
+          {renderInput("Localité", "localite", localite)}
+          {renderInput("Adresse", "adresse", adresse)}
+          {renderInput("Code postal", "codePostal", codePostal)}
+          {renderInput("Téléphone", "numeroTelephone", numeroTelephone)}
+        </CardContent>
+      </Card>
+    );
+  };
+
+  const renderPasswordSection = () => (
     <Card>
       <CardHeader>
-        <CardTitle>{title}</CardTitle>
+        <CardTitle>Changer le mot de passe</CardTitle>
       </CardHeader>
-      <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {inputs}
+      <CardContent>
+        <form onSubmit={handlePasswordChange} className="space-y-4">
+          <div className="space-y-2">
+            <Label htmlFor="currentPassword">Mot de passe actuel</Label>
+            <Input
+              id="currentPassword"
+              type="password"
+              value={currentPassword}
+              onChange={(e) => setCurrentPassword(e.target.value)}
+              placeholder="Entrez le mot de passe actuel"
+              required
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="newPassword">Nouveau mot de passe</Label>
+            <Input
+              id="newPassword"
+              type="password"
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              placeholder="Entrez le nouveau mot de passe"
+              required
+            />
+            <p className="text-xs text-gray-500">
+              Le mot de passe doit contenir au moins 8 caractères, une
+              majuscule, un chiffre et un caractère spécial.
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="confirmPassword">
+              Confirmer le nouveau mot de passe
+            </Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
+              placeholder="Confirmez le nouveau mot de passe"
+              required
+            />
+          </div>
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Mise à jour..." : "Mettre à jour le mot de passe"}
+          </Button>
+        </form>
       </CardContent>
     </Card>
   );
 
-  const renderPersonalSection = () => {
-    const { role, nom, email, localite, adresse, codePostal, numeroTelephone } = editedData;
-
-    return renderSection("Informations personnelles", [
-      renderInput(
-        role === "entreprise" ? "Raison sociale" : "Nom",
-        role === "entreprise" ? "raisonSociale" : "nom",
-        nom,
-        "personal"
-      ),
-      renderInput("Email", "email", email, "personal"),
-      renderInput("Localité", "localite", localite, "personal"),
-      renderInput("Adresse", "adresse", adresse, "personal"),
-      renderInput("Code postal", "codePostal", codePostal, "personal"),
-      renderInput("Téléphone", "numeroTelephone", numeroTelephone, "personal"),
-    ]);
-  };
-
-  const renderPriveSection = () => {
-    const prive = editedData.prives;
-    if (!prive) return null;
-    return renderSection("Profil privé", [
-      renderInput("Date de naissance", "dateNaissance", prive.dateNaissance, "prives"),
-      renderInput("Nationalité", "nationalite", prive.nationalite, "prives"),
-      renderInput("État civil", "etatCivil", prive.etatCivil, "prives"),
-    ]);
-  };
-
   return (
-      <div className="flex justify-center px-4 py-8">
-        <Tabs defaultValue="account" className="w-full max-w-4xl space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="account">Informations</TabsTrigger>
-            <TabsTrigger value="password">Mot de passe</TabsTrigger>
-          </TabsList>
+    <div className="flex justify-center px-4 py-8">
+      <Toaster position="bottom-right" richColors closeButton />
+      <Tabs defaultValue="account" className="w-full max-w-4xl space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="account">Informations</TabsTrigger>
+          <TabsTrigger value="password">Mot de passe</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="account" className="space-y-6">
-            {userData && (
+        <TabsContent value="account" className="space-y-6">
+          {userData && renderPersonalSection()}
+          <div className="flex justify-end gap-4">
+            {!isEditing ? (
+              <Button variant="outline" onClick={() => setIsEditing(true)}>
+                Modifier
+              </Button>
+            ) : (
               <>
-                {renderPersonalSection()}
-                {renderPriveSection()}
+                <Button
+                  variant="outline"
+                  onClick={handleSaveAll}
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Enregistrement..." : "Enregistrer"}
+                </Button>
+                <Button onClick={handleCancelEdit} disabled={isSaving}>
+                  Annuler
+                </Button>
               </>
             )}
-            <div className="flex justify-end gap-4">
-              {!isEditing ? (
-                <Button variant="outline" onClick={() => setIsEditing(true)}>
-                  Modifier
-                </Button>
-              ) : (
-                <>
-                  <Button variant="outline" onClick={handleSaveAll}>
-                    Enregistrer
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setEditedData(userData);
-                      setIsEditing(false);
-                    }}
-                  >
-                    Annuler
-                  </Button>
-                </>
-              )}
-            </div>
-          </TabsContent>
-
-          <TabsContent value="password" className="space-y-6">
-            <ResetPassword />
-          </TabsContent>
-        </Tabs>
-      </div>
+          </div>
+        </TabsContent>
+        <TabsContent value="password" className="space-y-6">
+          {renderPasswordSection()}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
