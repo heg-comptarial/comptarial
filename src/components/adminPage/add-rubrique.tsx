@@ -106,7 +106,10 @@ export default function AddRubriqueDialog({
       const data = {
         declaration_id: declarationId,
         titre: rubriqueData.titre,
-      };
+        type: ""
+      }
+
+      let response
 
       if (isEditing && rubriqueId) {
         // Mode édition: mettre à jour une rubrique existante
@@ -123,8 +126,8 @@ export default function AddRubriqueDialog({
       // Réinitialiser le formulaire
       setRubriqueData({
         titre: "",
-        type: "",
-      });
+        type:""
+      })
 
       // Fermer la boîte de dialogue
       onClose();
