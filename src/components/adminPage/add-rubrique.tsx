@@ -34,7 +34,6 @@ export default function AddRubriqueDialog({
   declarationId,
   declarationTitle,
   onRubriqueAdded,
-  userId,
   isEditing = false,
   rubriqueId,
 }: AddRubriqueDialogProps) {
@@ -109,17 +108,15 @@ export default function AddRubriqueDialog({
         titre: rubriqueData.titre,
       };
 
-      let response;
-
       if (isEditing && rubriqueId) {
         // Mode édition: mettre à jour une rubrique existante
         console.log("Mise à jour de la rubrique:", data);
-        response = await axios.put(`${API_URL}/rubriques/${rubriqueId}`, data);
+        await axios.put(`${API_URL}/rubriques/${rubriqueId}`, data);
         toast.success("Rubrique modifiée avec succès");
       } else {
         // Mode création: ajouter une nouvelle rubrique
         console.log("Création d'une nouvelle rubrique:", data);
-        response = await axios.post(`${API_URL}/rubriques`, data);
+        await axios.post(`${API_URL}/rubriques`, data);
         toast.success("Rubrique ajoutée avec succès");
       }
 

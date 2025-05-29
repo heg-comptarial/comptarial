@@ -54,7 +54,6 @@ import axios from "axios";
 import AddRubriqueDialog from "@/components/adminPage/add-rubrique";
 import ConfirmationDialog from "@/components/confirmation-dialog";
 import CreateDeclarationDialog from "@/components/adminPage/declaration-dialog";
-import { downloadDocument } from "@/services/documentService";
 import DocumentUpload from "@/components/protected/declarations-client/features/documents/DocumentUpload";
 import FormulairePrive from "@/components/adminPage/formulaire-prive";
 import { getStatusBadge } from "@/utils/getStatusBadge";
@@ -174,6 +173,9 @@ export default function ClientDetail() {
   const [editedUser, setEditedUser] = useState<Partial<UserDetails> | null>(
     null
   );
+  const [uploadCompletedRubriques, setUploadCompletedRubriques] = useState<
+    number[]
+  >([]);
   // Ajouter un état pour stocker l'ID de l'administrateur
   const [adminId, setAdminId] = useState<number | null>(null);
 
@@ -889,10 +891,6 @@ export default function ClientDetail() {
         contenu: `Vos documents ont été enregistrés avec succès.`,
       });
 
-      toast.success("Documents enregistrés avec succès");
-      setAdminSelectedFiles([]);
-      await refreshUserData();
-
       // Envoi de la notification à l'utilisateur
       await fetch(`${API_URL}/documents/admin-upload-notification`, {
         method: "POST",
@@ -903,6 +901,18 @@ export default function ClientDetail() {
           year: activeDeclaration?.annee,
         }),
       });
+
+      toast.success("Documents enregistrés avec succès");
+      setAdminSelectedFiles([]);
+      const uploadedRubriqueIds = adminSelectedFiles.map((f) => f.rubriqueId);
+      setUploadCompletedRubriques((prev) => [
+        ...prev,
+        ...uploadedRubriqueIds.filter((id) => !prev.includes(id)),
+      ]);
+
+      await refreshUserData();
+
+      router.refresh();
     } catch (err) {
       console.error(err);
       toast.error("Erreur pendant l'envoi ou l'enregistrement");
@@ -1868,6 +1878,11 @@ export default function ClientDetail() {
                                         </div>
                                       )}
                                       <DocumentUpload
+                                        key={`rubrique-${
+                                          rubrique.rubrique_id
+                                        }-upload-${uploadCompletedRubriques.includes(
+                                          rubrique.rubrique_id
+                                        )}`}
                                         rubriqueId={rubrique.rubrique_id}
                                         rubriqueName={rubrique.titre}
                                         userId={userDetails.user_id}
@@ -1875,7 +1890,9 @@ export default function ClientDetail() {
                                           activeDeclaration?.annee?.toString() ||
                                           ""
                                         }
-                                        hideExistingList={true}
+                                        hideExistingList={uploadCompletedRubriques.includes(
+                                          rubrique.rubrique_id
+                                        )}
                                         onFilesSelected={(files) =>
                                           handleAdminFilesSelected(
                                             rubrique.rubrique_id,
@@ -1884,6 +1901,7 @@ export default function ClientDetail() {
                                         }
                                         onFileRemoved={handleAdminFileRemoved}
                                       />
+
                                       {adminSelectedFiles.some(
                                         (f) =>
                                           f.rubriqueId === rubrique.rubrique_id
@@ -2115,7 +2133,7 @@ export default function ClientDetail() {
                       />
                     ) : (
                       <div className="text-center py-8">
-                        <p>Ce client n'a pas de profil privé associé.</p>
+                        <p>Ce client n&apos;a pas de profil privé associé.</p>
                       </div>
                     )}
                   </CardContent>
