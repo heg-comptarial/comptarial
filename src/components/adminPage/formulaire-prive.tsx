@@ -577,6 +577,7 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
           <TabsTrigger value="finances">Finances</TabsTrigger>
           <TabsTrigger value="revenus">Revenus</TabsTrigger>
           <TabsTrigger value="deductions">Déductions</TabsTrigger>
+          <TabsTrigger value="autres-informations">Autres informations</TabsTrigger>
         </TabsList>
 
         {/* Onglet Informations personnelles */}
@@ -832,17 +833,6 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                           id="fo_autresDeductions"
                           checked={editedFormulaires?.fo_autresDeductions || false}
                           onCheckedChange={(checked) => handleFormulaireChange("fo_autresDeductions", checked)}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
-                        <Label htmlFor="fo_autresInformations" className="flex-1">
-                          Autres informations
-                        </Label>
-                        <Switch
-                          id="fo_autresInformations"
-                          checked={editedFormulaires?.fo_autresInformations || false}
-                          onCheckedChange={(checked) => handleFormulaireChange("fo_autresInformations", checked)}
                         />
                       </div>
 
@@ -1337,6 +1327,53 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       </Table>
                     ) : (
                       <p className="text-muted-foreground">Aucune assurance enregistrée</p>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Onglet Autres informations */}
+        <TabsContent value="autres-informations">
+          <Card>
+            <CardHeader>
+              <CardTitle>Autres informations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <Accordion type="multiple" className="w-full">
+                {/* Autres informations */}
+                <AccordionItem value="autres-informations">
+                  <AccordionTrigger>
+                    Autres informations ({formulaireData.autres_informations?.length || 0})
+                  </AccordionTrigger>
+                  <AccordionContent>
+                    {formulaireData.autres_informations && formulaireData.autres_informations.length > 0 ? (
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Bourses d'études</TableHead>
+                            <TableHead>Prestations AVS/SPC</TableHead>
+                            <TableHead>Prestations Ville/Commune</TableHead>
+                            <TableHead>Allocations impotents</TableHead>
+                            <TableHead>Institution bienfaisance</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {formulaireData.autres_informations.map((info) => (
+                            <TableRow key={info.autre_informations_id}>
+                              <TableCell>{info.fo_versementBoursesEtudes ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{info.fo_prestationsAVSSPC ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{info.fo_prestationsVilleCommune ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{info.fo_allocationsImpotents ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{info.fo_institutionBienfaisance ? "Oui" : "Non"}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
+                    ) : (
+                      <p className="text-muted-foreground">Aucune autre information enregistrée</p>
                     )}
                   </AccordionContent>
                 </AccordionItem>
