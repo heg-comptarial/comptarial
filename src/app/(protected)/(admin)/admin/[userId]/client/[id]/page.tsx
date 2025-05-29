@@ -311,6 +311,7 @@ export default function ClientDetail() {
             data.message || "Erreur lors de la récupération des données"
           );
         }
+          console.log(data)
 
         setUserDetails(data.data);
         setEditedUser(data.data);
@@ -1413,7 +1414,9 @@ export default function ClientDetail() {
               <TabsList className="mb-6">
                 <TabsTrigger value="declarations">Déclarations</TabsTrigger>
                 <TabsTrigger value="documents">Documents</TabsTrigger>
-                <TabsTrigger value="formilaire">Formulaire</TabsTrigger>
+                {userDetails.role === "prive" && (
+                  <TabsTrigger value="formulaire">Formulaire</TabsTrigger>
+                )}
               </TabsList>
               <Button
                 variant="outline"
@@ -2097,7 +2100,7 @@ export default function ClientDetail() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="formilaire">
+              <TabsContent value="formulaire">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">
@@ -2112,7 +2115,7 @@ export default function ClientDetail() {
                       />
                     ) : (
                       <div className="text-center py-8">
-                        <p>Ce client n'a pas de profil privé associé.</p>
+                        <p>Ce client n&apos;a pas de profil privé associé.</p>
                       </div>
                     )}
                   </CardContent>

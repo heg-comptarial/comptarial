@@ -154,14 +154,13 @@ interface FormulaireComplet {
   fo_banques: boolean
   fo_dettes: boolean
   fo_immobiliers: boolean
-  fo_salarie: boolean
+  fo_revenu: boolean
   fo_autrePersonneCharge: boolean
-  fo_independant: boolean
   fo_rentier: boolean
-  fo_autreRevenu: boolean
-  fo_assurance: boolean
-  fo_autreDeduction: boolean
-  fo_autreInformations: boolean
+  fo_assurances: boolean
+  fo_titres: boolean
+  fo_autresDeductions: boolean
+  fo_autresInformations: boolean
   nom?: string
   prenom?: string
   user?: any
@@ -229,17 +228,16 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
           dateNaissance: "1990-01-01",
           nationalite: "Suisse",
           etatCivil: "celibataire",
-          fo_banques: true,
+          fo_revenu: false,
+          fo_banques: false,
           fo_dettes: false,
-          fo_immobiliers: true,
-          fo_salarie: true,
+          fo_immobiliers: false,
           fo_autrePersonneCharge: false,
-          fo_independant: false,
           fo_rentier: false,
-          fo_autreRevenu: true,
-          fo_assurance: true,
-          fo_autreDeduction: false,
-          fo_autreInformations: true,
+          fo_assurances: false,
+          fo_titres: false,
+          fo_autresDeductions: false,
+          fo_autresInformations: false,
           nom: "Nom Test",
           prenom: "Prénom Test",
           user: { nom: "Nom Test", prenom: "Prénom Test" },
@@ -377,14 +375,13 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
         fo_banques: editedFormulaires.fo_banques,
         fo_dettes: editedFormulaires.fo_dettes,
         fo_immobiliers: editedFormulaires.fo_immobiliers,
-        fo_salarie: editedFormulaires.fo_salarie,
+        fo_revenu: editedFormulaires.fo_revenu,
         fo_autrePersonneCharge: editedFormulaires.fo_autrePersonneCharge,
-        fo_independant: editedFormulaires.fo_independant,
         fo_rentier: editedFormulaires.fo_rentier,
-        fo_autreRevenu: editedFormulaires.fo_autreRevenu,
-        fo_assurance: editedFormulaires.fo_assurance,
-        fo_autreDeduction: editedFormulaires.fo_autreDeduction,
-        fo_autreInformations: editedFormulaires.fo_autreInformations,
+        fo_titres: editedFormulaires.fo_titres,
+        fo_assurances: editedFormulaires.fo_assurances,
+        fo_autresDeductions: editedFormulaires.fo_autresDeductions,
+        fo_autresInformations: editedFormulaires.fo_autresInformations,
       }
 
       const response = await axios.put(`${API_URL}/prives/${formulaireData.prive_id}`, formulairesData)
@@ -664,13 +661,13 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="fo_salarie" className="flex-1">
-                          Salarié
+                        <Label htmlFor="fo_revenu" className="flex-1">
+                          Revenu
                         </Label>
                         <Switch
-                          id="fo_salarie"
-                          checked={editedFormulaires?.fo_salarie || false}
-                          onCheckedChange={(checked) => handleFormulaireChange("fo_salarie", checked)}
+                          id="fo_revenu"
+                          checked={editedFormulaires?.fo_revenu || false}
+                          onCheckedChange={(checked) => handleFormulaireChange("fo_revenu", checked)}
                         />
                       </div>
 
@@ -686,17 +683,6 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="fo_independant" className="flex-1">
-                          Indépendant
-                        </Label>
-                        <Switch
-                          id="fo_independant"
-                          checked={editedFormulaires?.fo_independant || false}
-                          onCheckedChange={(checked) => handleFormulaireChange("fo_independant", checked)}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
                         <Label htmlFor="fo_rentier" className="flex-1">
                           Rentier
                         </Label>
@@ -708,46 +694,46 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="fo_autreRevenu" className="flex-1">
-                          Autres revenus
-                        </Label>
-                        <Switch
-                          id="fo_autreRevenu"
-                          checked={editedFormulaires?.fo_autreRevenu || false}
-                          onCheckedChange={(checked) => handleFormulaireChange("fo_autreRevenu", checked)}
-                        />
-                      </div>
-
-                      <div className="flex items-center justify-between">
                         <Label htmlFor="fo_assurance" className="flex-1">
                           Assurances
                         </Label>
                         <Switch
-                          id="fo_assurance"
-                          checked={editedFormulaires?.fo_assurance || false}
-                          onCheckedChange={(checked) => handleFormulaireChange("fo_assurance", checked)}
+                          id="fo_assurances"
+                          checked={editedFormulaires?.fo_assurances || false}
+                          onCheckedChange={(checked) => handleFormulaireChange("fo_assurances", checked)}
                         />
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="fo_autreDeduction" className="flex-1">
+                        <Label htmlFor="fo_titres" className="flex-1">
+                          Titres/Élements de fortune
+                        </Label>
+                        <Switch
+                          id="fo_titres"
+                          checked={editedFormulaires?.fo_titres || false}
+                          onCheckedChange={(checked) => handleFormulaireChange("fo_titres", checked)}
+                        />
+                      </div>
+
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="fo_autresDeductions" className="flex-1">
                           Autres déductions
                         </Label>
                         <Switch
-                          id="fo_autreDeduction"
-                          checked={editedFormulaires?.fo_autreDeduction || false}
-                          onCheckedChange={(checked) => handleFormulaireChange("fo_autreDeduction", checked)}
+                          id="fo_autresDeductions"
+                          checked={editedFormulaires?.fo_autresDeductions || false}
+                          onCheckedChange={(checked) => handleFormulaireChange("fo_autresDeductions", checked)}
                         />
                       </div>
 
                       <div className="flex items-center justify-between">
-                        <Label htmlFor="fo_autreInformations" className="flex-1">
+                        <Label htmlFor="fo_autresInformations" className="flex-1">
                           Autres informations
                         </Label>
                         <Switch
-                          id="fo_autreInformations"
-                          checked={editedFormulaires?.fo_autreInformations || false}
-                          onCheckedChange={(checked) => handleFormulaireChange("fo_autreInformations", checked)}
+                          id="fo_autresInformations"
+                          checked={editedFormulaires?.fo_autresInformations || false}
+                          onCheckedChange={(checked) => handleFormulaireChange("fo_autresInformations", checked)}
                         />
                       </div>
 
@@ -791,9 +777,9 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Salarié:</span>
-                        <Badge variant={formulaireData.fo_salarie ? "default" : "outline"}>
-                          {formulaireData.fo_salarie ? "Activé" : "Désactivé"}
+                        <span className="text-muted-foreground">Revenu:</span>
+                        <Badge variant={formulaireData.fo_revenu ? "default" : "outline"}>
+                          {formulaireData.fo_revenu ? "Activé" : "Désactivé"}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2">
@@ -803,9 +789,9 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Indépendant:</span>
-                        <Badge variant={formulaireData.fo_independant ? "default" : "outline"}>
-                          {formulaireData.fo_independant ? "Activé" : "Désactivé"}
+                        <span className="text-muted-foreground">Titres/Élemets de fortune:</span>
+                        <Badge variant={formulaireData.fo_titres ? "default" : "outline"}>
+                          {formulaireData.fo_titres ? "Activé" : "Désactivé"}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2">
@@ -814,28 +800,23 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                           {formulaireData.fo_rentier ? "Activé" : "Désactivé"}
                         </Badge>
                       </div>
-                      <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Autres revenus:</span>
-                        <Badge variant={formulaireData.fo_autreRevenu ? "default" : "outline"}>
-                          {formulaireData.fo_autreRevenu ? "Activé" : "Désactivé"}
-                        </Badge>
-                      </div>
+                      
                       <div className="grid grid-cols-2">
                         <span className="text-muted-foreground">Assurances:</span>
-                        <Badge variant={formulaireData.fo_assurance ? "default" : "outline"}>
-                          {formulaireData.fo_assurance ? "Activé" : "Désactivé"}
+                        <Badge variant={formulaireData.fo_assurances ? "default" : "outline"}>
+                          {formulaireData.fo_assurances ? "Activé" : "Désactivé"}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2">
                         <span className="text-muted-foreground">Autres déductions:</span>
-                        <Badge variant={formulaireData.fo_autreDeduction ? "default" : "outline"}>
-                          {formulaireData.fo_autreDeduction ? "Activé" : "Désactivé"}
+                        <Badge variant={formulaireData.fo_autresDeductions ? "default" : "outline"}>
+                          {formulaireData.fo_autresDeductions ? "Activé" : "Désactivé"}
                         </Badge>
                       </div>
                       <div className="grid grid-cols-2">
                         <span className="text-muted-foreground">Autres informations:</span>
-                        <Badge variant={formulaireData.fo_autreInformations ? "default" : "outline"}>
-                          {formulaireData.fo_autreInformations ? "Activé" : "Désactivé"}
+                        <Badge variant={formulaireData.fo_autresInformations ? "default" : "outline"}>
+                          {formulaireData.fo_autresInformations ? "Activé" : "Désactivé"}
                         </Badge>
                       </div>
                     </div>
@@ -1036,7 +1017,7 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                             <TableHead>Banque</TableHead>
                             <TableHead>Numéro de compte</TableHead>
                             <TableHead>Solde</TableHead>
-                            <TableHead>Date d'ouverture</TableHead>
+                            <TableHead>Date d&apos;ouverture</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1068,7 +1049,7 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                           <TableRow>
                             <TableHead>Créancier</TableHead>
                             <TableHead>Montant de la dette</TableHead>
-                            <TableHead>Taux d'intérêt</TableHead>
+                            <TableHead>Taux d&apos;intérêt</TableHead>
                             <TableHead>Date de début</TableHead>
                             <TableHead>Date de fin</TableHead>
                             <TableHead>Montant des intérêts</TableHead>
@@ -1104,8 +1085,8 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                             <TableHead>Adresse</TableHead>
                             <TableHead>Valeur fiscale</TableHead>
                             <TableHead>Valeur locative</TableHead>
-                            <TableHead>Date d'acquisition</TableHead>
-                            <TableHead>Prix d'acquisition</TableHead>
+                            <TableHead>Date d&apos;acquisition</TableHead>
+                            <TableHead>Prix d&apos;acquisition</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -1140,7 +1121,7 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                             <TableHead>Quantité</TableHead>
                             <TableHead>Valeur unitaire</TableHead>
                             <TableHead>Valeur totale</TableHead>
-                            <TableHead>Date d'acquisition</TableHead>
+                            <TableHead>Date d&apos;acquisition</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
