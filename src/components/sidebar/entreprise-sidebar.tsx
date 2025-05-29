@@ -31,11 +31,25 @@ import { NotificationBell } from "@/components/ui/notification-bell";
 export function EntrepriseSidebar(props: React.ComponentProps<typeof Sidebar>) {
   const params = useParams()
   const userId = Number(params?.userId)
+  const [user, setUser] = React.useState<{ nom: string; email: string } | null>(null);
+
+  React.useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`);
+        const data = await res.json();
+        setUser(data);
+      } catch (error) {
+        setUser({ nom: "Utilisateur", email: "inconnu" });
+      }
+    }
+    if (userId) fetchUser();
+  }, [userId]);
+
   const data = {
     user: {
-      name: "Username",
-      email: "Email",
-      avatar: "/images/avatar.png",
+      name: user?.nom || "Utilisateur",
+      email: user?.email || "inconnu",
     },
     navMain: [
       {

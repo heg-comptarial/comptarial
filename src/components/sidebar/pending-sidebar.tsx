@@ -32,27 +32,32 @@ export function PendingSidebar({ ...props }: React.ComponentProps<typeof Sidebar
   const params = useParams()
   const userId = Number(params?.userId)
 
+  const [user, setUser] = React.useState<{ nom: string; email: string } | null>(null);
+
+  React.useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`);
+        const data = await res.json();
+        setUser(data);
+      } catch (error) {
+        setUser({ nom: "Utilisateur", email: "inconnu" });
+      }
+    }
+    if (userId) fetchUser();
+  }, [userId]);
+
   const data = {
     user: {
-      name: "Username",
-      email: "Email",
-      avatar: "public/images/avatar.png",
+      name: user?.nom || "Utilisateur",
+      email: user?.email || "inconnu",
+      avatar: "/images/avatar.png",
     },
     navMain: [
       {
         title: "Mon compte",
         url: `/account/${userId}`,
         icon: SquareUserRound,
-        items: [
-          {
-            title: "Paramètres",
-            url: "/settings",
-          },
-          {
-            title: "Déconnexion",
-            url: "/logout",
-          },
-        ],
       },
     ],
     navSecondary: [
@@ -89,7 +94,7 @@ export function PendingSidebar({ ...props }: React.ComponentProps<typeof Sidebar
   return (
     <Sidebar variant="inset" {...props} collapsible="icon">
       <SidebarHeader>
-        <div className="flex items-center justify-between px-4 py-2">
+        <div className="flex items-center justify-between py-2">
           <SidebarMenu>
             <SidebarMenuItem>
               <SidebarMenuButton size="lg" asChild>
@@ -99,7 +104,6 @@ export function PendingSidebar({ ...props }: React.ComponentProps<typeof Sidebar
                   </div>
                   <div className="grid flex-1 text-left text-sm leading-tight">
                     <span className="truncate font-semibold">Comptarial</span>
-                    <span className="truncate text-xs">Fiduciaire</span>
                   </div>
                 </Link>
               </SidebarMenuButton>

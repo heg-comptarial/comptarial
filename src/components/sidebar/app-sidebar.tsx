@@ -32,14 +32,28 @@ import {
 import { useParams } from "next/navigation";
 
 export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
-  const params = useParams()
-  const userId = Number(params?.userId)
+  const params = useParams();
+  const userId = Number(params?.userId);
+
+  const [user, setUser] = React.useState<{ nom: string; email: string } | null>(null);
+
+  React.useEffect(() => {
+    async function fetchUser() {
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`);
+        const data = await res.json();
+        setUser(data);
+      } catch (error) {
+        setUser({ nom: "Utilisateur", email: "inconnu" });
+      }
+    }
+    if (userId) fetchUser();
+  }, [userId]);
 
   const data = {
     user: {
-      name: "Username",
-      email: "Email",
-      avatar: "/images/avatar.png",
+      name: user?.nom || "Utilisateur",
+      email: user?.email || "inconnu",
     },
     navMain: [
       {
@@ -114,9 +128,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
               </SidebarMenuButton>
             </SidebarMenuItem>
           </SidebarMenu>
-
-            {/* Ajout de la cloche de notification */}
-            {userId && <NotificationBell userId={userId} />}
+          {userId && <NotificationBell userId={userId} />}
         </div>
         <SidebarSeparator />
       </SidebarHeader>
