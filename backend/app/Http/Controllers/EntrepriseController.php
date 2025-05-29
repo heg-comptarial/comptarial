@@ -62,4 +62,17 @@ class EntrepriseController extends Controller
         $entreprise->delete();
         return response()->json(null, 204);
     }
+
+    public function getEntrepriseByUserId($userId)
+{
+    // Récupère l'entreprise liée à un user_id donné (avec la relation user)
+    $entreprise = Entreprise::with('user')->where('user_id', $userId)->first();
+
+    if (!$entreprise) {
+        return response()->json(['message' => 'Entreprise non trouvée'], 404);
+    }
+
+    return response()->json($entreprise);
 }
+}
+

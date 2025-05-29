@@ -314,12 +314,18 @@ export default function Dashboard() {
     try {
       setDemandes((prev) => prev.filter((user) => user.user_id !== userId));
       setUsers((prev) => prev.filter((user) => user.user_id !== userId));
+      const token = localStorage.getItem("auth_token"); 
 
       // Envoi de la requête au backend
       const response = await fetch(`${API_URL}/users/${userId}`, {
         method: "PATCH",
         ...fetchConfig,
         body: JSON.stringify({ statut: newStatus }),
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        
       });
 
       if (!response.ok) {

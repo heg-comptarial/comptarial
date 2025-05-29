@@ -35,6 +35,10 @@ use Illuminate\Support\Facades\Crypt;
 // Routes pour les utilisateurs
 Route::apiResource('users', UserController::class)->middleware("auth:sanctum");
 
+// Routes pour les utilisateurs
+Route::post('users-ins', [UserController::class, 'store']);
+
+
 // Protéger la route par Sanctum
 Route::get('/users/{id}', [UserController::class, 'show'])->middleware('auth:sanctum');
 

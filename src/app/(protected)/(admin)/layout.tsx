@@ -1,6 +1,6 @@
 "use client"
 
-import type React from "react"
+import  React from "react"
 
 import { notFound } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -123,20 +123,24 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               <Separator orientation="vertical" className="mr-2 h-4" />
               <div className="flex flex-1 items-center justify-between">
                 <Breadcrumb>
-                  <BreadcrumbList>
-                    {breadcrumbs.map((crumb, index) => (
-                      <BreadcrumbItem key={index} className={index === 0 ? "hidden md:flex" : ""}>
-                        {!crumb.isCurrent ? (
-                          <BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
-                        ) : (
-                          <BreadcrumbPage>{crumb.label}</BreadcrumbPage>
-                        )}
-                        {index < breadcrumbs.length - 1 && (
-                          <BreadcrumbSeparator className={index === 0 ? "hidden md:flex" : ""} />
-                        )}
-                      </BreadcrumbItem>
-                    ))}
-                  </BreadcrumbList>
+<BreadcrumbList>
+  {breadcrumbs.map((crumb, index) => (
+<React.Fragment key={index}>
+<BreadcrumbItem className={index === 0 ? "hidden md:flex" : ""}>
+        {!crumb.isCurrent ? (
+<BreadcrumbLink href={crumb.href}>{crumb.label}</BreadcrumbLink>
+        ) : (
+<BreadcrumbPage>{crumb.label}</BreadcrumbPage>
+        )}
+</BreadcrumbItem>
+ 
+      {/* SEPARATOR EN DEHORS DE L'ÉLÉMENT <li> */}
+      {index < breadcrumbs.length - 1 && (
+<BreadcrumbSeparator className={index === 0 ? "hidden md:flex" : ""} />
+      )}
+</React.Fragment>
+  ))}
+</BreadcrumbList>
                 </Breadcrumb>
 
                 {adminName && (

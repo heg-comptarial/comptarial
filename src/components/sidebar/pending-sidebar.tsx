@@ -37,8 +37,15 @@ export function PendingSidebar({ ...props }: React.ComponentProps<typeof Sidebar
   React.useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`);
+        const token = localStorage.getItem("auth_token");
+        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
         const data = await res.json();
+        console.log("Fetching user data for userId:", data);
         setUser(data);
       } catch (error) {
         setUser({ nom: "Utilisateur", email: "inconnu" });

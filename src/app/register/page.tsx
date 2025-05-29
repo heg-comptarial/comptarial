@@ -105,16 +105,18 @@ export default function SignupPage() {
 
     try {
       // 1. Envoyer les données d'inscription à l'API
-      const response = await axios.post("http://127.0.0.1:8000/api/users", dataToSubmit)
+      const response = await axios.post("http://127.0.0.1:8000/api/users-ins", dataToSubmit)
 
       console.log("Inscription réussie:", response.data)
+
+      const userId = response.data.user_id // Récupérer l'ID de l'utilisateur créé
 
       // 2. Connecter automatiquement l'utilisateur
       const loginSuccess = await loginUser(formData.email, formData.motDePasse)
 
       if (loginSuccess) {
         // 3. Rediriger vers le dashboard
-        router.push("/dashboard")
+        router.push(`/dashboard/${userId}`)
       } else {
         // Si la connexion automatique échoue, rediriger vers la page de connexion
         console.error("Échec de la connexion automatique après l'inscription.")

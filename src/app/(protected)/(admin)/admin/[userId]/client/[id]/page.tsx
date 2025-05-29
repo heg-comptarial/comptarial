@@ -585,8 +585,15 @@ export default function ClientDetail() {
     setIsSaving(true)
     try {
       // 1. Mettre à jour les informations de l'utilisateur
-      await axios.put(`${API_URL}/users/${userId}`, editedUser)
-
+      await axios.put(
+        `${API_URL}/users/${userId}`,
+        editedUser,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem("auth_token")}`,
+          },
+        }
+      )
       // 2. Après la mise à jour réussie, récupérer toutes les données complètes
       await refreshUserData()
 

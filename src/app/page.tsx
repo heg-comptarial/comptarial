@@ -379,7 +379,7 @@ export default function Home() {
                 {/* Image à droite */}
                 <div className="rounded-2xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-300">
                   <Image
-                    src="/images/placeholder.svg?height=800&width=800"
+                    src="/images/khloud.png?height=800&width=800"
                     alt="Image d'accueil"
                     width={800}
                     height={800}
@@ -407,7 +407,7 @@ export default function Home() {
                 {/* Image à gauche */}
                 <div className="rounded-2xl overflow-hidden shadow-2xl transform hover:scale-[1.02] transition-transform duration-300 order-2 md:order-1">
                   <Image
-                    src="/images/placeholder.svg?height=800&width=800"
+                    src="/images/test.webp?height=800&width=800"
                     alt="Notre équipe"
                     width={800}
                     height={800}
