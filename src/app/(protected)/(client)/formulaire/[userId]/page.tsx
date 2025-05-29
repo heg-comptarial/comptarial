@@ -2421,46 +2421,33 @@ const renderStep3 = () => {
           </AccordionItem>
 
           {(infoBase.etatCivil === "marie" || infoBase.etatCivil === "pacse") && (
-            <AccordionItem value="conjoint">
+                        <AccordionItem value="conjoint">
               <AccordionTrigger>Informations du conjoint</AccordionTrigger>
               <AccordionContent>
                 <div className="space-y-2">
                   <p>
-                    <strong>Nom:</strong> {conjointInfo.nom}
+                    <strong>Nom:</strong> {conjointData?.nom}
                   </p>
                   <p>
-                    <strong>Prénom:</strong> {conjointInfo.prenom}
+                    <strong>Prénom:</strong> {conjointData?.prenom}
                   </p>
                   <p>
-                    <strong>Date de naissance:</strong> {conjointInfo.dateNaissance}
+                    <strong>Date de naissance:</strong> {conjointData?.dateNaissance}
                   </p>
                   <p>
-                    <strong>Nationalité:</strong> {conjointInfo.nationalite}
+                    <strong>Nationalité:</strong> {conjointData?.nationalite}
                   </p>
-                  <p>
-                    <strong>Situation professionnelle:</strong>{" "}
-                    {conjointInfo.situationProfessionnelle === "salarie"
-                      ? "Salarié(e)"
-                      : conjointInfo.situationProfessionnelle === "independant"
-                        ? "Indépendant(e)"
-                        : conjointInfo.situationProfessionnelle === "retraite"
-                          ? "Retraité(e)"
-                          : conjointInfo.situationProfessionnelle === "chomage"
-                            ? "En recherche d'emploi"
-                            : conjointInfo.situationProfessionnelle === "etudiant"
-                              ? "Étudiant(e)"
-                              : "Autre"}
-                  </p>
-                  {conjointInfo.adresse && (
+ 
+                  {conjointData?.adresse && (
                     <>
                       <p>
-                        <strong>Adresse:</strong> {conjointInfo.adresse}
+                        <strong>Adresse:</strong> {conjointData?.adresse}
                       </p>
                       <p>
-                        <strong>Localité:</strong> {conjointInfo.localite}
+                        <strong>Localité:</strong> {conjointData?.localite}
                       </p>
                       <p>
-                        <strong>Code postal:</strong> {conjointInfo.codePostal}
+                        <strong>Code postal:</strong> {conjointData?.codePostal}
                       </p>
                     </>
                   )}
@@ -2526,24 +2513,25 @@ const renderStep3 = () => {
             </AccordionItem>
           )}
 
-          <AccordionItem value="rubriques">
+                    <AccordionItem value="rubriques">
             <AccordionTrigger>Rubriques sélectionnées</AccordionTrigger>
             <AccordionContent>
               <ul className="list-disc pl-5 space-y-1">
-                {formSections.fo_revenu && <li>Salarié</li>}
-                {formSections.fo_independant && <li>Indépendant</li>}
+                {formSections.fo_revenu && <li>Revenu</li>}
                 {formSections.fo_rentier && <li>Rentier</li>}
                 {formSections.fo_banques && <li>Banques</li>}
                 {formSections.fo_immobiliers && <li>Immobiliers</li>}
                 {formSections.fo_dettes && <li>Dettes</li>}
                 {formSections.fo_assurances && <li>Assurances</li>}
                 {formSections.fo_autrePersonneCharge && <li>Autres personnes à charge</li>}
+                {formSections.fo_titres && <li>Titres/Élement de fortunue</li>}
                 {formSections.fo_autresDeductions && <li>Autres déductions</li>}
                 {formSections.fo_autresInformations && <li>Autres informations</li>}
               </ul>
             </AccordionContent>
           </AccordionItem>
         </Accordion>
+ 
 
         {error && <p className="text-red-500 text-sm">{error}</p>}
 
