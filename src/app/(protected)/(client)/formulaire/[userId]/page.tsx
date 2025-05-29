@@ -1822,9 +1822,10 @@ if (mode === "create") {
   for (const rubrique of existingRubriques) {
     const titre = rubrique.titre;
 
-    // Ne pas supprimer les rubriques protégées (conjoint, enfants, autres personnes à charge) si état civil marié/pacsé
-    const isProtectedRubrique =
-      (etatCivil === "marie" || etatCivil === "pacse") 
+    // Ne pas supprimer les rubriques protégées (conjoint) si état civil marié/pacsé
+    const isProtectedRubrique = rubrique.titre === "Conjoint(e)" &&
+    (etatCivil === "marie" || etatCivil === "pacse");
+
     // Vérifier si rubrique doit être supprimée (pas dans formSections)
     const foKey = Object.entries(rubriquesMapping).find(([, mappedTitre]) => mappedTitre === titre)?.[0];
     if (!isProtectedRubrique && foKey && !formSections[foKey]) {

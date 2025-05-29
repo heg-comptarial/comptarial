@@ -368,7 +368,7 @@ const defaultPension: PensionAlimentaireData = {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor={`adresse-${index}`}>Adresse (si différente)</Label>
+                    <Label htmlFor={`adresse-${index}`}>Adresse</Label>
                     <Input
                       id={`adresse-${index}`}
                       value={enfant.adresse}
