@@ -56,7 +56,7 @@ export function AppSidebar(props: React.ComponentProps<typeof Sidebar>) {
         const data = await res.json();
         setUser(data);
         setAuthentifie(true);
-      } catch (error) {
+      } catch {
         setUser({ nom: "Utilisateur", email: "inconnu" });
         setAuthentifie(false);
       }

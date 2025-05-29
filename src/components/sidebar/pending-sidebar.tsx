@@ -47,7 +47,7 @@ export function PendingSidebar({ ...props }: React.ComponentProps<typeof Sidebar
         const data = await res.json();
         console.log("Fetching user data for userId:", data);
         setUser(data);
-      } catch (error) {
+      } catch {
         setUser({ nom: "Utilisateur", email: "inconnu" });
       }
     }

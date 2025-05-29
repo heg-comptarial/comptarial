@@ -124,15 +124,15 @@ export interface Prive {
   _hasPensionAlimentaire?: boolean
 }
 
- interface PensionAlimentaireData {
-  enfant_id?: number
-  statut: "verse" | "recu"
-  montantContribution: string
-  nom: string
-  prenom: string
-  noContribuable: string
-  preuveVersement: boolean
-}
+//  interface PensionAlimentaireData {
+//   enfant_id?: number
+//   statut: "verse" | "recu"
+//   montantContribution: string
+//   nom: string
+//   prenom: string
+//   noContribuable: string
+//   preuveVersement: boolean
+// }
 
 interface PriveData {
   dateNaissance: string;
