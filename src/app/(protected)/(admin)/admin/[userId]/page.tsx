@@ -22,7 +22,6 @@ import {
 } from "@/components/ui/table";
 import { toast, Toaster } from "sonner";
 import { Input } from "@/components/ui/input";
-import { getStatusBadge } from "@/utils/getStatusBadge";
 import { useParams, useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
 
@@ -61,7 +60,9 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [activeTab, setActiveTab] = useState("clients");
-  const [clientsFilter, setClientsFilter] = useState<"all" | "pendingDeclarations">("all");
+  const [clientsFilter, setClientsFilter] = useState<
+    "all" | "pendingDeclarations"
+  >("all");
   const params = useParams();
   const userId = Number(params?.userId);
   const router = useRouter();
@@ -80,7 +81,7 @@ export default function Dashboard() {
       const data = await response.json();
       console.log("Demandes reçues:", data);
       setDemandes(data); // stocke les demandes
-      setUsers(data);    // affiche dans le tableau
+      setUsers(data); // affiche dans le tableau
     } catch (error) {
       toast.error(
         "Une erreur est survenue, veuillez vérifier votre connexion internet",
@@ -106,7 +107,7 @@ export default function Dashboard() {
 
       const data = await response.json();
       setClients(data); // stocke les clients
-      setUsers(data);   // affiche dans le tableau
+      setUsers(data); // affiche dans le tableau
     } catch (error) {
       toast.error(
         "Une erreur est survenue, veuillez vérifier votre connexion internet",
@@ -241,60 +242,38 @@ export default function Dashboard() {
     }
   };
 
-  const fetchUsersWithPendingDeclarations = async () => {
-    setLoading(true);
-    try {
-      const response = await fetch(
-        `${API_URL}/users-with-pending-declarations`,
-        fetchConfig
-      );
-      if (!response.ok)
-        throw new Error(`HTTP error! Status: ${response.status}`);
-
-      const json = await response.json();
-      setPendingDeclarations(json.data); // stocke la liste une fois
-    } catch (error) {
-      toast.error(
-        "Erreur lors du chargement des utilisateurs avec déclarations pending",
-        {
-          description: error instanceof Error ? error.message : String(error),
-          icon: <AlertCircle className="h-5 w-5" />,
-        }
-      );
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const searchUsers = async () => {
     if (!searchTerm.trim()) {
       // Si la recherche est vide, on recharge les utilisateurs selon l'onglet actif
       if (activeTab === "demandes") {
-        fetchPendingUsers()
+        fetchPendingUsers();
       } else if (activeTab === "clients") {
-        fetchApprovedUsers()
+        fetchApprovedUsers();
       }
-      return
+      return;
     }
 
-    setLoading(true)
+    setLoading(true);
     try {
-      const statut = activeTab === "demandes" ? "pending" : "approved"
+      const statut = activeTab === "demandes" ? "pending" : "approved";
       const response = await fetch(
-        `${API_URL}/users?query=${encodeURIComponent(searchTerm)}&statut=${statut}`,
-        fetchConfig,
-      )
+        `${API_URL}/users?query=${encodeURIComponent(
+          searchTerm
+        )}&statut=${statut}`,
+        fetchConfig
+      );
 
-      if (!response.ok) throw new Error(`HTTP error! Status: ${response.status}`)
+      if (!response.ok)
+        throw new Error(`HTTP error! Status: ${response.status}`);
 
-      const data = await response.json()
+      const data = await response.json();
       setUsers(data.results || []);
     } catch (error) {
-      console.error("Erreur lors de la recherche des utilisateurs:", error)
+      console.error("Erreur lors de la recherche des utilisateurs:", error);
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   const handleTabChange = (value: string) => {
     setActiveTab(value);
@@ -314,7 +293,7 @@ export default function Dashboard() {
     try {
       setDemandes((prev) => prev.filter((user) => user.user_id !== userId));
       setUsers((prev) => prev.filter((user) => user.user_id !== userId));
-      const token = localStorage.getItem("auth_token"); 
+      const token = localStorage.getItem("auth_token");
 
       // Envoi de la requête au backend
       const response = await fetch(`${API_URL}/users/${userId}`, {
@@ -322,10 +301,9 @@ export default function Dashboard() {
         ...fetchConfig,
         body: JSON.stringify({ statut: newStatus }),
         headers: {
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
-          },
-        
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       if (!response.ok) {
@@ -338,7 +316,11 @@ export default function Dashboard() {
       // Optionnel : ajouter à la liste des clients si besoin
       if (newStatus === "approved") {
         const approvedUser = previousDemandes.find((u) => u.user_id === userId);
-        if (approvedUser) setClients((prev) => [...prev, { ...approvedUser, statut: "approved" }]);
+        if (approvedUser)
+          setClients((prev) => [
+            ...prev,
+            { ...approvedUser, statut: "approved" },
+          ]);
       }
     } catch (error) {
       setDemandes(previousDemandes);
@@ -355,11 +337,12 @@ export default function Dashboard() {
     const fetchAll = async () => {
       setLoading(true);
       try {
-        const [clientsRes, demandesRes, pendingDeclarationsRes] = await Promise.all([
-          fetch(`${API_URL}/users/status/approved`, fetchConfig),
-          fetch(`${API_URL}/users/status/pending`, fetchConfig),
-          fetch(`${API_URL}/users-with-pending-declarations`, fetchConfig),
-        ]);
+        const [clientsRes, demandesRes, pendingDeclarationsRes] =
+          await Promise.all([
+            fetch(`${API_URL}/users/status/approved`, fetchConfig),
+            fetch(`${API_URL}/users/status/pending`, fetchConfig),
+            fetch(`${API_URL}/users-with-pending-declarations`, fetchConfig),
+          ]);
         if (!clientsRes.ok || !demandesRes.ok || !pendingDeclarationsRes.ok)
           throw new Error("Erreur lors du chargement des données");
 
@@ -438,7 +421,7 @@ export default function Dashboard() {
         const res = await fetch(`http://localhost:8000/api/users/${userId}`, {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         if (!res.ok) {
@@ -446,7 +429,7 @@ export default function Dashboard() {
           return;
         }
         setAuthentifie(true);
-      } catch (error) {
+      } catch {
         setAuthentifie(false);
       }
     };
@@ -519,7 +502,11 @@ export default function Dashboard() {
                     </Button>
                     <Button
                       size="sm"
-                      variant={clientsFilter === "pendingDeclarations" ? "default" : "outline"}
+                      variant={
+                        clientsFilter === "pendingDeclarations"
+                          ? "default"
+                          : "outline"
+                      }
                       onClick={() => {
                         setUsers(pendingDeclarations);
                         setClientsFilter("pendingDeclarations");
@@ -552,7 +539,11 @@ export default function Dashboard() {
                           users.map((user) => (
                             <TableRow
                               key={user.user_id}
-                              onClick={() => router.push(`/admin/${userId}/client/${user.user_id}`)}
+                              onClick={() =>
+                                router.push(
+                                  `/admin/${userId}/client/${user.user_id}`
+                                )
+                              }
                               className="cursor-pointer hover:bg-muted transition-colors"
                             >
                               <TableCell className="px-2 py-2">
@@ -561,9 +552,15 @@ export default function Dashboard() {
                                   <RoleBadge role={user.role} />
                                 </div>
                               </TableCell>
-                              <TableCell className="px-2 py-2">{user.email}</TableCell>
-                              <TableCell className="px-2 py-2">{user.numeroTelephone}</TableCell>
-                              <TableCell className="px-2 py-2">{user.localite}</TableCell>
+                              <TableCell className="px-2 py-2">
+                                {user.email}
+                              </TableCell>
+                              <TableCell className="px-2 py-2">
+                                {user.numeroTelephone}
+                              </TableCell>
+                              <TableCell className="px-2 py-2">
+                                {user.localite}
+                              </TableCell>
                             </TableRow>
                           ))
                         ) : (
@@ -627,9 +624,15 @@ export default function Dashboard() {
                                   <RoleBadge role={user.role} />
                                 </div>
                               </TableCell>
-                              <TableCell className="px-2 py-2">{user.email}</TableCell>
-                              <TableCell className="px-2 py-2">{user.numeroTelephone}</TableCell>
-                              <TableCell className="px-2 py-2">{user.localite}</TableCell>
+                              <TableCell className="px-2 py-2">
+                                {user.email}
+                              </TableCell>
+                              <TableCell className="px-2 py-2">
+                                {user.numeroTelephone}
+                              </TableCell>
+                              <TableCell className="px-2 py-2">
+                                {user.localite}
+                              </TableCell>
                               <TableCell className="text-right px-2 py-2">
                                 <div className="flex flex-col gap-2 min-w-[120px] sm:flex-row sm:justify-end sm:items-center">
                                   <Button
@@ -637,7 +640,10 @@ export default function Dashboard() {
                                     size="sm"
                                     className="cursor-pointer bg-green-50 text-green-700 hover:bg-green-100 border-green-200 w-full sm:w-auto"
                                     onClick={() => {
-                                      updateUserStatus(user.user_id, "approved");
+                                      updateUserStatus(
+                                        user.user_id,
+                                        "approved"
+                                      );
                                       approveUser(user.user_id, user.role);
                                     }}
                                   >
@@ -647,7 +653,9 @@ export default function Dashboard() {
                                     variant="outline"
                                     size="sm"
                                     className="cursor-pointer bg-red-50 text-red-700 hover:bg-red-100 border-red-200 w-full sm:w-auto"
-                                    onClick={() => deleteUser(user.user_id, user.nom)}
+                                    onClick={() =>
+                                      deleteUser(user.user_id, user.nom)
+                                    }
                                   >
                                     Refuser
                                   </Button>

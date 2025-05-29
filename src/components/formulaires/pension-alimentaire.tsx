@@ -5,7 +5,6 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent } from "@/components/ui/card"
-import axios from "axios"
 
 export interface PensionAlimentaireData {
   enfant_id?: number

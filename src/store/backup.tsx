@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import type React from "react"
@@ -13,14 +16,11 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Loader2 } from "lucide-react"
 import axios from "axios"
-import ProtectedPrive from "@/components/routes/ProtectedRouteApprovedPrive"
 import { useParams } from "next/navigation"
 import AutrePersonne from "@/components/formulaires/autrePersonne"
 import Revenu from "@/components/formulaires/revenu"
-import Independants from "@/components/formulaires/independant"
 import IndemnitesAssurance from "@/components/formulaires/assurances"
 import Rentier from "@/components/formulaires/rentier"
-import AutresRevenus from "@/components/formulaires/autresRevenus"
 import Banques from "@/components/formulaires/banques"
 import Titres from "@/components/formulaires/titres"
 import Immobiliers from "@/components/formulaires/immobiliers"
@@ -33,6 +33,16 @@ import Conjoint from "@/components/formulaires/conjoint"
 import { useYearStore } from "@/store/useYear"
 
 // Interfaces pour les différents types de données
+import type { EnfantsData } from "@/components/formulaires/enfants"
+import type { PensionAlimentaireData as ImportedPensionAlimentaireData } from "@/components/formulaires/pension-alimentaire"
+
+// Ajout de la propriété pension_id pour éviter l'erreur TypeScript
+export interface PensionAlimentaireData extends ImportedPensionAlimentaireData {
+  pension_id?: number
+  preuveVersement?: boolean | string
+  enfant_id?: number
+}
+
 interface ImmobiliersData {
   immobiliers: Array<{
     immobilier_id?:number
@@ -108,14 +118,10 @@ interface AutresRevenusData {
 }
 
 interface BanquesData {
-  comptes: Array<{
-    // Définir la structure d'un compte bancaire
-    // Par exemple:
-    banque: string
-    iban: string
-    solde: string
-    // ... autres propriétés
-  }>
+  banque_id?: number
+  prive_id?: number
+  nb_compte: number
+  comptes?: any[] // Ajouté pour supporter la propriété 'comptes'
 }
 
 interface TitresData {
@@ -187,7 +193,7 @@ interface ConjointData {
   dateNaissance: string
   nationalite: string
   professionExercee: string
-  contributionReligieuse: string // Changé de type union à string
+  contributionReligieuse: "Église Catholique Chrétienne" | "Église Catholique Romaine" | "Église Protestante" | "Aucune organisation religieuse"
 }
 
 // Pour l'interface Enfant, rendons toutes les propriétés optionnelles requises
@@ -233,17 +239,6 @@ interface Enfant {
   _hasPensionAlimentaire?: boolean
 }
 
-interface PensionAlimentaireData {
-  pension_id?:number
-  enfant_id?: number
-  statut: "verse" | "recu"
-  montantContribution: string
-  nom: string
-  prenom: string
-  noContribuable: string
-  preuveVersement: boolean
-}
-
 interface FormDataType {
   infoBase: {
     dateNaissance: string
@@ -272,11 +267,6 @@ interface FormulaireDeclarationProps {
   priveId?: number | null
 }
 
-interface EnfantsData {
-  enfants: Enfant[]
-  pensionsAlimentaires: PensionAlimentaireData[]
-}
-
 interface AutrePersonneData {
   personnesACharge: Array<{
     autre_personne_id?:number
@@ -293,7 +283,7 @@ interface AutrePersonneData {
   }>
 }
 
-export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null }: FormulaireDeclarationProps) {
+export default function FormulaireDeclaration({ priveId = null }: FormulaireDeclarationProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isDataLoading, setIsDataLoading] = useState(!!priveId)
@@ -347,7 +337,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
   >([])
 
   // État pour le conjoint
-  const [conjointInfo, setConjointInfo] = useState({
+  const [conjointInfo] = useState({
     nom: "",
     prenom: "",
     dateNaissance: "",
@@ -853,6 +843,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null 
 
                       if (banquesResponse.data && banquesResponse.data.length > 0) {
                         setBanquesData({
+                          nb_compte: banquesResponse.data.length,
                           comptes: banquesResponse.data,
                         })
                       }
@@ -1336,7 +1327,7 @@ if (existingResponse) {
   declarationId = existingResponse.data.declaration_id;
   console.log(`Une déclaration pour ${selectedYear} existe déjà avec ID ${declarationId}.`);
 } else {
-let currentYear = new Date().getFullYear.toString()
+const currentYear = new Date().getFullYear.toString()
 
   // Créer la déclaration principale
   const declarationData = {
@@ -1987,7 +1978,6 @@ let currentYear = new Date().getFullYear.toString()
   // Afficher un écran de chargement pendant la récupération des données
   if (isDataLoading) {
     return (
-      <ProtectedPrive>
         <div className="container max-w-3xl py-8">
           <Card>
             <CardHeader>
@@ -1999,13 +1989,11 @@ let currentYear = new Date().getFullYear.toString()
             </CardContent>
           </Card>
         </div>
-      </ProtectedPrive>
     )
   }
 
   // Rendu de l'étape 1: Informations de base
   const renderStep1 = () => (
-    <ProtectedPrive>
       <div className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor="dateNaissance">Date de naissance</Label>
@@ -2188,7 +2176,7 @@ let currentYear = new Date().getFullYear.toString()
               onCheckedChange={(checked) => handleSectionChange("fo_titres", checked as boolean)}
             />
             <Label htmlFor="fo_titres" className="font-medium">
-              Possedez-vous des titres ou d'autres éléments de fortune ?
+              Possedez-vous des titres ou d&apos;autres éléments de fortune ?
             </Label>
           </div>
 
@@ -2199,7 +2187,7 @@ let currentYear = new Date().getFullYear.toString()
               onCheckedChange={(checked) => handleSectionChange("fo_autreInformations", checked as boolean)}
             />
             <Label htmlFor="fo_autreInformations" className="font-medium">
-              Souhaitez-vous communiquer d'autres informations (dons, 3e pilier, cotisations AVS, handicap, etc.) ?
+              Souhaitez-vous communiquer d&apos;autres informations (dons, 3e pilier, cotisations AVS, handicap, etc.) ?
             </Label>
           </div>
         </div>
@@ -2208,7 +2196,6 @@ let currentYear = new Date().getFullYear.toString()
           Continuer
         </Button>
       </div>
-    </ProtectedPrive>
   )
 
   // Rendu de l'étape 2: Informations du conjoint (si marié ou pacsé)
@@ -2217,23 +2204,23 @@ let currentYear = new Date().getFullYear.toString()
       // Si pas marié ni pacsé, passer directement à l'étape suivante
       setTimeout(() => nextStep(), 0)
       return (
-        <ProtectedPrive>
+        
           <div className="flex justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
-        </ProtectedPrive>
+        
       )
     }
 
     return (
-      <ProtectedPrive>
+      
         <Conjoint
           data={conjointData}
           onUpdate={(newData) => setConjointData(newData)}
           onNext={nextStep}
           onPrev={prevStep}
         />
-      </ProtectedPrive>
+      
     )
   }
 
@@ -2243,11 +2230,11 @@ let currentYear = new Date().getFullYear.toString()
       // Si pas d'enfants, passer directement à l'étape suivante
       setTimeout(() => nextStep(), 0)
       return (
-        <ProtectedPrive>
+        
           <div className="flex justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
-        </ProtectedPrive>
+        
       )
     }
 
@@ -2302,151 +2289,151 @@ let currentYear = new Date().getFullYear.toString()
     }
 
     return (
-      <ProtectedPrive>
+      
         <Enfants
           data={enfantsData}
           onUpdate={(newData) => setEnfantsData(newData)}
           onNext={nextStep}
           onPrev={prevStep}
         />
-      </ProtectedPrive>
+      
     )
   }
   // Rendu de l'étape 4: Autres personnes à charge
 
   const renderStep4 = () => (
-    <ProtectedPrive>
+    
       <AutrePersonne
         data={autrePersonneData}
         onUpdate={(newData) => setAutrePersonneData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
+    
   )
 
   // Rendu de l'étape 5: Revenu
   const renderStep5 = () => (
-    <ProtectedPrive>
+    
       <Revenu data={revenuData} onUpdate={(newData) => setRevenuData(newData)} onNext={nextStep} onPrev={prevStep} />
-    </ProtectedPrive>
+    
   )
 
-  // Rendu de l'étape 6: Indépendant
-  const renderStep6 = () => (
-    <ProtectedPrive>
-      <Independants
-        data={independantsData}
-        onUpdate={(newData) => setIndependantsData(newData)}
-        onNext={nextStep}
-        onPrev={prevStep}
-      />
-    </ProtectedPrive>
-  )
+  // // Rendu de l'étape 6: Indépendant
+  // const renderStep6 = () => (
+    
+  //     <Independants
+  //       data={independantsData}
+  //       onUpdate={(newData) => setIndependantsData(newData)}
+  //       onNext={nextStep}
+  //       onPrev={prevStep}
+  //     />
+    
+  // )
 
   // Rendu de l'étape 7: Indemnités assurance
   const renderStep7 = () => (
-    <ProtectedPrive>
+    
       <IndemnitesAssurance
         data={indemnitesAssuranceData}
         onUpdate={(newData) => setIndemnitesAssuranceData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
+    
   )
 
   // Rendu de l'étape 8: Rentier
   const renderStep8 = () => (
-    <ProtectedPrive>
+    
       <Rentier data={rentierData} onUpdate={(newData) => setRentierData(newData)} onNext={nextStep} onPrev={prevStep} />
-    </ProtectedPrive>
+    
   )
 
-  // Rendu de l'étape 9: Autres revenus
-  const renderStep9 = () => (
-    <ProtectedPrive>
-      <AutresRevenus
-        data={autresRevenusData}
-        onUpdate={(newData) => setAutresRevenusData(newData)}
-        onNext={nextStep}
-        onPrev={prevStep}
-      />
-    </ProtectedPrive>
-  )
+  // // Rendu de l'étape 9: Autres revenus
+  // const renderStep9 = () => (
+    
+  //     <AutresRevenus
+  //       data={autresRevenusData}
+  //       onUpdate={(newData) => setAutresRevenusData(newData)}
+  //       onNext={nextStep}
+  //       onPrev={prevStep}
+  //     />
+    
+  // )
 
   // Rendu de l'étape 10: Banques
   const renderStep10 = () => (
-    <ProtectedPrive>
+    
       <Banques data={banquesData} onUpdate={(newData) => setBanquesData(newData)} onNext={nextStep} onPrev={prevStep} />
-    </ProtectedPrive>
+    
   )
 
   // Rendu de l'étape 11: Titres
   const renderStep11 = () => (
-    <ProtectedPrive>
+    
       <Titres data={titresData} onUpdate={(newData) => setTitresData(newData)} onNext={nextStep} onPrev={prevStep} />
-    </ProtectedPrive>
+    
   )
 
   // Rendu de l'étape 12: Immobiliers
   const renderStep12 = () => (
-    <ProtectedPrive>
+    
       <Immobiliers
         data={immobiliersData}
         onUpdate={(newData) => setImmobiliersData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
+    
   )
 
   // Rendu de l'étape 13: Dettes
   const renderStep13 = () => (
-    <ProtectedPrive>
+    
       <Dettes data={dettesData} onUpdate={(newData) => setDettesData(newData)} onNext={nextStep} onPrev={prevStep} />
-    </ProtectedPrive>
+    
   )
 
   // Rendu de l'étape 14: Assurances
   const renderStep14 = () => (
-    <ProtectedPrive>
+    
       <Assurances
         data={assurancesData}
         onUpdate={(newData) => setAssurancesData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
+    
   )
 
   // Rendu de l'étape 15: Autres déductions
   const renderStep15 = () => (
-    <ProtectedPrive>
+    
       <AutresDeductions
         data={autresDeductionsData}
         onUpdate={(newData) => setAutresDeductionsData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
+    
   )
 
   // Rendu de l'étape 16: Autres informations
   const renderStep16 = () => (
-    <ProtectedPrive>
+    
       <AutresInformations
         data={autresInformationsData}
         onUpdate={(newData) => setAutresInformationsData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
+    
   )
 
   // Rendu de l'étape 18: Récapitulatif et confirmation
   const renderStep18 = () => (
-    <ProtectedPrive>
+    
       <div className="space-y-6">
         <h3 className="text-lg font-medium">Récapitulatif de votre déclaration</h3>
 
@@ -2621,7 +2608,7 @@ let currentYear = new Date().getFullYear.toString()
           </Button>
         </div>
       </div>
-    </ProtectedPrive>
+    
   )
 
   // Rendu du formulaire en fonction de l'étape actuelle
@@ -2638,13 +2625,13 @@ let currentYear = new Date().getFullYear.toString()
       case 5:
         return renderStep5()
       case 6:
-        return renderStep6()
+        // return renderStep6()
       case 7:
         return renderStep7()
       case 8:
         return renderStep8()
       case 9:
-        return renderStep9()
+        // return renderStep9()
       case 10:
         return renderStep10()
       case 11:
@@ -2667,7 +2654,7 @@ let currentYear = new Date().getFullYear.toString()
   }
 
   return (
-    <ProtectedPrive>
+    
       <div className="container max-w-3xl py-8">
         <Card>
           <CardHeader>
@@ -2706,6 +2693,6 @@ let currentYear = new Date().getFullYear.toString()
           </CardContent>
         </Card>
       </div>
-    </ProtectedPrive>
+    
   )
 }
