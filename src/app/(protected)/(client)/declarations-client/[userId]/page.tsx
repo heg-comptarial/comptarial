@@ -15,7 +15,7 @@ import YearSelector from "@/components/protected/declarations-client/features/se
 import RubriqueAccordionItem from "@/components/protected/declarations-client/features/documents/RubriqueAccordionItem";
 import dynamic from "next/dynamic";
 import router from "next/router";
-import { useYearStore } from '@/store/useYear';
+import { useYearStore } from "@/store/useYear";
 
 export default function DeclarationsClientPage() {
   //const [selectedYear, setSelectedYear] = useState<string | null>(null);
@@ -24,32 +24,35 @@ export default function DeclarationsClientPage() {
   const [declarationYears, setDeclarationYears] = useState<string[]>([]);
   const [loading, setLoading] = useState(true);
   const [toastShown, setToastShown] = useState(false);
-  const [selectedFiles, setSelectedFiles] = useState<{ file: File; rubriqueId: number }[]>([]);
+  const [selectedFiles, setSelectedFiles] = useState<
+    { file: File; rubriqueId: number }[]
+  >([]);
   const [priveId, setPriveId] = useState<number | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
-  const [userName, setUserName] = useState<string>("")
+  const [userName, setUserName] = useState<string>("");
 
   const params = useParams();
   const searchParams = useSearchParams();
   const userId = Number(params?.userId);
   const typeFromUrl = searchParams.get("type");
   const [role, setRole] = useState<"prive" | "entreprise" | null>(null);
-  const [showForm, setShowForm] = useState(false);    
+  const [showForm, setShowForm] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const selectedYear = useYearStore((state) => state.selectedYear);
   const setSelectedYear = useYearStore((state) => state.setSelectedYear);
 
-
-
-  const FormulaireDeclaration = dynamic(() => import("../../formulaire/[userId]/page"), {
-    ssr: false,
-    loading: () => (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    ),
-  });
+  const FormulaireDeclaration = dynamic(
+    () => import("../../formulaire/[userId]/page"),
+    {
+      ssr: false,
+      loading: () => (
+        <div className="flex justify-center items-center min-h-[400px]">
+          <Loader2 className="h-8 w-8 animate-spin" />
+        </div>
+      ),
+    }
+  );
 
   useEffect(() => {
     const fetchDeclarations = async () => {
@@ -63,7 +66,7 @@ export default function DeclarationsClientPage() {
         setRole(userRole);
 
         // Stocker le nom de l'utilisateur pour les notifications
-        setUserName(data.nom || "Utilisateur")
+        setUserName(data.nom || "Utilisateur");
 
         const filteredDeclarations =
           userRole === "entreprise" && typeFromUrl
@@ -129,28 +132,28 @@ export default function DeclarationsClientPage() {
         const prives: Prive[] = await priveRes.json();
         const userPrive = prives.find((p) => p.user_id === userId);
 
-        console.log(data.declaration_id)
+        console.log(data.declaration_id);
 
-for (const [field, value] of Object.entries(userPrive || {})) {
-  if (
-    field.startsWith("fo_") &&
-    value === true &&
-    foFields[field as keyof typeof foFields]
-  ) {
-    const rubriqueInfo = foFields[field as keyof typeof foFields];
-    const titre = rubriqueInfo.titre.trim().toLowerCase();
-    if (existingTitles.has(titre)) continue;
-    const createRes = await fetch(
-      `http://localhost:8000/api/rubriques?declaration_id=${data.declaration_id}}`,
-      {
-        method: "GET",
-        headers: { "Content-Type": "application/json" },
-      }
-    );
+        for (const [field, value] of Object.entries(userPrive || {})) {
+          if (
+            field.startsWith("fo_") &&
+            value === true &&
+            foFields[field as keyof typeof foFields]
+          ) {
+            const rubriqueInfo = foFields[field as keyof typeof foFields];
+            const titre = rubriqueInfo.titre.trim().toLowerCase();
+            if (existingTitles.has(titre)) continue;
+            const createRes = await fetch(
+              `http://localhost:8000/api/rubriques?declaration_id=${data.declaration_id}}`,
+              {
+                method: "GET",
+                headers: { "Content-Type": "application/json" },
+              }
+            );
 
-    if (createRes.ok) createdRubriques.push(await createRes.json());
-  }
-}
+            if (createRes.ok) createdRubriques.push(await createRes.json());
+          }
+        }
 
         const finalRes = await fetch(
           `http://localhost:8000/api/users/${userId}/declarations/${data.declaration_id}`
@@ -215,11 +218,10 @@ for (const [field, value] of Object.entries(userPrive || {})) {
     fetchPriveId();
   }, [userId, router]);
 
-
-const handleYearChange = (year: number) => {
-  setSelectedYear(year.toString());
-  setShowForm(false); // Ferme le formulaire lors du changement
-};
+  const handleYearChange = (year: number) => {
+    setSelectedYear(year.toString());
+    setShowForm(false); // Ferme le formulaire lors du changement
+  };
   const handleFilesSelected = (rubriqueId: number, files: File[]) => {
     setSelectedFiles((prev) => [
       ...prev,
@@ -249,11 +251,11 @@ const handleYearChange = (year: number) => {
     }
   };
   const handleCloseForm = () => {
-      console.log("handleCloseForm appelé");
+    console.log("handleCloseForm appelé");
 
-  refreshDeclaration(); // recharge les données si nécessaire
-  setShowForm(false);   // referme le formulaire
-};
+    refreshDeclaration(); // recharge les données si nécessaire
+    setShowForm(false); // referme le formulaire
+  };
 
   const uploadAndSaveDocuments = async () => {
     if (selectedFiles.length === 0)
@@ -302,30 +304,38 @@ const handleYearChange = (year: number) => {
 
       const savedDocuments = await saveRes.json();
 
-      
       // Envoyer une notification pour chaque document
       if (savedDocuments && savedDocuments.documents) {
         for (const doc of savedDocuments.documents) {
           try {
             // Utiliser directement l'API pour envoyer la notification
-            const notifRes = await fetch("http://localhost:8000/api/notifications/admin", {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                user_id: userId,
-                contenu: `${userName} a téléchargé un nouveau document: ${doc.nom}`,
-                resource_type: "document",
-                resource_id: doc.doc_id,
-              }),
-            })
+            const notifRes = await fetch(
+              "http://localhost:8000/api/notifications/admin",
+              {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  user_id: userId,
+                  contenu: `${userName} a téléchargé un nouveau document: ${doc.nom}`,
+                  resource_type: "document",
+                  resource_id: doc.doc_id,
+                }),
+              }
+            );
 
             if (!notifRes.ok) {
-              console.error("Erreur lors de l'envoi de la notification:", await notifRes.text())
+              console.error(
+                "Erreur lors de l'envoi de la notification:",
+                await notifRes.text()
+              );
             } else {
-              console.log("Notification envoyée avec succès:", await notifRes.json())
+              console.log(
+                "Notification envoyée avec succès:",
+                await notifRes.json()
+              );
             }
           } catch (error) {
-            console.error("Erreur lors de l'envoi de la notification:", error)
+            console.error("Erreur lors de l'envoi de la notification:", error);
           }
         }
       }
@@ -377,7 +387,7 @@ const handleYearChange = (year: number) => {
   return (
     <ProtectedRoutePrive>
       <Toaster position="bottom-right" richColors closeButton />
-      <div className="px-10">
+      <div className="px-4 sm:px-6 md:px-10">
         <h2 className="text-lg font-semibold px-2">Année de la déclaration</h2>
         <YearSelector
           years={declarationYears}
@@ -387,42 +397,49 @@ const handleYearChange = (year: number) => {
         />
       </div>
 
-      <div className="p-10 pt-5">
-<div className="flex justify-between items-center mb-6">
-  <h1 className="text-3xl font-bold">{declaration?.titre}</h1>
-  <div className="flex items-center gap-2">
-    {declaration?.statut && getStatusBadge(declaration.statut)}
-{declaration?.statut === "pending" && (
-  <Button
-    variant="outline"
-    size="sm"
-    onClick={() => setShowForm(!showForm)}
-  >
-    {showForm ? "Fermer" : "Modifier les informations du formulaire"}
-  </Button>
-)}
-  </div>
-</div>
-{showForm && declaration?.statut === "pending" && (
-  <div className="my-6">
-    <FormulaireDeclaration
-      mode="edit"
-      priveId={priveId}
-      onSubmitSuccess={async () => {
-        try {
-          await refreshDeclaration()
-          setShowForm(false)
-          toast.success("Formulaire soumis avec succès")
-          return true
-        } catch (error) {
-          console.error("Erreur lors de la fermeture du formulaire:", error)
-          return false
-        }
-      }}
-          />
+      <div className="px-4 pt-5 sm:px-6 md:px-10">
+        <div className="flex flex-wrap justify-between items-start gap-4 mb-6">
+          <h1 className="text-2xl sm:text-3xl font-bold">
+            {declaration?.titre}
+          </h1>
+          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
+            {declaration?.statut && getStatusBadge(declaration.statut)}
+            {declaration?.statut === "pending" && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setShowForm(!showForm)}
+                className="w-full sm:w-auto"
+              >
+                {showForm
+                  ? "Fermer"
+                  : "Modifier les informations du formulaire"}
+              </Button>
+            )}
+          </div>
         </div>
-      )}
-
+        {showForm && declaration?.statut === "pending" && (
+          <div className="my-6">
+            <FormulaireDeclaration
+              mode="edit"
+              priveId={priveId}
+              onSubmitSuccess={async () => {
+                try {
+                  await refreshDeclaration();
+                  setShowForm(false);
+                  toast.success("Formulaire soumis avec succès");
+                  return true;
+                } catch (error) {
+                  console.error(
+                    "Erreur lors de la fermeture du formulaire:",
+                    error
+                  );
+                  return false;
+                }
+              }}
+            />
+          </div>
+        )}
 
         {/* Affichage du montant des impôts */}
         {declaration?.impots && (
@@ -433,27 +450,29 @@ const handleYearChange = (year: number) => {
         )}
 
         {declaration?.rubriques?.length ? (
-          <Accordion
-            type="multiple"
-            defaultValue={declaration.rubriques
-              .filter((rubrique) => (rubrique.documents ?? []).length > 0)
-              .map((rubrique) => `rubrique-${rubrique.rubrique_id}`)}
-            className="w-full"
-          >
-            {declaration.rubriques.map((rubrique) => (
-              <RubriqueAccordionItem
-                key={rubrique.rubrique_id}
-                rubrique={rubrique}
-                declarationStatus={declaration?.statut ?? "pending"}
-                uploadedRubriques={uploadedRubriques}
-                onFilesSelected={handleFilesSelected}
-                onFileRemoved={handleFileRemoved}
-                onUploadCompleted={refreshDeclaration}
-                userId={userId}
-                year={declaration.annee}
-              />
-            ))}
-          </Accordion>
+          <div className="overflow-x-auto">
+            <Accordion
+              type="multiple"
+              defaultValue={declaration.rubriques
+                .filter((rubrique) => (rubrique.documents ?? []).length > 0)
+                .map((rubrique) => `rubrique-${rubrique.rubrique_id}`)}
+              className="w-full"
+            >
+              {declaration.rubriques.map((rubrique) => (
+                <RubriqueAccordionItem
+                  key={rubrique.rubrique_id}
+                  rubrique={rubrique}
+                  declarationStatus={declaration?.statut ?? "pending"}
+                  uploadedRubriques={uploadedRubriques}
+                  onFilesSelected={handleFilesSelected}
+                  onFileRemoved={handleFileRemoved}
+                  onUploadCompleted={refreshDeclaration}
+                  userId={userId}
+                  year={declaration.annee}
+                />
+              ))}
+            </Accordion>
+          </div>
         ) : (
           <p className="text-center text-gray-500 py-8">
             Aucune rubrique trouvée pour cette déclaration
@@ -461,7 +480,7 @@ const handleYearChange = (year: number) => {
         )}
 
         {selectedFiles.length > 0 && (
-          <div className="fixed bottom-8 right-8 flex items-center gap-2 bg-white p-4 rounded-lg shadow-lg border border-gray-200">
+          <div className="fixed bottom-4 left-4 right-4 sm:left-auto sm:right-8 flex flex-wrap sm:flex-nowrap items-center justify-between gap-2 bg-white p-4 rounded-lg shadow-lg border border-gray-200 z-50">
             <span className="text-sm font-medium">
               {selectedFiles.length} document
               {selectedFiles.length > 1 ? "s" : ""} prêt

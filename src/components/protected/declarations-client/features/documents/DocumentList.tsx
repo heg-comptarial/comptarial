@@ -68,7 +68,7 @@ const DocumentList = ({
       ref={containerRef}
     >
       <div className="p-4 border-b border-gray-100 bg-gray-50">
-        <div className="flex justify-between items-center">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
           <h3 className="text-lg font-medium text-gray-800">
             Documents pour {rubriqueName}
           </h3>
@@ -77,7 +77,7 @@ const DocumentList = ({
               variant="outline"
               size="sm"
               onClick={() => setShowUploader((prev) => !prev)}
-              className="bg-white hover:bg-gray-50"
+              className="w-full sm:w-auto bg-white hover:bg-gray-50"
             >
               <Plus className="h-4 w-4 mr-2" /> Ajouter des documents
             </Button>
