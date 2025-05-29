@@ -98,6 +98,7 @@ interface Document {
   statut: "pending" | "rejected" | "approved";
   sous_rubrique?: string | null;
   dateCreation: string;
+  rubrique?: Rubrique; // Relation hasOne
   // Propriétés supplémentaires pour la compatibilité avec le code existant
   chemin?: string; // Alias pour cheminFichier
   dateUpload?: string; // Alias pour dateCreation
@@ -112,6 +113,7 @@ interface Rubrique {
   rubrique_id: number;
   declaration_id: number;
   titre: string;
+  declaration?: Declaration;
   // Propriétés supplémentaires pour la compatibilité avec le code existant
   id?: number; // Alias pour rubrique_id
   nom?: string; // Alias pour titre
@@ -224,13 +226,12 @@ export default function ClientDetail() {
       );
 
       if (response.status === 200) {
-
         // Créer une notification pour le client
         await axios.post(`${API_URL}/notifications`, {
           user_id: userDetails?.user_id,
           contenu: `Le montant des impôts de votre déclaration a été mis à jour: ${newImpots}`,
         });
-        
+
         toast.success("Montant des impôts mis à jour avec succès !");
         await refreshUserData(); // Rafraîchir les données utilisateur
       } else {
@@ -732,17 +733,16 @@ export default function ClientDetail() {
     setIsEditingRubrique(true);
   };
 
-  const handleDownload = async (doc: Document, rubriqueName: string) => {
+  const handleDownload = async (doc: Document, rubrique: Rubrique) => {
     try {
       const query = new URLSearchParams({
         fileName: doc.nom,
         year:
-          doc.annee?.toString() ??
-          new Date(doc.dateCreation || doc.dateUpload || "")
-            .getFullYear()
-            .toString(),
+          rubrique.declaration?.annee?.toString() ??
+          activeDeclaration?.annee?.toString() ??
+          "",
         userId: userDetails?.user_id?.toString() || "",
-        rubriqueName: rubriqueName || "",
+        rubriqueName: rubrique.titre || rubrique.nom || "",
       });
 
       console.log("/api/download?" + query.toString());
@@ -1040,7 +1040,7 @@ export default function ClientDetail() {
       await axios.post(`${API_URL}/notifications/declaration-status`, {
         declaration_id: pendingDeclarationAction.declarationId,
         status: "approved",
-        message: "Votre déclaration et tous ses documents ont été validés"
+        message: "Votre déclaration et tous ses documents ont été validés",
       });
 
       toast.success("Déclaration et documents validés avec succès");
@@ -1723,7 +1723,7 @@ export default function ClientDetail() {
                                                           onClick={() =>
                                                             handleDownload(
                                                               doc,
-                                                              rubrique.titre
+                                                              rubrique
                                                             )
                                                           }
                                                         >
@@ -1975,12 +1975,15 @@ export default function ClientDetail() {
                                     <Button
                                       variant="ghost"
                                       size="icon"
-                                      onClick={() =>
-                                        handleDownload(
-                                          doc,
-                                          doc.rubriqueNom || ""
-                                        )
-                                      }
+                                      onClick={() => {
+                                        if (doc.rubrique) {
+                                          handleDownload(doc, doc.rubrique);
+                                        } else {
+                                          toast.error(
+                                            "Rubrique introuvable pour ce document"
+                                          );
+                                        }
+                                      }}
                                     >
                                       <Download className="h-4 w-4" />
                                     </Button>
