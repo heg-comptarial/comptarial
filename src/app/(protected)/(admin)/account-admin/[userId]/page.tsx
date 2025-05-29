@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -26,43 +26,42 @@ export default function AccountPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [authentifie, setAuthentifie] = useState<boolean | null>(null);
 
-  useEffect(() => {
-    const fetchUser = async () => {
-      const token = localStorage.getItem("auth_token");
-      if (!token) {
+  const fetchUser = useCallback(async () => {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      setAuthentifie(false);
+      return;
+    }
+
+    try {
+      const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!res.ok) {
         setAuthentifie(false);
         return;
       }
+      const data = await res.json();
+      setUserData(data);
+      setEditedData(data);
+      setAuthentifie(true);
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des données utilisateur :",
+        error
+      );
+      setAuthentifie(false);
+    }
+  }, [userId]);
 
-      try {
-        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        if (!res.ok) {
-          setAuthentifie(false);
-          return;
-        }
-        const data = await res.json();
-        const { ...filtered } = data;
-        setUserData(filtered);
-        setEditedData(filtered);
-        setAuthentifie(true);
-      } catch (error) {
-        console.error(
-          "Erreur lors de la récupération des données utilisateur :",
-          error
-        );
-        setAuthentifie(false);
-      }
-    };
-
+  useEffect(() => {
     if (userId) {
       fetchUser();
     }
-  }, [userId]);
+  }, [userId, fetchUser]);
 
   // Bloc d'authentification à placer juste avant le rendu
   if (authentifie === null) {
@@ -77,11 +76,18 @@ export default function AccountPage() {
     return notFound();
   }
 
-  const handleInputChange = (field: string, value: any) => {
-    setEditedData((prev: any) => ({
-      ...prev,
-      [field]: value,
-    }));
+  const handleInputChange = <K extends keyof Utilisateur>(
+    field: K,
+    value: Utilisateur[K]
+  ) => {
+    setEditedData((prev) =>
+      prev
+        ? {
+            ...prev,
+            [field]: value,
+          }
+        : null
+    );
   };
 
   const handleSectionUpdate = async () => {
@@ -130,7 +136,9 @@ export default function AccountPage() {
         "Toutes les modifications ont été enregistrées avec succès !"
       );
       setIsEditing(false);
-      router.refresh();
+
+      await fetchUser();
+      window.location.reload();
     } catch (error) {
       console.error(
         "Erreur lors de l'enregistrement des modifications :",
@@ -259,7 +267,7 @@ export default function AccountPage() {
           <Input
             id={id}
             value={value || ""}
-            onChange={(e) => handleInputChange(id, e.target.value)}
+            onChange={(e) => handleInputChange(id as keyof Utilisateur, e.target.value)}
           />
         )}
       </div>
