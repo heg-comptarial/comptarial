@@ -107,18 +107,11 @@ Pour exécuter les tests unitaires Laravel :
 php artisan test
 ```
 
-Des tests Cypress côté frontend peuvent être ajoutés dans les prochaines versions.
-
----
-
-## 🚗 Déploiement
+Les tests frontend peuvent être exécutés avec :
 
 ```bash
-php artisan migrate --force
-php artisan config:cache
+npx vitest 
 ```
-
-Configurez les fichiers `.env` de production et assurez-vous de sécuriser votre environnement (HTTPS, firewall, etc.).
 
 ---
 
