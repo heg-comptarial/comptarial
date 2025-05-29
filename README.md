@@ -1,49 +1,137 @@
-# <p align="center">Comptarial</p>
+# Comptarial
 
-Comptarial est une plateforme de gestion d'échange de documents pour la fiduciaire Comptarial, permettant aux clients et aux fiduciaires d'échanger des documents en toute sécurité. Ce projet, développé dans le cadre du cours 64-56 – Projet de développement sur mandat à la Haute école de gestion de Genève (HEG), vise à créer une interface fluide et intuitive pour faciliter l'interaction entre les utilisateurs et la fiduciaire.
+## ✨ Présentation du projet
 
-Les membres de l'équipe de développement sont :
+Comptarial est une plateforme numérique conçue pour permettre un échange sécurisé de documents entre les fiduciaires et leurs clients. Développée dans le cadre du module 64-56 à la Haute école de gestion de Genève (HEG), cette application vise à moderniser les interactions entre les collaborateurs d'une fiduciaire et ses clients, avec une interface intuitive et une sécurité renforcée.
 
-PEREIRA Christopher,
-MAHMOUD Khloud,
-KAHRIMANOVIC Hakija,
-UZUN Boran
+---
 
-## Getting started
+## ⚙️ Prérequis
 
-First, install the dependencies.
+- PHP >= 8.2
+- Composer >= 2.x
+- MySQL ou autre SGBD compatible
+- Node.js >= 18.x
+- npm >= 9.x
+
+---
+
+## ⚡ Installation du projet
+
+Cloner le dépôt GitHub et suivre les instructions ci-dessous pour configurer le backend (Laravel) et le frontend (Next.js).
 
 ```bash
-npm install
+git clone https://github.com/heg-comptarial/comptarial
+cd comptarial
 ```
 
-Then, run the developpement server
+### 🚀 Installation du frontend (Next.js)
 
 ```bash
+# 1. Installer les dépendances npm
+npm install
+
+# 2. Lancer le serveur de développement
 npm run dev
 ```
 
+### 📅 Configuration .env
+
+Référez-vous au fichier `.env.example` fourni pour configurer l'URL de l'API et les autres variables nécessaires.
+
+---
+
+### 🔧 Installation du backend (Laravel)
+
 ```bash
+# 1. Accéder au dossier backend
 cd backend
+
+# 2. Copier et configurer le fichier .env
+cp .env.example .env
+
+# 3. Installer les dépendances PHP
 composer install
-php artisan api:install (au cas les routes /api marchent pas, faire cette commande)
-php artisan migrate:refresh --seed  
+
+# 5. Lancer les migrations et éventuellement les seeders
+php artisan migrate --seed
+
+# 6. Démarrer le serveur de développement
+php artisan serve
 ```
 
-## Tech Stack
+### 🔐 Configuration .env
 
-- [React](https://reactjs.org/)
-- [Next.js](https://nextjs.org/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Laravel](https://laravel.com/)
+Référez-vous au fichier `.env.example` fourni pour renseigner les variables d'environnement nécessaires à l'exécution du projet.
 
-## Vitest
+---
 
-- npm install react-day-picker@latest            
-- npm install -D vite @vitejs/plugin-react 
-- npm install -D vitest happy-dom @testing-library/react
-- npm install --save-dev @testing-library/jest-dom   
-- npx vitest  (lancer les tests)
-- npm list @vitejs/plugin-react (check les plugins)
+## 🌐 Fonctionnalités principales
+
+- 🔐 Authentification sécurisée avec rôles
+- 👥 Gestion des utilisateurs et des clients
+- 📂 Téléversement et téléchargement sécurisés de fichiers
+- 📢 Système de notifications et d'envoi de mail
+
+---
+
+## 🚀 Routes principales de l'API REST
+
+```http
+POST  /api/login
+POST  /api/logout
+GET   /api/users
+GET   /api/prives
+GET   /api/documents
+POST  /api/documents
+GET   /api/declarations
+PUT   /api/declarations/{declaration}
+```
+
+> Exécutez `php artisan route:list` pour voir la liste complète.
+
+---
+
+## 📊 Stack technique
+
+- **Frontend** : Next.js, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend** : Laravel 12+, Laravel Sanctum, Laravel Mail, MySQL
+
+---
+
+## 🔧 Tests
+
+Pour exécuter les tests unitaires Laravel :
+
+```bash
+php artisan test
+```
+
+Des tests Cypress côté frontend peuvent être ajoutés dans les prochaines versions.
+
+---
+
+## 🚗 Déploiement
+
+```bash
+php artisan migrate --force
+php artisan config:cache
+```
+
+Configurez les fichiers `.env` de production et assurez-vous de sécuriser votre environnement (HTTPS, firewall, etc.).
+
+---
+
+## 📝 Équipe de développement
+
+- **Christopher Pereira**
+- **Khloud Mahmoud**
+- **Hakija Kahrimanovic**
+- **Boran Uzun**
+
+---
+
+## 💡 Remarques
+
+- Tous les documents sont stockés dans un bucket S3 infomaniak.
+- Utilisation de reCAPTCHA v3 pour la sécurité du formulaire de contact.

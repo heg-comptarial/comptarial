@@ -1,7 +1,6 @@
 "use client"
 
 import type React from "react"
-import { notFound } from "next/navigation"
 
 import { useRouter, useParams } from "next/navigation"
 import { useEffect, useState } from "react"
@@ -76,6 +75,7 @@ interface Document {
   statut: "pending" | "rejected" | "approved"
   sous_rubrique?: string | null
   dateCreation: string
+  rubrique?: Rubrique // Relation hasOne
   // Propriétés supplémentaires pour la compatibilité avec le code existant
   chemin?: string // Alias pour cheminFichier
   dateUpload?: string // Alias pour dateCreation
@@ -90,6 +90,7 @@ interface Rubrique {
   rubrique_id: number
   declaration_id: number
   titre: string
+  declaration?: Declaration
   // Propriétés supplémentaires pour la compatibilité avec le code existant
   id?: number // Alias pour rubrique_id
   nom?: string // Alias pour titre
@@ -134,7 +135,6 @@ export default function ClientDetail() {
   const params = useParams()
   const router = useRouter()
   const userId = params.id as string
-  const idUser = params.userId as string
   const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"
 
   const [userDetails, setUserDetails] = useState<UserDetails | null>(null)
@@ -147,6 +147,7 @@ export default function ClientDetail() {
   const [isSaving, setIsSaving] = useState<boolean>(false)
   const [isEditingUser, setIsEditingUser] = useState<boolean>(false)
   const [editedUser, setEditedUser] = useState<Partial<UserDetails> | null>(null)
+  const [uploadCompletedRubriques, setUploadCompletedRubriques] = useState<number[]>([])
   // Ajouter un état pour stocker l'ID de l'administrateur
   const [adminId, setAdminId] = useState<number | null>(null)
 
@@ -169,6 +170,9 @@ export default function ClientDetail() {
 
   const [editedImpots, setEditedImpots] = useState(activeDeclaration?.impots || "")
   const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false)
+
+  // État pour gérer l'envoi de notifications
+  const [lastNotificationSentAt, setLastNotificationSentAt] = useState<Date | null>(null)
 
   // Liste des titres possibles pour une déclaration
   const TITLES = ["Déclaration, Comptabilité", "TVA", "Salaires", "Administration", "Fiscalité", "Divers"]
@@ -623,13 +627,13 @@ export default function ClientDetail() {
     setIsEditingRubrique(true)
   }
 
-  const handleDownload = async (doc: Document, rubriqueName: string) => {
+  const handleDownload = async (doc: Document, rubrique: Rubrique) => {
     try {
       const query = new URLSearchParams({
         fileName: doc.nom,
-        year: doc.annee?.toString() ?? new Date(doc.dateCreation || doc.dateUpload || "").getFullYear().toString(),
+        year: rubrique.declaration?.annee?.toString() ?? activeDeclaration?.annee?.toString() ?? "",
         userId: userDetails?.user_id?.toString() || "",
-        rubriqueName: rubriqueName || "",
+        rubriqueName: rubrique.titre || rubrique.nom || "",
       })
 
       console.log("/api/download?" + query.toString())
@@ -764,20 +768,31 @@ export default function ClientDetail() {
         contenu: `Vos documents ont été enregistrés avec succès.`,
       })
 
+      // Envoi de la notification à l'utilisateur (max 1 fois toutes les 10 minutes)
+      const now = new Date()
+      if (lastNotificationSentAt && now.getTime() - lastNotificationSentAt.getTime() < 10 * 60 * 1000) {
+        console.log("Notification déjà envoyée récemment, skip.")
+      } else {
+        await fetch(`${API_URL}/documents/admin-upload-notification`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: userDetails?.user_id,
+            title: activeDeclaration?.titre,
+            year: activeDeclaration?.annee,
+          }),
+        })
+        setLastNotificationSentAt(now)
+      }
+
       toast.success("Documents enregistrés avec succès")
       setAdminSelectedFiles([])
+      const uploadedRubriqueIds = adminSelectedFiles.map((f) => f.rubriqueId)
+      setUploadCompletedRubriques((prev) => [...prev, ...uploadedRubriqueIds.filter((id) => !prev.includes(id))])
+
       await refreshUserData()
 
-      // Envoi de la notification à l'utilisateur
-      await fetch(`${API_URL}/documents/admin-upload-notification`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userDetails?.user_id,
-          title: activeDeclaration?.titre,
-          year: activeDeclaration?.annee,
-        }),
-      })
+      router.refresh()
     } catch (err) {
       console.error(err)
       toast.error("Erreur pendant l'envoi ou l'enregistrement")
@@ -983,46 +998,14 @@ export default function ClientDetail() {
     return true
   }
 
-  const [authentifie, setAuthentifie] = useState<boolean | null>(null)
-
-  useEffect(() => {
-    const checkAuth = async () => {
-      setAuthentifie(null) // Réinitialiser l'état d'authentification
-      const token = localStorage.getItem("auth_token")
-      try {
-        const res = await fetch(`http://localhost:8000/api/users/${idUser}`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        })
-        if (!res.ok) {
-          setAuthentifie(false)
-          return
-        }
-        setAuthentifie(true)
-      } catch (error) {
-        setAuthentifie(false)
-      }
-    }
-    checkAuth()
-  }, [userId])
-
-  // Bloc d'authentification à placer juste avant le rendu
-  if (authentifie === null) {
-    return
-  }
-
-  if (!authentifie) {
-    return notFound()
-  }
-
   if (loading || !userId) {
     return (
-      <div className="container mx-auto py-10 px-4">
-        <div className="flex justify-center items-center h-64">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-          <span className="ml-2">Chargement des données...</span>
+      <div className="min-h-screen bg-white">
+        <div className="container mx-auto py-4 px-4 sm:py-10 sm:px-6 lg:px-8">
+          <div className="flex justify-center items-center h-64">
+            <Loader2 className="h-8 w-8 animate-spin text-primary" />
+            <span className="ml-2">Chargement des données...</span>
+          </div>
         </div>
       </div>
     )
@@ -1030,9 +1013,11 @@ export default function ClientDetail() {
 
   if (!userDetails) {
     return (
-      <div className="container mx-auto py-10 px-4">
-        <div className="flex justify-center items-center h-64">
-          <p className="text-lg">Utilisateur non trouvé</p>
+      <div className="min-h-screen bg-white">
+        <div className="container mx-auto py-4 px-4 sm:py-10 sm:px-6 lg:px-8">
+          <div className="flex justify-center items-center h-64">
+            <p className="text-lg">Utilisateur non trouvé</p>
+          </div>
         </div>
       </div>
     )
@@ -1043,7 +1028,7 @@ export default function ClientDetail() {
   const availableTitles = TITLES.filter((title) => !existingTitles.includes(title))
 
   return (
-    <div className="min-h-screen">
+    <div className="min-h-screen bg-white">
       <Toaster position="bottom-right" richColors closeButton />
 
       <div className="container mx-auto py-4 px-4 sm:py-6 sm:px-6 lg:px-8">
@@ -1470,13 +1455,13 @@ export default function ClientDetail() {
                                   key={rubrique.rubrique_id || rubrique.id}
                                   value={`rubrique-${rubrique.rubrique_id || rubrique.id}`}
                                 >
-                                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center sm:justify-between sm:space-y-0">
+                                  <div className="flex flex-col space-y-2 sm:flex-row sm:items-center">
                                     <AccordionTrigger className="flex-1 text-left">
                                       <span className="text-base font-medium truncate">
                                         {rubrique.titre || rubrique.nom}
                                       </span>
                                     </AccordionTrigger>
-                                    <div className="flex space-x-2 px-4 sm:mb-0 mb-4">
+                                    <div className="flex space-x-2 sm:px-4 sm:justify-end justify-start">
                                       <Button
                                         className="bg-blue-50 text-blue-700 hover:bg-blue-100 border-blue-200 text-xs px-2 py-1"
                                         variant="outline"
@@ -1532,7 +1517,7 @@ export default function ClientDetail() {
                                                         <Button
                                                           variant="ghost"
                                                           size="icon"
-                                                          onClick={() => handleDownload(doc, rubrique.titre)}
+                                                          onClick={() => handleDownload(doc, rubrique)}
                                                           title="Télécharger"
                                                         >
                                                           <Download className="h-4 w-4" />
@@ -1636,6 +1621,9 @@ export default function ClientDetail() {
                                         </div>
                                       )}
                                       <DocumentUpload
+                                        key={`rubrique-${
+                                          rubrique.rubrique_id
+                                        }-upload-${uploadCompletedRubriques.includes(rubrique.rubrique_id)}`}
                                         rubriqueId={rubrique.rubrique_id}
                                         rubriqueName={rubrique.titre}
                                         userId={userDetails.user_id}
@@ -1738,7 +1726,13 @@ export default function ClientDetail() {
                                       <Button
                                         variant="ghost"
                                         size="icon"
-                                        onClick={() => handleDownload(doc, doc.rubriqueNom || "")}
+                                        onClick={() => {
+                                          if (doc.rubrique) {
+                                            handleDownload(doc, doc.rubrique)
+                                          } else {
+                                            toast.error("Rubrique introuvable pour ce document")
+                                          }
+                                        }}
                                         title="Télécharger"
                                       >
                                         <Download className="h-4 w-4" />

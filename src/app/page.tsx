@@ -157,7 +157,7 @@ export default function Home() {
               {/* Logo */}
               <Link href="/" className="flex items-center gap-3 z-20">
                 <div className="flex items-center gap-2 z-20">
-                  <div className="bg-primary/10 p-2 rounded-md">
+                  <div className="bg-primary/5 p-2 rounded-md">
                     <Image
                       src="/images/logo.png?height=25&width=25"
                       alt="Logo"
@@ -768,7 +768,10 @@ export default function Home() {
                         className="text-sm text-gray-600"
                       >
                         En sélectionnant cette option, vous acceptez notre{" "}
-                        <Link href="/privacy" className="text-black underline">
+                        <Link
+                          href="/privacy-policy"
+                          className="text-black underline"
+                        >
                           Politique de confidentialité
                         </Link>
                         .
@@ -795,18 +798,23 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="grid md:grid-cols-4 gap-8">
               <div>
-                <div className="flex items-center gap-2 mb-6">
-                  <div className="font-bold text-xl">Comptarial</div>
-                  <div className="bg-primary/20 p-2 rounded-md">
-                    <Image
-                      src="/images/logo.png?height=25&width=25"
-                      alt="Logo"
-                      width={25}
-                      height={25}
-                      className="w-full h-auto object-cover"
-                    />
+                {/* Logo */}
+                <Link href="/" className="flex items-center gap-3 z-20">
+                  <div className="flex items-center gap-2 z-20">
+                    <div className="bg-primary/10 p-2 rounded-md">
+                      <Image
+                        src="/images/logo.png?height=25&width=25"
+                        alt="Logo"
+                        width={25}
+                        height={25}
+                        className="w-full h-auto object-cover"
+                      />
+                    </div>
                   </div>
-                </div>
+                  <div className="font-bold text-xl tracking-tight">
+                    Comptarial
+                  </div>
+                </Link>
                 <p className="text-gray-400">
                   Solutions comptables et fiduciaires innovantes pour les
                   entreprises modernes.
@@ -819,7 +827,7 @@ export default function Home() {
                   <li>
                     <button
                       onClick={() => scrollToSection("accueil")}
-                      className="text-gray-400 hover:text-white transition-colors"
+                      className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                     >
                       Accueil
                     </button>
@@ -827,7 +835,7 @@ export default function Home() {
                   <li>
                     <button
                       onClick={() => scrollToSection("nous")}
-                      className="text-gray-400 hover:text-white transition-colors"
+                      className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                     >
                       À propos
                     </button>
@@ -835,7 +843,7 @@ export default function Home() {
                   <li>
                     <button
                       onClick={() => scrollToSection("services")}
-                      className="text-gray-400 hover:text-white transition-colors"
+                      className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                     >
                       Services
                     </button>
@@ -843,7 +851,7 @@ export default function Home() {
                   <li>
                     <button
                       onClick={() => scrollToSection("contact")}
-                      className="text-gray-400 hover:text-white transition-colors"
+                      className="text-gray-400 hover:text-white transition-colors cursor-pointer"
                     >
                       Contact
                     </button>
@@ -856,7 +864,7 @@ export default function Home() {
                 <ul className="space-y-2">
                   <li>
                     <a
-                      href="#"
+                      href="#services"
                       className="text-gray-400 hover:text-white transition-colors"
                     >
                       Comptabilité en ligne
@@ -864,26 +872,34 @@ export default function Home() {
                   </li>
                   <li>
                     <a
-                      href="#"
+                      href="#services"
                       className="text-gray-400 hover:text-white transition-colors"
                     >
-                      Gestion de la paie
+                      Gestion de la paie numérique
                     </a>
                   </li>
                   <li>
                     <a
-                      href="#"
+                      href="#services"
                       className="text-gray-400 hover:text-white transition-colors"
                     >
-                      Conseil fiscal
+                      Conseil et accompagnement personnalisé
                     </a>
                   </li>
                   <li>
                     <a
-                      href="#"
+                      href="#services"
                       className="text-gray-400 hover:text-white transition-colors"
                     >
-                      Déclarations fiscales
+                      Déclarations fiscales automatisées
+                    </a>
+                  </li>
+                  <li>
+                    <a
+                      href="#services"
+                      className="text-gray-400 hover:text-white transition-colors"
+                    >
+                      Gestion des documents fiscaux et comptables
                     </a>
                   </li>
                 </ul>
@@ -894,34 +910,10 @@ export default function Home() {
                 <ul className="space-y-2">
                   <li>
                     <Link
-                      href="/terms"
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      Conditions d&apos;utilisation
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/privacy"
+                      href="/privacy-policy"
                       className="text-gray-400 hover:text-white transition-colors"
                     >
                       Politique de confidentialité
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/cookies"
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      Politique de cookies
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/mentions"
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      Mentions légales
                     </Link>
                   </li>
                 </ul>
@@ -931,6 +923,15 @@ export default function Home() {
             <div className="border-t border-gray-800 mt-12 pt-8 text-center">
               <p className="text-gray-400">
                 © {new Date().getFullYear()} Comptarial. Tous droits réservés.
+              </p>
+              <p className="text-gray-500 text-sm mt-2">
+                <a
+                  href="https://www.uid.admin.ch/Detail.aspx?uid_id=CHE239928457"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  CHE-239.928.457
+                </a>
               </p>
             </div>
           </div>

@@ -24,10 +24,25 @@ class DeclarationController extends Controller
             'annee' => 'required|string|size:4',
         ]);
 
+        // Vérifie si une déclaration avec le même user_id, titre et année existe déjà
+        $exists = Declaration::where('user_id', $request->user_id)
+            ->whereRaw('LOWER(titre) = ?', [strtolower($request->titre)])
+            ->where('annee', $request->annee)
+            ->exists();
+
+        if ($exists) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Une déclaration avec ce titre et cette année existe déjà.',
+            ], 409); // HTTP 409 Conflict
+        }
+
         // Crée une nouvelle déclaration
         $declaration = Declaration::create($request->all());
+
         return response()->json($declaration, 201);
     }
+
 
     public function show($id)
     {
