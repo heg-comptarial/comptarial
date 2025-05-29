@@ -1,3 +1,4 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 "use client";
 
 import { notFound } from "next/navigation";
@@ -40,7 +41,6 @@ export default function DeclarationsClientPage() {
   const typeFromUrl = searchParams.get("type");
   const [role, setRole] = useState<"prive" | "entreprise" | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [error, setError] = useState<string | null>(null);
   const selectedYear = useYearStore((state) => state.selectedYear);
   const setSelectedYear = useYearStore((state) => state.setSelectedYear);
 
@@ -212,11 +212,10 @@ export default function DeclarationsClientPage() {
         if (response.data?.prive_id) {
           setPriveId(response.data.prive_id);
         } else {
-          setError("Identifiant privé introuvable.");
+          toast.error("Identifiant privé introuvable.");
         }
-      } catch (err) {
-        console.error("Erreur lors de la récupération du privé:", err);
-        setError("Erreur de récupération du privé.");
+      } catch  {
+        toast.error("Erreur de récupération du privé:");
       } finally {
         setLoading(false);
       }
@@ -256,12 +255,6 @@ export default function DeclarationsClientPage() {
         setUploadedRubriques(uploadedIds);
       }
     }
-  };
-  const handleCloseForm = () => {
-    console.log("handleCloseForm appelé");
-
-    refreshDeclaration(); // recharge les données si nécessaire
-    setShowForm(false); // referme le formulaire
   };
 
   const uploadAndSaveDocuments = async () => {

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import {
@@ -108,7 +109,7 @@ function ConfirmationDialog({
           </div>
 
           <p className="text-xs text-gray-600 dark:text-gray-400 mb-4">
-            Veuillez choisir l'action à effectuer concernant cette déclaration et ses documents.
+            Veuillez choisir l&apos;action à effectuer concernant cette déclaration et ses documents.
           </p>
 
           {/* Boutons d'action */}

@@ -109,8 +109,6 @@ export default function AddRubriqueDialog({
         type: ""
       }
 
-      let response
-
       if (isEditing && rubriqueId) {
         // Mode édition: mettre à jour une rubrique existante
         console.log("Mise à jour de la rubrique:", data);

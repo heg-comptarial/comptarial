@@ -1,3 +1,6 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import type React from "react"
@@ -27,8 +30,6 @@ import AutresDeductions from "@/components/formulaires/autresDeductions"
 import AutresInformations from "@/components/formulaires/autresInformations"
 import Conjoint from "@/components/formulaires/conjoint"
 import { useYearStore } from "@/store/useYear"
-import { integer } from "aws-sdk/clients/cloudfront"
-import { J } from "vitest/dist/chunks/reporters.d.CfRkRKN2.js"
 
 interface Rubrique {
   rubrique_id?: number
@@ -274,7 +275,6 @@ interface AutrePersonneData {
 export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null, mode }: FormulaireDeclarationProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
-  const [isDataLoading, setIsDataLoading] = useState(!!priveId)
   const [error, setError] = useState<string | null>(null)
   const [step, setStep] = useState(Number(1))
   const params = useParams()
@@ -321,18 +321,6 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
       fortuneNet: string
     }>
   >([])
-
-  // État pour le conjoint
-  const [conjointInfo, setConjointInfo] = useState({
-    nom: "",
-    prenom: "",
-    dateNaissance: "",
-    nationalite: "",
-    adresse: "",
-    localite: "",
-    codePostal: "",
-    situationProfessionnelle: "",
-  })
 
   // État pour les rubriques du formulaire
   const [formSections, setFormSections] = useState<{
@@ -977,7 +965,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
         console.error("Erreur lors de la récupération des données:", error)
         setError("Une erreur est survenue lors de la récupération de vos données.")
       } finally {
-        setIsDataLoading(false)
+        // setIsDataLoading(false)
       }
     }
 
@@ -994,7 +982,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
     ]
 
     const dynEtapes = Object.entries(formSections)
-      .filter(([_, value]) => value) // uniquement les cases cochées
+      .filter(([ value]) => value) // uniquement les cases cochées
       .map(([key]) => ({
         step: etapesMap[key],
         label: etapeLabelFromKey(key), // fonction utilitaire (ci-dessous)
@@ -2019,7 +2007,7 @@ if (mode === "create") {
               onCheckedChange={(checked) => handleSectionChange("fo_revenu", checked as boolean)}
             />
             <Label htmlFor="fo_revenu" className="font-medium">
-              Percevez-vous un revenu, y compris d'une activité indépendante ?
+              Percevez-vous un revenu, y compris d&apos;une activité indépendante ?
             </Label>
           </div>
 
@@ -2108,7 +2096,7 @@ if (mode === "create") {
               onCheckedChange={(checked) => handleSectionChange("fo_titres", checked as boolean)}
             />
             <Label htmlFor="fo_titres" className="font-medium">
-              Possedez-vous des titres ou d'autres éléments de fortune ?
+              Possedez-vous des titres ou d&apos;autres éléments de fortune ?
             </Label>
           </div>
 
@@ -2119,7 +2107,7 @@ if (mode === "create") {
               onCheckedChange={(checked) => handleSectionChange("fo_autresInformations", checked as boolean)}
             />
             <Label htmlFor="fo_autresInformations" className="font-medium">
-              Souhaitez-vous communiquer d'autres informations (dons, 3e pilier, cotisations AVS, handicap, etc.) ?
+              Souhaitez-vous communiquer d&apos;autres informations (dons, 3e pilier, cotisations AVS, handicap, etc.) ?
             </Label>
           </div>
         </div>

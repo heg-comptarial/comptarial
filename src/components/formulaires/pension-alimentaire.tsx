@@ -67,14 +67,6 @@ export default function PensionAlimentaire({
     onUpdate(updatedData)
   }
 
-  const deletePension = async() => {
-  const token = localStorage.getItem("auth_token");
-  const enfantId = formData.enfant_id
-      axios.delete(`http://127.0.0.1:8000/api/pensionsalimentaires/enfants/${enfantId}`, { 
-        headers: { Authorization: `Bearer ${token}` } 
-      })
-}
-
   return (
     <div className="space-y-4">
       <h4 className="font-medium">Pension alimentaire</h4>

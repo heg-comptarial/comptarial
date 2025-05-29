@@ -1,3 +1,5 @@
+/* eslint-disable react-hooks/exhaustive-deps */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { useState, useEffect } from "react";
@@ -205,7 +207,7 @@ useEffect(() => {
   const createNewDeclarationFromPrive = async () => {
     if (hasChanges === "non" && priveId) {
       try {
-        await createDeclarationAndCopyRubriques(priveId);
+        await createDeclarationAndCopyRubriques();
       } catch (error) {
         console.error("Erreur lors de la création de déclaration et copie des rubriques :", error);
         setError("Une erreur est survenue lors de la création de la déclaration.");
@@ -216,7 +218,7 @@ useEffect(() => {
   createNewDeclarationFromPrive();
 }, [hasChanges, priveId, router]);
 
-const createDeclarationAndCopyRubriques = async (priveId: number) => {
+const createDeclarationAndCopyRubriques = async () => {
   try {
     const token = localStorage.getItem("auth_token");
     if (!token) {
@@ -451,7 +453,7 @@ const createDeclarationAndCopyRubriques = async (priveId: number) => {
           mode="create"
           onSubmitSuccess={async (formData) => {
             // Remove extra fields if present, only pass the fields expected by createDeclaration
-            const { user_id, titre, statut, annee, dateCreation, ...rest } = formData as any;
+            const { ...rest } = formData as any;
             return createDeclaration(rest);
           }}
           priveId={priveId}

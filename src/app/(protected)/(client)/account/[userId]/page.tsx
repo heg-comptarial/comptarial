@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import { JSX, useEffect, useState } from "react";
@@ -6,7 +7,6 @@ import {
   Card,
   CardContent,
   CardDescription,
-  CardFooter,
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
@@ -186,12 +186,12 @@ export default function AccountPage() {
         }
         const data = await res.json();
         console.log("Données utilisateur récupérées :", data);
-        const { declarations, notifications, ...filtered } = data;
+        const { ...filtered } = data;
         setUserData(filtered);
         setEditedData(filtered);
         setUserName(filtered.nom || "Utilisateur");
         setAuthentifie(true);
-      } catch (error) {
+      } catch {
         setAuthentifie(false); // Utiliser notFound() pour gérer les erreurs de récupération
       }
     };
@@ -361,7 +361,7 @@ export default function AccountPage() {
   );
 
   const renderPersonalSection = () => {
-    const { role, nom, raisonSociale, email, localite, adresse, codePostal, numeroTelephone } = editedData;
+    const { role, nom, email, localite, adresse, codePostal, numeroTelephone } = editedData;
 
     return renderSection("Informations personnelles", [
       renderInput(

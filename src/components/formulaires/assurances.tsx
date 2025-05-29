@@ -80,7 +80,7 @@ export default function Assurances({ data, onUpdate, onNext, onPrev }: Assurance
 
   return (
     <div className="space-y-6">
-      <h3 className="text-lg font-medium">Indemnités d'assurance</h3>
+      <h3 className="text-lg font-medium">Indemnités d&apos;assurance</h3>
       <form onSubmit={handleSubmit}>
         <Card>
           <CardContent className="pt-6 space-y-4">

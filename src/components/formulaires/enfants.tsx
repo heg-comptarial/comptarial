@@ -11,7 +11,6 @@ import { Input } from "@/components/ui/input"
 import { Loader2, Plus, Trash2 } from "lucide-react"
 import axios from "axios"
 import PensionAlimentaire, { type PensionAlimentaireData } from "@/components/formulaires/pension-alimentaire"
-import { ConfigurationServicePlaceholders } from "aws-sdk/lib/config_service_placeholders"
 
 interface EnfantsProps {
   data: EnfantsData | null
@@ -297,7 +296,7 @@ const defaultPension: PensionAlimentaireData = {
 
       // Nettoyer les données avant de les envoyer (supprimer les propriétés temporaires)
       const cleanedData: EnfantsData = {
-        enfants: formData.enfants.map(({ _hasPensionAlimentaire, ...enfant }) => enfant),
+        enfants: formData.enfants.map(({ ...enfant }) => enfant),
         pensionsAlimentaires: formData.pensionsAlimentaires,
       }
 

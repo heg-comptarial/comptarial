@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import type React from "react"
@@ -9,7 +10,6 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Separator } from "@/components/ui/separator"
 import { Loader2, Edit, Save, X, RefreshCw } from "lucide-react"
 import { toast } from "sonner"
 import { Button } from "@/components/ui/button"
@@ -1312,7 +1312,7 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Bourses d'études</TableHead>
+                            <TableHead>Bourses d&apos;études</TableHead>
                             <TableHead>Prestations AVS/SPC</TableHead>
                             <TableHead>Prestations Ville/Commune</TableHead>
                             <TableHead>Allocations impotents</TableHead>

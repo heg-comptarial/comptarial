@@ -7,7 +7,6 @@ import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { Loader2 } from "lucide-react"
-import axios from "axios"
 
 interface RevenuProps {
   data: RevenuData | null
@@ -189,7 +188,7 @@ export default function Revenu({ data, onUpdate, onNext, onPrev }: RevenuProps) 
                     onCheckedChange={(checked) => handleChange("subsidesAssuranceMaladie", checked as boolean)}
                   />
                   <Label htmlFor="subsidesAssuranceMaladie" className="font-normal">
-                    Subsides d'assurance maladie
+                    Subsides d&apos;assurance maladie
                   </Label>
                 </div>
               </div>
@@ -240,7 +239,7 @@ export default function Revenu({ data, onUpdate, onNext, onPrev }: RevenuProps) 
                     onCheckedChange={(checked) => handleChange("fo_preuveEncaissementSousLoc", checked as boolean)}
                   />
                   <Label htmlFor="fo_preuveEncaissementSousLoc" className="font-normal">
-                    Preuves d'encaissement de sous-location
+                    Preuves d&apos;encaissement de sous-location
                   </Label>
                 </div>
 
@@ -251,7 +250,7 @@ export default function Revenu({ data, onUpdate, onNext, onPrev }: RevenuProps) 
                     onCheckedChange={(checked) => handleChange("fo_gainsAccessoires", checked as boolean)}
                   />
                   <Label htmlFor="fo_gainsAccessoires" className="font-normal">
-                    Gains accessoires (jusqu'à 2300 CHF non soumis à AVS)
+                    Gains accessoires (jusqu&apos;à 2300 CHF non soumis à AVS)
                   </Label>
                 </div>
 
@@ -262,7 +261,7 @@ export default function Revenu({ data, onUpdate, onNext, onPrev }: RevenuProps) 
                     onCheckedChange={(checked) => handleChange("fo_attestationAutresRevenus", checked as boolean)}
                   />
                   <Label htmlFor="fo_attestationAutresRevenus" className="font-normal">
-                    Attestations d'autres revenus
+                    Attestations d&apos;autres revenus
                   </Label>
                 </div>
 

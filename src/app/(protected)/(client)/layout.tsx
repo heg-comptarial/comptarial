@@ -77,7 +77,7 @@ export default function DashboardLayout({
         setRole(role);
         setStatus(status);
         setAuthentifie(!!role && !!status);
-      } catch (error) {
+      } catch {
         setRole(null);
         setStatus(null);
         setAuthentifie(false);

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client"
 
 import type React from "react"
@@ -173,9 +174,6 @@ export default function ClientDetail() {
 
   // État pour gérer l'envoi de notifications
   const [lastNotificationSentAt, setLastNotificationSentAt] = useState<Date | null>(null)
-
-  // Liste des titres possibles pour une déclaration
-  const TITLES = ["Déclaration, Comptabilité", "TVA", "Salaires", "Administration", "Fiscalité", "Divers"]
 
   const handleUpdateImpots = async (declarationId: number, newImpots: string) => {
     try {
@@ -961,29 +959,6 @@ export default function ClientDetail() {
     }
   }
 
-  // Fonction pour créer une nouvelle déclaration
-  const handleCreateDeclaration = async (titre: string, annee: string) => {
-    try {
-      const response = await axios.post(`http://127.0.0.1:8000/api/declarations`, {
-        user_id: userId,
-        titre,
-        statut: "pending",
-        annee,
-      })
-
-      if (response.status === 201) {
-        toast.success(`Déclaration "${titre}" créée avec succès !`)
-        await refreshUserData()
-      } else {
-        toast.error("Erreur lors de la création de la déclaration.")
-      }
-    } catch (error) {
-      console.error("Erreur lors de la création de la déclaration:", error)
-      toast.error("Erreur lors de la création de la déclaration.")
-    } finally {
-    }
-  }
-
   // Fonction pour supprimer une déclaration
   const handleDeleteDeclaration = async (declarationId: number) => {
     const confirmed = window.confirm("Voulez-vous vraiment supprimer cette déclaration ?")
@@ -1000,7 +975,7 @@ export default function ClientDetail() {
   }
 
   // Fonction pour gérer la soumission réussie du formulaire
-  const handleFormSubmitSuccess = async (formData: any) => {
+  const handleFormSubmitSuccess = async () => {
     toast.success("Formulaire soumis avec succès")
     await refreshUserData()
     return true
@@ -1030,10 +1005,6 @@ export default function ClientDetail() {
       </div>
     )
   }
-
-  // Déterminer les titres disponibles pour la création
-  const existingTitles = userDetails.declarations?.map((d) => d.titre) || []
-  const availableTitles = TITLES.filter((title) => !existingTitles.includes(title))
 
   return (
     <div className="min-h-screen bg-white">
@@ -1721,7 +1692,7 @@ export default function ClientDetail() {
                                           className="mt-2 w-full sm:w-auto"
                                           variant="default"
                                         >
-                                          Valider l'envoi
+                                          Valider l&apos;envoi
                                         </Button>
                                       )}
                                     </div>

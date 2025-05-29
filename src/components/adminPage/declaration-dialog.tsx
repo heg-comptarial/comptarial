@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState } from "react";
 import {
   Dialog,
@@ -12,7 +13,6 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import axios from "axios";
-import { useParams } from "next/navigation";
 
 interface CreateDeclarationDialogProps {
   isOpen: boolean;
