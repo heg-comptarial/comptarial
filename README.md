@@ -1,100 +1,137 @@
-# <p align="center">Comptarial</p>
+# Comptarial
 
-<p align="center">
-  <b>Plateforme d'échange sécurisé de documents pour fiduciaires</b><br>
-  <i>Projet HEG Genève – 64-56</i>
-</p>
+## ✨ Présentation du projet
+
+Comptarial est une plateforme numérique conçue pour permettre un échange sécurisé de documents entre les fiduciaires et leurs clients. Développée dans le cadre du module 64-56 à la Haute école de gestion de Genève (HEG), cette application vise à moderniser les interactions entre les collaborateurs d'une fiduciaire et ses clients, avec une interface intuitive et une sécurité renforcée.
 
 ---
 
-## Sommaire
+## ⚙️ Prérequis
 
-- [Comptarial](#comptarial)
-  - [Sommaire](#sommaire)
-  - [Présentation](#présentation)
-  - [Fonctionnalités](#fonctionnalités)
-  - [Prérequis](#prérequis)
-  - [Démarrage rapide](#démarrage-rapide)
-    - [Frontend](#frontend)
-    - [Backend](#backend)
-  - [Stack technique](#stack-technique)
-
-## Présentation
-
-Comptarial est une plateforme de gestion d'échange de documents pour la fiduciaire Comptarial, permettant aux clients et aux fiduciaires d'échanger des documents en toute sécurité. Ce projet, développé dans le cadre du cours 64-56 – Projet de développement sur mandat à la Haute école de gestion de Genève (HEG), vise à créer une interface fluide et intuitive pour faciliter l'interaction entre les utilisateurs et la fiduciaire.
-
-**Membres de l'équipe de développement :**
-
-- PEREIRA Christopher
-- MAHMOUD Khloud
-- KAHRIMANOVIC Hakija
-- UZUN Boran
-
-## Fonctionnalités
-
-- Authentification sécurisée
-- Gestion des utilisateurs
-- Téléversement et téléchargement de documents
-- Notifications
-- Interface moderne et responsive
-
-## Prérequis
-
+- PHP >= 8.2
+- Composer >= 2.x
+- MySQL ou autre SGBD compatible
 - Node.js >= 18.x
 - npm >= 9.x
-- PHP >= 8.1
-- Composer >= 2.x
-- MySQL ou autre base de données compatible
 
-## Démarrage rapide
+---
 
-### Frontend
+## ⚡ Installation du projet
 
-1. Installe les dépendances :
+Cloner le dépôt GitHub et suivre les instructions ci-dessous pour configurer le backend (Laravel) et le frontend (Next.js).
 
-   ```bash
-   npm install
-   ```
+```bash
+git clone https://github.com/heg-comptarial/comptarial
+cd comptarial
+```
 
-2. Lance le serveur de développement :
+### 🚀 Installation du frontend (Next.js)
 
-   ```bash
-   npm run dev
-   ```
+```bash
+# 1. Installer les dépendances npm
+npm install
 
-3. Variables d'environnement :
-   - Crée un fichier `.env` à la racine du frontend et copie le contenu de `.env.example`.
-   - Configure l'URL de l'API pour pointer vers ton backend.
+# 2. Lancer le serveur de développement
+npm run dev
+```
 
-### Backend
+### 📅 Configuration .env
 
-1. Va dans le dossier backend et installe les dépendances :
+Référez-vous au fichier `.env.example` fourni pour configurer l'URL de l'API et les autres variables nécessaires.
 
-   ```bash
-   cd backend
-   composer install
-   ```
+---
 
-2. Exécute les migrations pour créer la base de données :
+### 🔧 Installation du backend (Laravel)
 
-   ```bash
-   php artisan migrate
-   ```
+```bash
+# 1. Accéder au dossier backend
+cd backend
 
-3. Lance le serveur backend :
+# 2. Copier et configurer le fichier .env
+cp .env.example .env
 
-   ```bash
-   php artisan serve
-   ```
+# 3. Installer les dépendances PHP
+composer install
 
-4. Variables d'environnement :
-   - Crée un fichier `.env` à la racine du backend et copie le contenu de `.env.example`.
-   - Configure la connexion à la base de données et les autres variables nécessaires.
+# 5. Lancer les migrations et éventuellement les seeders
+php artisan migrate --seed
 
-## Stack technique
+# 6. Démarrer le serveur de développement
+php artisan serve
+```
 
-- [Next.js](https://nextjs.org/)
-- [TypeScript](https://www.typescriptlang.org/)
-- [Tailwind CSS](https://tailwindcss.com/)
-- [shadcn/ui](https://ui.shadcn.com/)
-- [Laravel](https://laravel.com/)
+### 🔐 Configuration .env
+
+Référez-vous au fichier `.env.example` fourni pour renseigner les variables d'environnement nécessaires à l'exécution du projet.
+
+---
+
+## 🌐 Fonctionnalités principales
+
+- 🔐 Authentification sécurisée avec rôles
+- 👥 Gestion des utilisateurs et des clients
+- 📂 Téléversement et téléchargement sécurisés de fichiers
+- 📢 Système de notifications et d'envoi de mail
+
+---
+
+## 🚀 Routes principales de l'API REST
+
+```http
+POST  /api/login
+POST  /api/logout
+GET   /api/users
+GET   /api/prives
+GET   /api/documents
+POST  /api/documents
+GET   /api/declarations
+PUT   /api/declarations/{declaration}
+```
+
+> Exécutez `php artisan route:list` pour voir la liste complète.
+
+---
+
+## 📊 Stack technique
+
+- **Frontend** : Next.js, TypeScript, Tailwind CSS, shadcn/ui
+- **Backend** : Laravel 12+, Laravel Sanctum, Laravel Mail, MySQL
+
+---
+
+## 🔧 Tests
+
+Pour exécuter les tests unitaires Laravel :
+
+```bash
+php artisan test
+```
+
+Des tests Cypress côté frontend peuvent être ajoutés dans les prochaines versions.
+
+---
+
+## 🚗 Déploiement
+
+```bash
+php artisan migrate --force
+php artisan config:cache
+```
+
+Configurez les fichiers `.env` de production et assurez-vous de sécuriser votre environnement (HTTPS, firewall, etc.).
+
+---
+
+## 📝 Équipe de développement
+
+- **Christopher Pereira**
+- **Khloud Mahmoud**
+- **Hakija Kahrimanovic**
+- **Boran Uzun**
+
+---
+
+## 💡 Remarques
+
+- Tous les documents sont stockés dans un bucket S3 infomaniak.
+- Utilisation de reCAPTCHA v3 pour la sécurité du formulaire de contact.
