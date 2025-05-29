@@ -568,6 +568,15 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
     )
   }
 
+  const etatCivilOptions = [
+    { value: "celibataire", label: "Célibataire" },
+    { value: "marie", label: "Marié(e)" },
+    { value: "divorce", label: "Divorcé(e)" },
+    { value: "veuf", label: "Veuf/Veuve" },
+    { value: "separe", label: "Séparé(e)" },
+    { value: "pacse", label: "Pacsé(e)" },
+  ];
+
   return (
     <div className="space-y-6">
       <Tabs defaultValue="informations-personnelles">
@@ -604,29 +613,6 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
 
                   {isEditingPersonalInfo ? (
                     <div className="space-y-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="nom">Nom</Label>
-                        <Input
-                          id="nom"
-                          name="nom"
-                          value={editedPersonalInfo?.nom || formulaireData.user?.nom || ""}
-                          onChange={handlePersonalInfoChange}
-                          disabled
-                        />
-                        <p className="text-xs text-muted-foreground">Le nom ne peut pas être modifié ici</p>
-                      </div>
-
-                      <div className="space-y-2">
-                        <Label htmlFor="prenom">Prénom</Label>
-                        <Input
-                          id="prenom"
-                          name="prenom"
-                          value={editedPersonalInfo?.prenom || formulaireData.user?.nom || ""}
-                          onChange={handlePersonalInfoChange}
-                          disabled
-                        />
-                        <p className="text-xs text-muted-foreground">Le prénom ne peut pas être modifié ici</p>
-                      </div>
 
                       <div className="space-y-2">
                         <Label htmlFor="dateNaissance">Date de naissance</Label>
@@ -657,21 +643,26 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                         <Label htmlFor="etatCivil">État civil</Label>
                         <Select
                           name="etatCivil"
-                          value={editedPersonalInfo?.etatCivil || ""}
+                          value={
+                            editedPersonalInfo?.etatCivil ??
+                            formulaireData.etatCivil ??
+                            ""
+                          }
                           onValueChange={(value) =>
-                            setEditedPersonalInfo((prev) => (prev ? { ...prev, etatCivil: value } : null))
+                            setEditedPersonalInfo((prev) =>
+                              prev ? { ...prev, etatCivil: value } : null
+                            )
                           }
                         >
                           <SelectTrigger>
                             <SelectValue placeholder="Sélectionner un état civil" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="celibataire">Célibataire</SelectItem>
-                            <SelectItem value="marie">Marié(e)</SelectItem>
-                            <SelectItem value="divorce">Divorcé(e)</SelectItem>
-                            <SelectItem value="veuf">Veuf/Veuve</SelectItem>
-                            <SelectItem value="separe">Séparé(e)</SelectItem>
-                            <SelectItem value="pacse">Pacsé(e)</SelectItem>
+                            {etatCivilOptions.map((option) => (
+                              <SelectItem key={option.value} value={option.value}>
+                                {option.label}
+                              </SelectItem>
+                            ))}
                           </SelectContent>
                         </Select>
                       </div>
@@ -698,14 +689,6 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                   ) : (
                     <div className="space-y-2">
                       <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Nom:</span>
-                        <span>{formulaireData.nom || formulaireData.user?.nom || "Non spécifié"}</span>
-                      </div>
-                      <div className="grid grid-cols-2">
-                        <span className="text-muted-foreground">Prénom:</span>
-                        <span>{formulaireData.prenom || formulaireData.user?.nom || "Non spécifié"}</span>
-                      </div>
-                      <div className="grid grid-cols-2">
                         <span className="text-muted-foreground">Date de naissance:</span>
                         <span>{formatDate(formulaireData.dateNaissance)}</span>
                       </div>
@@ -715,7 +698,9 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       </div>
                       <div className="grid grid-cols-2">
                         <span className="text-muted-foreground">État civil:</span>
-                        <span>{formulaireData.etatCivil}</span>
+                        <span>
+                          {etatCivilOptions.find(opt => opt.value === formulaireData.etatCivil)?.label || formulaireData.etatCivil}
+                        </span>
                       </div>
                     </div>
                   )}
@@ -922,32 +907,6 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                   )}
                 </div>
               </div>
-
-              {formulaireData.autres_informations && formulaireData.autres_informations.length > 0 && (
-                <>
-                  <Separator className="my-6" />
-                  <h3 className="font-medium mb-4">Autres informations</h3>
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Type</TableHead>
-                        <TableHead>Description</TableHead>
-                        <TableHead>Date</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {formulaireData.autres_informations?.map((info) => (
-                        <TableRow key={info.autre_informations_id}>
-                          <TableCell>{info.fo_versementBoursesEtudes ? "Bourses d'études" : "-"}</TableCell>
-                          <TableCell>{info.fo_prestationsAVSSPC ? "Prestations AVS/SPC" : "-"}</TableCell>
-                          <TableCell>{info.fo_prestationsVilleCommune ? "Prestations Ville/Commune" : "-"}</TableCell>
-                          {/* Ajoute d'autres champs si besoin */}
-                        </TableRow>
-                      ))}
-                    </TableBody>
-                  </Table>
-                </>
-              )}
             </CardContent>
           </Card>
         </TabsContent>
