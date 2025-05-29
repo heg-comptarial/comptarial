@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import { notFound } from "next/navigation";
 
 import { useRouter, useParams } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -30,7 +31,6 @@ import {
   Plus,
   Trash2,
 } from "lucide-react";
-import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin";
 import { Separator } from "@/components/ui/separator";
 import { Textarea } from "@/components/ui/textarea";
 import { Input } from "@/components/ui/input";
@@ -156,6 +156,7 @@ export default function ClientDetail() {
   const params = useParams();
   const router = useRouter();
   const userId = params.id as string;
+  const idUser = params.userId as string;
   const API_URL =
     process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
 
@@ -1078,7 +1079,6 @@ export default function ClientDetail() {
 
   // Fonction pour créer une nouvelle déclaration
   const handleCreateDeclaration = async (titre: string, annee: string) => {
-    setIsCreatingDeclaration(true);
     try {
       const response = await axios.post(
         `http://127.0.0.1:8000/api/declarations`,
@@ -1100,7 +1100,6 @@ export default function ClientDetail() {
       console.error("Erreur lors de la création de la déclaration:", error);
       toast.error("Erreur lors de la création de la déclaration.");
     } finally {
-      setIsCreatingDeclaration(false);
     }
   };
 
@@ -1128,28 +1127,58 @@ export default function ClientDetail() {
     return true;
   };
 
+  const [authentifie, setAuthentifie] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      setAuthentifie(null); // Réinitialiser l'état d'authentification
+      const token = localStorage.getItem("auth_token");
+      try {
+        const res = await fetch(`http://localhost:8000/api/users/${idUser}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          setAuthentifie(false);
+          return;
+        }
+        setAuthentifie(true);
+      } catch (error) {
+        setAuthentifie(false);
+      }
+    };
+    checkAuth();
+  }, [userId]);
+
+  // Bloc d'authentification à placer juste avant le rendu
+  if (authentifie === null) {
+    return null;
+  }
+
+  if (!authentifie) {
+    return notFound();
+  }
+
   if (loading || !userId) {
     return (
-      <ProtectedRouteAdmin>
         <div className="container mx-auto py-10 px-4">
           <div className="flex justify-center items-center h-64">
             <Loader2 className="h-8 w-8 animate-spin text-primary" />
             <span className="ml-2">Chargement des données...</span>
           </div>
         </div>
-      </ProtectedRouteAdmin>
     );
   }
 
   if (!userDetails) {
     return (
-      <ProtectedRouteAdmin>
         <div className="container mx-auto py-10 px-4">
           <div className="flex justify-center items-center h-64">
             <p className="text-lg">Utilisateur non trouvé</p>
           </div>
         </div>
-      </ProtectedRouteAdmin>
     );
   }
 
@@ -1160,7 +1189,7 @@ export default function ClientDetail() {
   );
 
   return (
-    <ProtectedRouteAdmin>
+    <div className="min-h-screen bg-background">
       <Toaster position="bottom-right" richColors closeButton />
 
       <div className="container mx-auto py-10 px-4">
@@ -2147,6 +2176,6 @@ export default function ClientDetail() {
         validateDeclarationAndDocuments={validateDeclarationAndDocuments}
         setPendingDeclarationAction={setPendingDeclarationAction}
       />
-    </ProtectedRouteAdmin>
+      </div>
   );
 }

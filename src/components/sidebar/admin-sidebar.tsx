@@ -4,6 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import { Command, Frame, LifeBuoy, Map, PieChart, Shield, SquareUserRound } from 'lucide-react';
 import axios from "axios";
+import { notFound } from "next/navigation";
 
 import { NavMain } from "@/components/sidebar/nav-main";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
@@ -26,37 +27,54 @@ import { useParams } from "next/navigation";
 export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const params = useParams();
   const userId = Number(params?.userId);
-  const { close } = useSidebar(); // Récupère la fonction close
+  const { close } = useSidebar();
 
-  // Récupération des infos utilisateur depuis l'API
   const [user, setUser] = React.useState<{ name: string; email: string; avatar?: string }>({
     name: "",
     email: "",
     avatar: "",
   });
+  const [authentifie, setAuthentifie] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
     const fetchUser = async () => {
       try {
+        const token = localStorage.getItem("auth_token");
         const response = await axios.get(
-          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/${userId}`
+          `${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api"}/users/${userId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
         );
         setUser({
           name: response.data.nom || response.data.name || "Admin",
           email: response.data.email,
           avatar: response.data.avatar || "/images/avatar.png",
         });
+        setAuthentifie(true);
       } catch (error) {
+        console.error("Error fetching user data:", error);
         setUser({
           name: "Admin inconnu",
           email: "",
           avatar: "/images/avatar.png",
         });
+        setAuthentifie(false);
       }
     };
 
     if (userId) fetchUser();
   }, [userId]);
+
+  if (authentifie === null) {
+    return null;
+  }
+
+  if (!authentifie) {
+    return notFound();
+  }
 
   const data = {
     user,
@@ -103,11 +121,8 @@ export function AdminSidebar({ ...props }: React.ComponentProps<typeof Sidebar>)
     ],
   };
 
-  // Fonction utilitaire pour fermer la sidebar sur mobile
   const handleMenuClick = () => {
-    if (window.innerWidth < 640) 
-      console.log("Closing sidebar on mobile");
-      close(); // sm breakpoint
+    if (window.innerWidth < 640) close();
   };
 
   return (

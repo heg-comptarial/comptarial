@@ -10,10 +10,10 @@ import { Loader2 } from "lucide-react";
 import axios from "axios";
 import dynamic from "next/dynamic";
 import { FormDataType } from "@/types/interfaces";
-import ProtectedRoutePrive from "@/components/routes/ProtectedRouteApprovedPrive";
 import { useParams } from "next/navigation";
 import { NotificationService } from "@/services/notification-service"
 import { toast } from "sonner"
+import { notFound } from "next/navigation";
 
 
 const FormulaireDeclaration = dynamic(() => import("../../formulaire/[userId]/page"), {
@@ -41,32 +41,35 @@ export default function NouvelleDeclaration() {
   const [hasChanges, setHasChanges] = useState<string | null>(null);
   const params = useParams();
   const userId = Number(params?.userId);
-  const [userName, setUserName] = useState<string>("")
-
+  const [userName, setUserName] = useState<string>("");
+  const [authentifie, setAuthentifie] = useState<boolean | null>(null);
 
   useEffect(() => {
     const fetchUserData = async () => {
       try {
+        setAuthentifie(null); // loading
         const token = localStorage.getItem("auth_token");
         if (!token) {
-          router.push("/login");
+          setAuthentifie(false);
           return;
         }
 
         if (!userId) {
-          router.push("/login");
+          setAuthentifie(false);
           return;
         }
 
-        // Récupérer les informations de l'utilisateur pour les notifications
+        // Vérifier l'utilisateur authentifié
         const userResponse = await axios.get(`http://127.0.0.1:8000/api/users/${userId}`, {
           headers: { Authorization: `Bearer ${token}` },
-        })
+        });
 
-
-        if (userResponse.data && userResponse.data.nom) {
-          setUserName(userResponse.data.nom)
+        if (!userResponse.data || !userResponse.data.nom) {
+          setAuthentifie(false);
+          return;
         }
+        setUserName(userResponse.data.nom);
+        setAuthentifie(true);
 
         const priveResponse = await axios.get(
           `http://127.0.0.1:8000/api/prives/users/${userId}`,
@@ -103,16 +106,15 @@ export default function NouvelleDeclaration() {
           }
         }
       } catch (err) {
-        // Assertion de type pour indiquer que err est une erreur Axios
         if (axios.isAxiosError(err) && err.response && err.response.status === 404) {
-          console.log("Erreur 404 : L'utilisateur n'a pas été trouvé. Le compte est peut-être en attente d'approbation.");
           setError("Votre compte n'as pas été encore approuvé par l'admin");
-        }else{
-              console.error("Erreur lors de la récupération des données:", err);
-              setError(
-                "Impossible de récupérer vos informations. Veuillez vous reconnecter."
-              );
-            }} finally {
+        } else {
+          setError(
+            "Impossible de récupérer vos informations. Veuillez vous reconnecter."
+          );
+        }
+        setAuthentifie(false);
+      } finally {
         setIsLoading(false);
       }
     };
@@ -239,19 +241,28 @@ export default function NouvelleDeclaration() {
 
   // === RENDER ===
 
+  // Bloc d'authentification à placer juste avant le rendu
+  if (authentifie === null) {
+    return null;
+  }
+
+  if (!authentifie) {
+    return notFound();
+  }
+
   if (isLoading) {
     return (
-      <ProtectedRoutePrive>
+      
       <div className="flex justify-center items-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin" />
       </div>
-      </ProtectedRoutePrive>
+      
     );
   }
 
   if (error) {
     return (
-      <ProtectedRoutePrive>
+      
       <div className="w-full px-4 py-8">
         <Card>
           <CardHeader>
@@ -267,13 +278,13 @@ export default function NouvelleDeclaration() {
           </CardContent>
         </Card>
       </div>
-      </ProtectedRoutePrive>
+      
     );
   }
 
   if (!hasDeclaration && !showForm) {
     return (
-      <ProtectedRoutePrive>
+      
       <div className="w-full px-4 py-8">
         <Card>
           <CardHeader>
@@ -304,13 +315,13 @@ export default function NouvelleDeclaration() {
           </CardContent>
         </Card>
       </div>
-      </ProtectedRoutePrive>
+      
     );
   }
 
   if (hasDeclaration && hasChanges === null && !showForm) {
     return (
-      <ProtectedRoutePrive>
+      
       <div className="w-full px-4 py-8">
         <Card>
           <CardHeader>
@@ -362,13 +373,13 @@ export default function NouvelleDeclaration() {
           </CardContent>
         </Card>
       </div>
-      </ProtectedRoutePrive>
+      
     );
   }
 
   if (hasChanges === "non" && priveId) {
     return (
-      <ProtectedRoutePrive>
+      
       <div className="w-full px-4 py-8">
         <Card>
           <CardHeader>
@@ -382,13 +393,13 @@ export default function NouvelleDeclaration() {
           </CardContent>
         </Card>
       </div>
-      </ProtectedRoutePrive>
+      
     );
   }
 
   if (showForm) {
     return (
-      <ProtectedRoutePrive>
+      
       <>
         {hasDeclaration && (
           <div className="w-full px-4 py-8">
@@ -404,16 +415,20 @@ export default function NouvelleDeclaration() {
         )}
         <FormulaireDeclaration
           mode="create"
-          onSubmitSuccess={createDeclaration}
+          onSubmitSuccess={async (formData) => {
+            // Remove extra fields if present, only pass the fields expected by createDeclaration
+            const { user_id, titre, statut, annee, dateCreation, ...rest } = formData as any;
+            return createDeclaration(rest);
+          }}
           priveId={priveId}
         />
       </>
-      </ProtectedRoutePrive>
+      
     );
   }
 
   return (
-    <ProtectedRoutePrive>
+    
     <div className="w-full px-4 py-8">
       <Card>
         <CardHeader>
@@ -429,6 +444,6 @@ export default function NouvelleDeclaration() {
         </CardContent>
       </Card>
     </div>
-    </ProtectedRoutePrive>
+    
   );
 }

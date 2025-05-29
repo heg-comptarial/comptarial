@@ -56,9 +56,14 @@ class UserController extends Controller
         return response()->json($user, 201);
     }
 
-    public function show($id)
+    public function show(Request $request, $id)
     {
-        // Récupère un utilisateur spécifique avec ses relations
+        // Vérifie que l'utilisateur authentifié correspond à l'ID demandé
+        if ($request->user()->user_id != $id) {
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        // Récupère l'utilisateur avec ses relations
         $user = User::with(['administrateurs', 'declarations', 'entreprises', 'notifications', 'prives'])->findOrFail($id);
         return response()->json($user);
     }

@@ -23,8 +23,8 @@ import {
 import { toast, Toaster } from "sonner";
 import { Input } from "@/components/ui/input";
 import { getStatusBadge } from "@/utils/getStatusBadge";
-import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin";
 import { useParams, useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 
 interface User {
   user_id: number;
@@ -65,6 +65,7 @@ export default function Dashboard() {
   const params = useParams();
   const userId = Number(params?.userId);
   const router = useRouter();
+  const [authentifie, setAuthentifie] = useState<boolean | null>(null);
 
   const fetchPendingUsers = async () => {
     setLoading(true);
@@ -424,8 +425,39 @@ export default function Dashboard() {
     </span>
   );
 
+  useEffect(() => {
+    const checkAuth = async () => {
+      const token = localStorage.getItem("auth_token");
+      try {
+        const res = await fetch(`http://localhost:8000/api/users/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          setAuthentifie(false);
+          return;
+        }
+        setAuthentifie(true);
+      } catch (error) {
+        setAuthentifie(false);
+      }
+    };
+    checkAuth();
+  }, [userId]);
+
+  // Bloc d'authentification à placer juste avant le rendu
+  if (authentifie === null) {
+    return null;
+  }
+
+  if (!authentifie) {
+    return notFound();
+  }
+
   return (
-    <ProtectedRouteAdmin>
+    <div className="min-h-screen bg-background">
       <Toaster position="bottom-right" richColors closeButton />
       <div className="container mx-auto px-4 max-w-full">
         <h1 className="text-2xl font-semibold mb-8">
@@ -633,6 +665,6 @@ export default function Dashboard() {
           </TabsContent>
         </Tabs>
       </div>
-    </ProtectedRouteAdmin>
+    </div>
   );
 }

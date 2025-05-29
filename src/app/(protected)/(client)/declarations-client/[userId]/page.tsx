@@ -1,5 +1,6 @@
 "use client";
 
+import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import axios from "axios";
 import { Declaration, Prive, Rubrique } from "@/types/interfaces";
@@ -7,7 +8,6 @@ import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { toast, Toaster } from "sonner";
-import ProtectedRoutePrive from "@/components/routes/ProtectedRouteApproved";
 import { useParams, useSearchParams } from "next/navigation";
 import { foFields } from "@/utils/foFields";
 import { getStatusBadge } from "@/utils/getStatusBadge";
@@ -29,6 +29,7 @@ export default function DeclarationsClientPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [uploadedRubriques, setUploadedRubriques] = useState<number[]>([]);
   const [userName, setUserName] = useState<string>("")
+  const [authentifie, setAuthentifie] = useState<boolean | null>(null);
 
   const params = useParams();
   const searchParams = useSearchParams();
@@ -54,23 +55,26 @@ export default function DeclarationsClientPage() {
   useEffect(() => {
     const fetchDeclarations = async () => {
       if (!userId) return;
+      setAuthentifie(null); // loading
       try {
+        const token = localStorage.getItem("auth_token");
         const { data } = await axios.get(
-          `http://localhost:8000/api/users/${userId}`
+          `http://localhost:8000/api/users/${userId}`,
+          {
+            headers: { Authorization: `Bearer ${token}` },
+            withCredentials: true,
+          }
         );
         const declarations = data.declarations || [];
         const userRole = data.role as "prive" | "entreprise" | null;
         setRole(userRole);
 
-        // Stocker le nom de l'utilisateur pour les notifications
-        setUserName(data.nom || "Utilisateur")
+        setUserName(data.nom || "Utilisateur");
 
         const filteredDeclarations =
           userRole === "entreprise" && typeFromUrl
             ? declarations.filter((d: Declaration) => d.titre === typeFromUrl)
             : declarations;
-
-        console.log("Filtered Declarations: ", filteredDeclarations);
 
         setUserDeclarations(filteredDeclarations);
 
@@ -80,7 +84,9 @@ export default function DeclarationsClientPage() {
         if (years.length > 0) {
           setSelectedYear(years.sort().reverse()[0]);
         }
+        setAuthentifie(true);
       } catch (err) {
+        setAuthentifie(false);
         toast.error("Erreur lors du chargement des déclarations");
         console.error(err);
       } finally {
@@ -351,13 +357,13 @@ const handleYearChange = (year: number) => {
     }
   };
 
-  if (loading || !userId) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        <span className="ml-2">Chargement...</span>
-      </div>
-    );
+  if (authentifie === null || loading || !userId) {
+    return;
+  }
+
+  if (!authentifie) {
+    notFound();
+    return null;
   }
 
   if (
@@ -375,7 +381,7 @@ const handleYearChange = (year: number) => {
   }
 
   return (
-    <ProtectedRoutePrive>
+    <div>
       <Toaster position="bottom-right" richColors closeButton />
       <div className="px-10">
         <h2 className="text-lg font-semibold px-2">Année de la déclaration</h2>
@@ -485,6 +491,6 @@ const handleYearChange = (year: number) => {
           </div>
         )}
       </div>
-    </ProtectedRoutePrive>
+    </div>
   );
 }

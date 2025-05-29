@@ -11,9 +11,9 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
+import { notFound } from "next/navigation";
 
 export default function AccountPage() {
   const router = useRouter();
@@ -26,18 +26,43 @@ export default function AccountPage() {
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [authentifie, setAuthentifie] = useState<boolean | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
-      const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`);
-      const data = await res.json();
-      const { declarations, notifications, ...filtered } = data;
-      setUserData(filtered);
-      setEditedData(filtered);
+      const token = localStorage.getItem("auth_token");
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          setAuthentifie(false);
+          return;
+        }
+        const data = await res.json();
+        const { declarations, notifications, ...filtered } = data;
+        setUserData(filtered);
+        setEditedData(filtered);
+        setAuthentifie(true);
+      } catch (error) {
+        setAuthentifie(false);
+      }
     };
 
     fetchUser();
   }, [userId]);
+
+  // Bloc d'authentification à placer juste avant le rendu
+  if (authentifie === null) {
+    return null;
+  }
+
+  if (!authentifie) {
+    return notFound();
+  }
 
   const handleInputChange = (field: string, value: any) => {
     setEditedData((prev: any) => ({
@@ -255,7 +280,6 @@ export default function AccountPage() {
   );
 
   return (
-    <ProtectedRouteAdmin>
       <div className="flex justify-center px-4 py-8">
         <Tabs defaultValue="account" className="w-full max-w-4xl space-y-4">
           <TabsList className="grid w-full grid-cols-2">
@@ -292,6 +316,5 @@ export default function AccountPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </ProtectedRouteAdmin>
   );
 }

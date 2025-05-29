@@ -1,5 +1,6 @@
 "use client";
 
+import { notFound } from "next/navigation";
 import { useEffect, useState } from "react";
 import { usePathname, useParams } from "next/navigation";
 import { AdminSidebar } from "@/components/sidebar/admin-sidebar";
@@ -17,18 +18,43 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb";
 import { Separator } from "@/components/ui/separator";
-import ProtectedRouteAdmin from "@/components/routes/ProtectedRouteAdmin";
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
 
   const [loading, setLoading] = useState(true);
+  const [authentifie, setAuthentifie] = useState<boolean | null>(null);
   const params = useParams();
   const userId = Number(params?.userId);
 
   useEffect(() => {
-    setLoading(false);
-  }, []);
+    const checkAuth = async () => {
+      try {
+        const token = localStorage.getItem("auth_token");
+        if (!token || !userId) {
+          setAuthentifie(false);
+          setLoading(false);
+          return;
+        }
+        const res = await fetch(`http://localhost:8000/api/users/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          setAuthentifie(false);
+        } else {
+          setAuthentifie(true);
+        }
+      } catch {
+        setAuthentifie(false);
+      } finally {
+        setLoading(false);
+      }
+    };
+    checkAuth();
+  }, [userId]);
 
   // Découper les segments de l'URL
   const segments = pathname.split("/").filter(Boolean);
@@ -47,16 +73,16 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         ?.replace(/-/g, " ")
         .replace(/^\w/, (c) => c.toUpperCase());
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <p>Chargement...</p>
-      </div>
-    );
+  if (loading || authentifie === null) {
+    return ;
+  }
+
+  if (!authentifie) {
+    return notFound();
   }
 
   return (
-    <ProtectedRouteAdmin>
+    <div className="flex h-screen w-full">
       <SidebarProvider>
         <AdminSidebar />
         <SidebarInset>
@@ -87,6 +113,6 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
           <main className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</main>
         </SidebarInset>
       </SidebarProvider>
-    </ProtectedRouteAdmin>
+    </div>
   );
 }

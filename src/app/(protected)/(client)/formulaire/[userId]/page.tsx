@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { useState, useEffect, useRef, useMemo } from "react"
-import { useRouter } from "next/navigation"
+import { notFound, useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -13,7 +13,6 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Loader2 } from "lucide-react"
 import axios from "axios"
-import ProtectedPrive from "@/components/routes/ProtectedRouteApprovedPrive"
 import { useParams } from "next/navigation"
 import AutrePersonne from "@/components/formulaires/autrePersonne"
 import Revenu from "@/components/formulaires/revenu"
@@ -272,7 +271,7 @@ interface AutrePersonneData {
   }>
 }
 
-export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,mode }: FormulaireDeclarationProps) {
+export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null, mode }: FormulaireDeclarationProps) {
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
   const [isDataLoading, setIsDataLoading] = useState(!!priveId)
@@ -296,6 +295,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
   const [conjointData, setConjointData] = useState<ConjointData | null>(null)
   const [pensionsAlimentaires, setPensionsAlimentaires] = useState<PensionAlimentaireData[]>([])
   const selectedYear = useYearStore((state) => state.selectedYear)
+    const [authentifie, setAuthentifie] = useState<boolean | null>(null);
 
 
   // Informations de base
@@ -465,7 +465,21 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setAuthentifie(null); // loading
         const token = localStorage.getItem("auth_token")
+
+        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          setAuthentifie(false);
+          return;
+        }
+        setAuthentifie(true);
+
         if (!token) {
           router.push("/login")
           return
@@ -974,6 +988,7 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
 
   // Construction dynamique des étapes à afficher
   const etapesAffichees = useMemo(() => {
+    
     const baseEtapes = [
       { step: 1, label: "Informations" },
       { step: 14, label: "Confirmation" },
@@ -1657,7 +1672,7 @@ if (banquesData) {
                     "Content-Type": "application/json",
                   },
                 },
-              ),
+              )
             )
           } else {
             // Sinon, c'est une nouvelle entrée
@@ -1951,8 +1966,26 @@ for (const foKey of deleteFoKeys) {
         console.log(error)}
 }
 
-          try{
-            await onSubmitSuccess()}catch(error){
+          try {
+            if (onSubmitSuccess) {
+              const formData: FormDataType = {
+                infoBase,
+                conjoint: conjointData || undefined,
+                enfants: enfantsData || undefined,
+                autrePersonne: autrePersonneData || undefined,
+                revenu: revenuData || undefined,
+                rentier: rentierData || undefined,
+                banques: banquesData || undefined,
+                titres: titresData || undefined,
+                immobiliers: immobiliersData || undefined,
+                dettes: dettesData || undefined,
+                assurances: assurancesData || undefined,
+                autresDeductions: autresDeductionsData || undefined,
+                autresInformations: autresInformationsData || undefined,
+              };
+              await onSubmitSuccess(formData);
+            }
+          } catch (error) {
             console.log(error)
           }
 
@@ -1991,7 +2024,6 @@ for (const foKey of deleteFoKeys) {
   // Afficher un écran de chargement pendant la récupération des données
   if (isDataLoading) {
     return (
-      <ProtectedPrive>
         <div className="container max-w-3xl py-8">
           <Card>
             <CardHeader>
@@ -2003,13 +2035,11 @@ for (const foKey of deleteFoKeys) {
             </CardContent>
           </Card>
         </div>
-      </ProtectedPrive>
     )
   }
 
   // Rendu de l'étape 1: Informations de base
   const renderStep1 = () => (
-    <ProtectedPrive>
       <div className="space-y-6">
         <div className="space-y-2">
           <Label htmlFor="dateNaissance">Date de naissance</Label>
@@ -2196,7 +2226,6 @@ for (const foKey of deleteFoKeys) {
         </Button>
 
       </div>
-    </ProtectedPrive>
   )
 
   // Rendu de l'étape 2: Informations du conjoint (si marié ou pacsé)
@@ -2205,23 +2234,19 @@ for (const foKey of deleteFoKeys) {
       // Si pas marié ni pacsé, passer directement à l'étape suivante
       setTimeout(() => nextStep(), 0)
       return (
-        <ProtectedPrive>
           <div className="flex justify-center">
             <Loader2 className="h-8 w-8 animate-spin" />
           </div>
-        </ProtectedPrive>
       )
     }
 
     return (
-      <ProtectedPrive>
         <Conjoint
           data={conjointData}
           onUpdate={(newData) => setConjointData(newData)}
           onNext={nextStep}
           onPrev={prevStep}
         />
-      </ProtectedPrive>
     )
   }
 
@@ -2231,11 +2256,9 @@ const renderStep3 = () => {
     // Si pas d'enfants et pas de section enfants demandée, passer directement à l'étape suivante
     setTimeout(() => nextStep(), 0);
     return (
-      <ProtectedPrive>
         <div className="flex justify-center">
           <Loader2 className="h-8 w-8 animate-spin" />
         </div>
-      </ProtectedPrive>
     );
   }
 
@@ -2291,121 +2314,98 @@ const renderStep3 = () => {
   }
 
   return (
-    <ProtectedPrive>
       <Enfants
         data={enfantsData || { enfants: [], pensionsAlimentaires: [] }}
         onUpdate={(newData) => setEnfantsData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
   );
 };
   // Rendu de l'étape 4: Autres personnes à charge
 
   const renderStep4 = () => (
-    <ProtectedPrive>
       <AutrePersonne
         data={autrePersonneData}
         onUpdate={(newData) => setAutrePersonneData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
   )
 
   // Rendu de l'étape 5: Revenu
   const renderStep5 = () => (
-    <ProtectedPrive>
       <Revenu data={revenuData} onUpdate={(newData) => setRevenuData(newData)} onNext={nextStep} onPrev={prevStep} />
-    </ProtectedPrive>
   )
 
 
 
   // Rendu de l'étape 14: Assurances
   const renderStep6 = () => (
-    <ProtectedPrive>
       <Assurances
         data={assurancesData}
         onUpdate={(newData) => setAssurancesData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
   )
   
 
   // Rendu de l'étape 8: Rentier
   const renderStep7 = () => (
-    <ProtectedPrive>
       <Rentier data={rentierData} onUpdate={(newData) => setRentierData(newData)} onNext={nextStep} onPrev={prevStep} />
-    </ProtectedPrive>
   )
 
 
   // Rendu de l'étape 10: Banques
   const renderStep8 = () => (
-    <ProtectedPrive>
       <Banques data={banquesData} onUpdate={(newData) => setBanquesData(newData)} onNext={nextStep} onPrev={prevStep} />
-    </ProtectedPrive>
   )
 
   // Rendu de l'étape 11: Titres
   const renderStep9 = () => (
-    <ProtectedPrive>
       <Titres data={titresData} onUpdate={(newData) => setTitresData(newData)} onNext={nextStep} onPrev={prevStep} />
-    </ProtectedPrive>
   )
 
   // Rendu de l'étape 12: Immobiliers
   const renderStep10 = () => (
-    <ProtectedPrive>
       <Immobiliers
         data={immobiliersData}
         onUpdate={(newData) => setImmobiliersData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
   )
 
   // Rendu de l'étape 13: Dettes
   const renderStep11 = () => (
-    <ProtectedPrive>
       <Dettes data={dettesData} onUpdate={(newData) => setDettesData(newData)} onNext={nextStep} onPrev={prevStep} />
-    </ProtectedPrive>
   )
 
 
 
   // Rendu de l'étape 15: Autres déductions
   const renderStep12 = () => (
-    <ProtectedPrive>
       <AutresDeductions
         data={autresDeductionsData}
         onUpdate={(newData) => setAutresDeductionsData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
   )
 
   // Rendu de l'étape 16: Autres informations
   const renderStep13 = () => (
-    <ProtectedPrive>
       <AutresInformations
         data={autresInformationsData}
         onUpdate={(newData) => setAutresInformationsData(newData)}
         onNext={nextStep}
         onPrev={prevStep}
       />
-    </ProtectedPrive>
   )
 
   // Rendu de l'étape 18: Récapitulatif et confirmation
   const renderStep14 = () => (
-    <ProtectedPrive>
       <div className="space-y-6">
         <h3 className="text-lg font-medium">Récapitulatif de votre déclaration</h3>
 
@@ -2579,7 +2579,7 @@ const renderStep3 = () => {
           </Button>
         </div>
       </div>
-    </ProtectedPrive>
+
   )
 
   // Rendu du formulaire en fonction de l'étape actuelle
@@ -2618,47 +2618,54 @@ const renderStep3 = () => {
     }
   }
 
+  // Ajoute ce bloc juste avant le return principal du composant
+  if (authentifie === null) {
+    return null;
+  }
+
+  if (!authentifie) {
+    return notFound();
+  }
+
   return (
-    <ProtectedPrive>
-      <div className="container max-w-3xl py-8">
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-bold">Formulaire de déclaration</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {/* Indicateur d'étape */}
-            <div className="mb-8">
-              <div className="relative mb-2">
-                <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
-                  {etapesAffichees.map((item) => (
-                    <button
-                      key={item.step}
-                      onClick={() => setStep(item.step)}
-                      ref={(el) => {
-                        stepRefs.current[item.step] = el
-                      }}
-                      className={`text-sm font-medium whitespace-nowrap ${
-                        step === item.step ? "text-primary" : "text-muted-foreground"
-                      }`}
-                    >
-                      {item.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-              <div className="w-full bg-muted rounded-full h-2.5">
-                <div
-                  className="bg-primary h-2.5 rounded-full transition-all duration-300"
-                  style={{ width: `${(step / 18) * 100}%` }}
-                ></div>
+    <div className="container max-w-3xl py-8">
+      <Card>
+        <CardHeader>
+          <CardTitle className="text-2xl font-bold">Formulaire de déclaration</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {/* Indicateur d'étape */}
+          <div className="mb-8">
+            <div className="relative mb-2">
+              <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide">
+                {etapesAffichees.map((item) => (
+                  <button
+                    key={item.step}
+                    onClick={() => setStep(item.step)}
+                    ref={(el) => {
+                      stepRefs.current[item.step] = el
+                    }}
+                    className={`text-sm font-medium whitespace-nowrap ${
+                      step === item.step ? "text-primary" : "text-muted-foreground"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </div>
             </div>
+            <div className="w-full bg-muted rounded-full h-2.5">
+              <div
+                className="bg-primary h-2.5 rounded-full transition-all duration-300"
+                style={{ width: `${(step / 18) * 100}%` }}
+              ></div>
+            </div>
+          </div>
 
-            {renderForm()}
-          </CardContent>
-        </Card>
-      </div>
-    </ProtectedPrive>
+          {renderForm()}
+        </CardContent>
+      </Card>
+    </div>
   )
 }
 

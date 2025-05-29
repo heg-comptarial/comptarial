@@ -12,6 +12,7 @@ import {
   FolderOpen,
   SquareUserRound,
 } from "lucide-react";
+import { notFound } from "next/navigation";
 
 import { NavDeclarations } from "@/components/sidebar/nav-declarations";
 import { NavSecondary } from "@/components/sidebar/nav-secondary";
@@ -29,22 +30,43 @@ import { useParams } from "next/navigation";
 import { NotificationBell } from "@/components/ui/notification-bell";
 
 export function EntrepriseSidebar(props: React.ComponentProps<typeof Sidebar>) {
-  const params = useParams()
-  const userId = Number(params?.userId)
+  const params = useParams();
+  const userId = Number(params?.userId);
   const [user, setUser] = React.useState<{ nom: string; email: string } | null>(null);
+  const [authentifie, setAuthentifie] = React.useState<boolean | null>(null);
 
   React.useEffect(() => {
     async function fetchUser() {
       try {
-        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`);
+        const token = localStorage.getItem("auth_token");
+        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          setAuthentifie(false);
+          return;
+        }
         const data = await res.json();
         setUser(data);
+        setAuthentifie(true);
       } catch (error) {
         setUser({ nom: "Utilisateur", email: "inconnu" });
+        setAuthentifie(false);
       }
     }
     if (userId) fetchUser();
   }, [userId]);
+
+  if (authentifie === null) {
+    return null;
+  }
+
+  if (!authentifie) {
+    return notFound();
+  }
 
   const data = {
     user: {

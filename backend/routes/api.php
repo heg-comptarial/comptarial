@@ -33,7 +33,10 @@ use App\Http\Controllers\DeclarationUpdateNotificationController;
 use Illuminate\Support\Facades\Crypt;
 
 // Routes pour les utilisateurs
-Route::apiResource('users', UserController::class);
+Route::apiResource('users', UserController::class)->middleware("auth:sanctum");
+
+// Protéger la route par Sanctum
+Route::get('/users/{id}', [UserController::class, 'show'])->middleware('auth:sanctum');
 
 // Routes supplémentaires pour récupere les info d'un utilisateur par son id
 Route::get('/users/{id}/details', [UserController::class, 'getUserDetails']);

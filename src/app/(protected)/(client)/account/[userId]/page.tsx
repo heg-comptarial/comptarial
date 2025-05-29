@@ -14,9 +14,10 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import ProtectedRoutePending from "@/components/routes/ProtectedRoutePending";
 import { useParams } from "next/navigation";
 import { NotificationService } from "@/services/notification-service"
+import { notFound } from "next/navigation";
+
 
 
 function ResetPassword() {
@@ -166,20 +167,46 @@ export default function AccountPage() {
   const [userData, setUserData] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
   const [editedData, setEditedData] = useState<any>(null);
-  const [userName, setUserName] = useState<string>("")
+  const [userName, setUserName] = useState<string>("");
+    const [authentifie, setAuthentifie] = useState<boolean | null>(true);
 
   useEffect(() => {
+    setAuthentifie(null); // Initialiser à null pour indiquer le chargement
     const fetchUser = async () => {
-      const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`);
-      const data = await res.json();
-      const { declarations, notifications, ...filtered } = data;
-      setUserData(filtered);
-      setEditedData(filtered);
-      setUserName(filtered.nom || "Utilisateur")
+      const token = localStorage.getItem("auth_token");
+      try {
+        const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
+        if (!res.ok) {
+          setAuthentifie(false); // Utiliser notFound() pour gérer les erreurs 404
+        }
+        const data = await res.json();
+        console.log("Données utilisateur récupérées :", data);
+        const { declarations, notifications, ...filtered } = data;
+        setUserData(filtered);
+        setEditedData(filtered);
+        setUserName(filtered.nom || "Utilisateur");
+        setAuthentifie(true);
+      } catch (error) {
+        setAuthentifie(false); // Utiliser notFound() pour gérer les erreurs de récupération
+      }
     };
 
     fetchUser();
   }, [userId]);
+
+    if (authentifie === null) {
+    // Affiche un loader ou rien du tout pendant le chargement
+    return null;
+    }
+
+    if (!authentifie) {
+    notFound();
+    }
 
   const handleInputChange = (section: string, field: string, value: any) => {
     setEditedData((prev: any) => {
@@ -206,7 +233,13 @@ export default function AccountPage() {
       let payload = {};
 
       if (section === "personal") {
-        endpoint = `http://127.0.0.1:8000/api/users/${userId}`;
+        const token = localStorage.getItem("auth_token");
+        const endpoint = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+        });
         payload = {
           nom: editedData.nom,
           email: editedData.email,
@@ -356,7 +389,6 @@ export default function AccountPage() {
   };
 
   return (
-    <ProtectedRoutePending>
       <div className="flex justify-center px-4 py-8">
         <Tabs defaultValue="account" className="w-full max-w-4xl space-y-4">
           <TabsList className="grid w-full grid-cols-2">
@@ -399,6 +431,5 @@ export default function AccountPage() {
           </TabsContent>
         </Tabs>
       </div>
-    </ProtectedRoutePending>
   );
 }
