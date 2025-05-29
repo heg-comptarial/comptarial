@@ -1,41 +1,44 @@
 "use client";
 
-import { JSX, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useParams } from "next/navigation";
 import { useRouter } from "next/navigation";
 import { notFound } from "next/navigation";
+import { Utilisateur } from "@/types/interfaces";
+import { toast, Toaster } from "sonner";
 
 export default function AccountPage() {
   const router = useRouter();
   const params = useParams();
   const userId = Number(params?.userId);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<Utilisateur | null>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [editedData, setEditedData] = useState<any>(null);
+  const [editedData, setEditedData] = useState<Utilisateur | null>(null);
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [authentifie, setAuthentifie] = useState<boolean | null>(null);
 
   useEffect(() => {
     const fetchUser = async () => {
       const token = localStorage.getItem("auth_token");
+      if (!token) {
+        setAuthentifie(false);
+        return;
+      }
+
       try {
         const res = await fetch(`http://127.0.0.1:8000/api/users/${userId}`, {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
         });
         if (!res.ok) {
@@ -43,21 +46,31 @@ export default function AccountPage() {
           return;
         }
         const data = await res.json();
-        const { declarations, notifications, ...filtered } = data;
+        const { ...filtered } = data;
         setUserData(filtered);
         setEditedData(filtered);
         setAuthentifie(true);
       } catch (error) {
+        console.error(
+          "Erreur lors de la récupération des données utilisateur :",
+          error
+        );
         setAuthentifie(false);
       }
     };
 
-    fetchUser();
+    if (userId) {
+      fetchUser();
+    }
   }, [userId]);
 
   // Bloc d'authentification à placer juste avant le rendu
   if (authentifie === null) {
-    return null;
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <p>Chargement...</p>
+      </div>
+    );
   }
 
   if (!authentifie) {
@@ -72,37 +85,62 @@ export default function AccountPage() {
   };
 
   const handleSectionUpdate = async () => {
-    try {
-      const endpoint = `http://127.0.0.1:8000/api/users/${userId}`;
-      const payload = {
-        nom: editedData.nom,
-        email: editedData.email,
-        localite: editedData.localite,
-        adresse: editedData.adresse,
-        codePostal: editedData.codePostal,
-        numeroTelephone: editedData.numeroTelephone,
-      };
-
-      await fetch(endpoint, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(payload),
-      });
-    } catch (error) {
-      console.error("Erreur lors de la mise à jour des informations :", error);
-      alert("Une erreur est survenue lors de l'enregistrement des modifications.");
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      throw new Error("Token d'authentification manquant");
     }
+
+    const endpoint = `http://127.0.0.1:8000/api/users/${userId}`;
+    const payload = {
+      nom: editedData?.nom,
+      email: editedData?.email,
+      localite: editedData?.localite,
+      adresse: editedData?.adresse,
+      codePostal: editedData?.codePostal,
+      numeroTelephone: editedData?.numeroTelephone,
+    };
+
+    const response = await fetch(endpoint, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(payload),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || `Erreur HTTP: ${response.status}`);
+    }
+
+    return await response.json();
   };
 
   const handleSaveAll = async () => {
+    setIsSaving(true);
     try {
-      await handleSectionUpdate();
-      alert("Toutes les modifications ont été enregistrées avec succès !");
-      setIsEditing(false); // Quitter le mode édition
+      const updatedUser = await handleSectionUpdate();
+
+      // Mettre à jour les données locales avec la réponse du serveur
+      setUserData(updatedUser);
+      setEditedData(updatedUser);
+
+      toast.success(
+        "Toutes les modifications ont été enregistrées avec succès !"
+      );
+      setIsEditing(false);
+      router.refresh();
     } catch (error) {
-      console.error("Erreur lors de l'enregistrement des modifications :", error);
+      console.error(
+        "Erreur lors de l'enregistrement des modifications :",
+        error
+      );
+      toast.error(
+        `Une erreur est survenue lors de l'enregistrement des modifications: ${error}`
+      );
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -111,92 +149,112 @@ export default function AccountPage() {
 
     const token = localStorage.getItem("auth_token");
     if (!token) {
-      alert("Token manquant");
+      toast.error("Token d'authentification manquant");
       return;
     }
+
     setIsLoading(true);
 
     try {
       // 1. Vérification de l'ancien mot de passe auprès de l'API
-      const check = await fetch("http://127.0.0.1:8000/api/users/check-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          currentPassword,
-        }),
-      });
+      const check = await fetch(
+        "http://127.0.0.1:8000/api/users/check-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            currentPassword,
+          }),
+        }
+      );
+
       if (!check.ok) {
-        alert("Mot de passe actuel incorrect");
-        setIsLoading(false);
+        toast.error("Mot de passe actuel incorrect");
         return;
       }
 
       // 2. Vérification : nouveau mot de passe différent de l'ancien
       if (currentPassword === newPassword) {
-        alert("Le nouveau mot de passe doit être différent de l'ancien.");
-        setIsLoading(false);
+        toast.error("Le nouveau mot de passe doit être différent de l'ancien");
         return;
       }
 
       // 3. Vérification : confirmation
       if (newPassword !== confirmPassword) {
-        alert("Les nouveaux mots de passe ne correspondent pas");
-        setIsLoading(false);
+        toast.error("Les nouveaux mots de passe ne correspondent pas");
         return;
       }
 
       // 4. Vérification : complexité du mot de passe
       const passwordRegex = /^(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/;
       if (!passwordRegex.test(newPassword)) {
-        alert(
+        toast.error(
           "Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial."
         );
-        setIsLoading(false);
         return;
       }
 
       // 5. Changement du mot de passe
-      const update = await fetch("http://127.0.0.1:8000/api/users/change-password", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          user_id: userId,
-          newPassword,
-        }),
-      });
+      const update = await fetch(
+        "http://127.0.0.1:8000/api/users/change-password",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            user_id: userId,
+            newPassword,
+          }),
+        }
+      );
+
       if (!update.ok) {
-        alert("Erreur lors de la mise à jour du mot de passe");
-        setIsLoading(false);
+        toast.error(
+          "Une erreur est survenue lors de la mise à jour du mot de passe"
+        );
         return;
       }
-      alert("Mot de passe mis à jour avec succès !");
+
+      toast.success("Mot de passe mis à jour avec succès !");
       setCurrentPassword("");
       setNewPassword("");
       setConfirmPassword("");
       router.push(`/admin/${userId}`);
     } catch (err) {
       console.error("Erreur:", err);
-      alert("Une erreur est survenue");
+      toast.error(
+        `Une erreur est survenue lors du changement de mot de passe: ${err}`
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
-  const renderInput = (label: string, id: string, value: any) => {
+  const handleCancelEdit = () => {
+    setEditedData(userData); // Réinitialiser les données
+    setIsEditing(false); // Quitter le mode édition
+  };
+
+  const renderInput = (
+    label: string,
+    id: string,
+    value: string | number | undefined
+  ) => {
     return (
       <div key={id} className="flex flex-col space-y-1">
         <Label htmlFor={id} className="capitalize">
           {label}
         </Label>
         {!isEditing ? (
-          <p>{value || "—"}</p>
+          <p className="py-2 px-3 bg-gray-50 rounded-md min-h-[40px] flex items-center">
+            {value || "—"}
+          </p>
         ) : (
           <Input
             id={id}
@@ -209,7 +267,10 @@ export default function AccountPage() {
   };
 
   const renderPersonalSection = () => {
-    const { nom, email, localite, adresse, codePostal, numeroTelephone } = editedData;
+    if (!editedData) return null;
+
+    const { nom, email, localite, adresse, codePostal, numeroTelephone } =
+      editedData;
 
     return (
       <Card>
@@ -257,11 +318,14 @@ export default function AccountPage() {
               required
             />
             <p className="text-xs text-gray-500">
-              Le mot de passe doit contenir au moins 8 caractères, une majuscule, un chiffre et un caractère spécial.
+              Le mot de passe doit contenir au moins 8 caractères, une
+              majuscule, un chiffre et un caractère spécial.
             </p>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirmPassword">Confirmer le nouveau mot de passe</Label>
+            <Label htmlFor="confirmPassword">
+              Confirmer le nouveau mot de passe
+            </Label>
             <Input
               id="confirmPassword"
               type="password"
@@ -280,41 +344,41 @@ export default function AccountPage() {
   );
 
   return (
-      <div className="flex justify-center px-4 py-8">
-        <Tabs defaultValue="account" className="w-full max-w-4xl space-y-4">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="account">Informations</TabsTrigger>
-            <TabsTrigger value="password">Mot de passe</TabsTrigger>
-          </TabsList>
+    <div className="flex justify-center px-4 py-8">
+      <Toaster position="bottom-right" richColors closeButton />
+      <Tabs defaultValue="account" className="w-full max-w-4xl space-y-4">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="account">Informations</TabsTrigger>
+          <TabsTrigger value="password">Mot de passe</TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="account" className="space-y-6">
-            {userData && renderPersonalSection()}
-            <div className="flex justify-end gap-4">
-              {!isEditing ? (
-                <Button variant="outline" onClick={() => setIsEditing(true)}>
-                  Modifier
+        <TabsContent value="account" className="space-y-6">
+          {userData && renderPersonalSection()}
+          <div className="flex justify-end gap-4">
+            {!isEditing ? (
+              <Button variant="outline" onClick={() => setIsEditing(true)}>
+                Modifier
+              </Button>
+            ) : (
+              <>
+                <Button
+                  variant="outline"
+                  onClick={handleSaveAll}
+                  disabled={isSaving}
+                >
+                  {isSaving ? "Enregistrement..." : "Enregistrer"}
                 </Button>
-              ) : (
-                <>
-                  <Button variant="outline" onClick={handleSaveAll}>
-                    Enregistrer
-                  </Button>
-                  <Button
-                    onClick={() => {
-                      setEditedData(userData); // Réinitialiser les données
-                      setIsEditing(false); // Quitter le mode édition
-                    }}
-                  >
-                    Annuler
-                  </Button>
-                </>
-              )}
-            </div>
-          </TabsContent>
-          <TabsContent value="password" className="space-y-6">
-            {renderPasswordSection()}
-          </TabsContent>
-        </Tabs>
-      </div>
+                <Button onClick={handleCancelEdit} disabled={isSaving}>
+                  Annuler
+                </Button>
+              </>
+            )}
+          </div>
+        </TabsContent>
+        <TabsContent value="password" className="space-y-6">
+          {renderPasswordSection()}
+        </TabsContent>
+      </Tabs>
+    </div>
   );
 }
