@@ -19,163 +19,256 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 // Définition des interfaces pour les données du formulaire
-interface Conjoint {
-  id: number
-  prive_id: number
+
+export interface User {
+  user_id: number
   nom: string
-  prenom: string
-  dateNaissance: string
-  nationalite?: string
-  etatCivil?: string
-  profession?: string
-  revenuAnnuel?: number
-  dateCreation: string
-}
-
-interface Enfant {
-  id: number
-  prive_id: number
-  nom: string
-  prenom: string
-  dateNaissance: string
-  ecole?: string
-  garde?: string
-  pensionsAlimentaires?: PensionAlimentaire[]
-}
-
-interface PensionAlimentaire {
-  id: number
-  enfant_id: number
-  montant: number
-  dateDebut: string
-  dateFin?: string
-}
-
-interface AutrePersonneACharge {
-  id: number
-  prive_id: number
-  nom: string
-  prenom: string
-  dateNaissance: string
-  lien: string
-  montantSoutien?: number
-}
-
-interface Banque {
-  id: number
-  prive_id: number
-  nomBanque: string
-  numeroCpte: string
-  solde: number
-  dateOuverture?: string
-}
-
-interface InteretDette {
-  id: number
-  prive_id: number
-  creancier: string
-  montantDette: number
-  tauxInteret: number
-  dateDebut: string
-  dateFin?: string
-  montantInteret?: number
-}
-
-interface Immobilier {
-  id: number
-  prive_id: number
+  email: string
+  localite: string
   adresse: string
-  valeurFiscale: number
-  valeurLocative?: number
-  dateAcquisition?: string
-  prixAcquisition?: number
-}
-
-interface IndemniteAssurance {
-  id: number
-  prive_id: number
-  compagnie: string
-  typeAssurance: string
-  montantPrime: number
-  dateDebut: string
-  dateFin?: string
-}
-
-interface Rentier {
-  id: number
-  prive_id: number
-  sourceRevenu: string
-  montantAnnuel: number
-  dateDebut: string
-  dateFin?: string
-}
-
-interface Revenu {
-  id: number
-  prive_id: number
-  source: string
-  montant: number
-  annee: number
-  description?: string
-}
-
-interface Titre {
-  id: number
-  prive_id: number
-  nomTitre: string
-  quantite: number
-  valeurUnitaire: number
-  dateAcquisition?: string
-}
-
-interface Deduction {
-  id: number
-  prive_id: number
-  type: string
-  montant: number
-  annee: number
-  description?: string
-}
-
-interface AutreInformation {
-  id: number
-  prive_id: number
-  type: string
-  description: string
+  codePostal: string
+  numeroTelephone: string
+  role: string
+  statut: string
   dateCreation: string
 }
 
-interface FormulaireComplet {
+export interface AutreInformation {
+  autre_informations_id: number
+  prive_id: number
+  fo_versementBoursesEtudes: number
+  fo_pensionsPercuesEnfantMajeurACharge: number
+  fo_prestationsAVSSPC: number
+  fo_prestationsFamilialesSPC: number
+  fo_prestationsVilleCommune: number
+  fo_allocationsImpotents: number
+  fo_reparationTortMoral: number
+  fo_hospiceGeneral: number
+  fo_institutionBienfaisance: number
+}
+
+export interface AutrePersonneACharge {
+  autre_personne_id: number
+  prive_id: number
+  nom: string
+  prenom: string
+  dateNaissance: string
+  degreParente: string
+  nbPersonneParticipation: number
+  vieAvecPersonneCharge: number
+  revenusBrutPersonneACharge: string
+  fortuneNetPersonneACharge: string
+  montantVerseAPersonneACharge: string
+  fo_preuveVersementEffectue: number
+}
+
+export interface Banque {
+  banque_id: number
+  prive_id: number
+  fo_attestationFinAnnee: number
+  nb_compte?: string // Ajout du nombre de compte (optionnel)
+}
+
+export interface Deduction {
+  autre_deduction_id: number
+  prive_id: number
+  fo_rachatLPP: boolean
+  fo_attestation3emePilierA: boolean
+  fo_attestation3emePilierB: boolean
+  fo_attestationAssuranceMaladie: boolean
+  fo_attestationAssuranceAccident: boolean
+  fo_cotisationAVS: boolean
+  fo_fraisFormationProfessionnel: boolean
+  fo_fraisMedicaux: boolean
+  fo_fraisHandicap: boolean
+  fo_dons: boolean
+  fo_versementPartisPolitiques: boolean
+}
+
+export interface Conjoint {
+  conjoint_id: number
+  prive_id: number
+  nom: string
+  prenom: string
+  email: string
+  localite: string
+  adresse: string
+  codePostal: string
+  numeroTelephone: string
+  etatCivil: string
+  dateNaissance: string
+  nationalite: string
+  professionExercee: string
+  contributionReligieuse: string
+}
+
+export interface PensionAlimentaire {
+  pension_id: number
+  enfant_id: number
+  statut: string
+  montantContribution: string
+  nom: string
+  prenom: string
+  noContribuable: string
+}
+
+export interface Enfant {
+  enfant_id: number
+  prive_id: number
+  nom: string
+  prenom: string
+  dateNaissance: string
+  adresse: string
+  codePostal: string
+  localite: string
+  noAVS: string
+  noContribuable: string
+  revenuBrut: number
+  fortuneNet: number | null
+  avantAgeScolaire: boolean
+  handicap: boolean
+  domicileAvecParents: boolean
+  parentsViventEnsemble: boolean
+  gardeAlternee: boolean
+  priseEnChargeFraisEgale: boolean
+  revenuNetSuperieurAAutreParent: boolean
+  fraisGarde: string | null
+  primeAssuranceMaladie: string
+  subsideAssuranceMaladie: string | null
+  fraisMedicaux: string | null
+  primeAssuranceAccident: string | null
+  allocationsFamilialesSuisse: string | null
+  montantInclusDansSalaireBrut: boolean
+  allocationsFamilialesEtranger: string | null
+  fo_scolaire: boolean
+  fo_scolaireStope: boolean
+  fo_certificatSalaire: boolean
+  fo_attestationFortune: boolean
+  fo_preuveVersementPensionAlim: boolean
+  fo_preuveEncaissementPensionAlim: boolean
+  fo_avanceScarpa: boolean
+  fo_fraisGardeEffectifs: boolean
+  fo_attestationAMPrimesAnnuel: boolean
+  fo_attestationAMFraisMedicaux: boolean
+  fo_attestationPaiementAssuranceAccident: boolean
+  pensions_alimentaires: PensionAlimentaire[]
+}
+
+export interface Immobilier {
+  immobilier_id: number
+  prive_id: number
+  statut: string
+  canton: string
+  commune: string
+  pays: string
+  noParcelleGeneve: string
+  adresseComplete: string
+  anneeConstruction: number
+  occupeDesLe: string
+  dateAchat: string
+  pourcentageProprietaire: number
+  autreProprietaire: string
+  prixAchat: number
+  valeurLocativeBrut: number
+  loyersEncaisses: number
+  fraisEntretienDeductibles: number
+  fo_bienImmobilier: boolean
+  fo_attestationValeurLocative: boolean
+  fo_taxeFonciereBiensEtranger: boolean
+  fo_factureEntretienImmeuble: boolean
+}
+
+export interface IndemniteAssurance {
+  indemnite_assurance_id: number
+  prive_id: number
+  fo_chomage: boolean
+  fo_maladie: boolean
+  fo_accident: boolean
+  fo_materniteMilitairePC: boolean
+}
+
+export interface InteretDette {
+  dettes_id: number
+  prive_id: number
+  fo_attestationEmprunt: boolean
+  fo_attestationCarteCredit: boolean
+  fo_attestationHypotheque: boolean
+}
+
+export interface Rentier {
+  rentier_id: number
+  prive_id: number
+  fo_attestationRenteAVSAI: boolean
+  fo_attestationRentePrevoyance: boolean
+  fo_autresRentes: boolean
+}
+
+export interface Revenu {
+  revenu_id: number
+  prive_id: number
+  indemnites: boolean
+  interruptionsTravailNonPayees: boolean
+  interuptionsTravailNonPayeesDebut: string | null
+  interuptionsTravailNonPayeesFin: string | null
+  activiteIndependante: boolean
+  prestationsSociales: boolean
+  subsidesAssuranceMaladie: boolean
+  fo_certificatSalaire: boolean
+  fo_renteViagere: boolean
+  fo_allocationLogement: boolean
+  fo_preuveEncaissementSousLoc: boolean
+  fo_gainsAccessoires: boolean
+  fo_attestationAutresRevenus: boolean
+  fo_etatFinancier: boolean
+}
+
+export interface Titre {
+  titre_id: number
+  prive_id: number
+  compteBancairePostale: boolean
+  actionOuPartSociale: boolean
+  autreElementFortune: boolean
+  aucunElementFortune: boolean
+  objetsValeur: boolean
+  fo_gainJeux: boolean
+  fo_releveFiscal: boolean
+}
+
+export interface FormulaireComplet {
   prive_id: number
   user_id: number
   dateNaissance: string
   nationalite: string
   etatCivil: string
-  fo_banques: boolean
-  fo_dettes: boolean
-  fo_immobiliers: boolean
-  fo_revenu: boolean
+  fo_enfants: boolean
   fo_autrePersonneCharge: boolean
+  fo_revenu: boolean
+  fo_independant: number
+  fo_indemnitesAssurance: number
   fo_rentier: boolean
-  fo_assurances: boolean
+  fo_autresRevenus: number
+  fo_banques: boolean
   fo_titres: boolean
+  fo_immobiliers: boolean
+  fo_dettes: boolean
+  fo_assurances: boolean
   fo_autresDeductions: boolean
   fo_autresInformations: boolean
   nom?: string
   prenom?: string
-  user?: any
+  user: User
+  autres_informations?: AutreInformation[]
+  autres_personnes_a_charge?: AutrePersonneACharge[]
+  banques?: Banque[]
+  deductions?: Deduction[]
   conjoints?: Conjoint[]
   enfants?: Enfant[]
-  autresPersonnesACharge?: AutrePersonneACharge[]
-  banques?: Banque[]
-  interetDettes?: InteretDette[]
   immobiliers?: Immobilier[]
-  indemniteAssurances?: IndemniteAssurance[]
-  rentier?: Rentier
+  indemnite_assurances?: IndemniteAssurance[]
+  interet_dettes?: InteretDette[]
+  rentier?: Rentier[]
   revenus?: Revenu[]
   titres?: Titre[]
-  deductions?: Deduction[]
-  autresInformations?: AutreInformation[]
 }
 
 interface FormulairePriveProps {
@@ -228,30 +321,46 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
           dateNaissance: "1990-01-01",
           nationalite: "Suisse",
           etatCivil: "celibataire",
-          fo_revenu: false,
-          fo_banques: false,
-          fo_dettes: false,
-          fo_immobiliers: false,
+          fo_enfants: false,
           fo_autrePersonneCharge: false,
+          fo_revenu: false,
+          fo_independant: 0,
+          fo_indemnitesAssurance: 0,
           fo_rentier: false,
-          fo_assurances: false,
+          fo_autresRevenus: 0,
+          fo_banques: false,
           fo_titres: false,
+          fo_immobiliers: false,
+          fo_dettes: false,
+          fo_assurances: false,
           fo_autresDeductions: false,
           fo_autresInformations: false,
           nom: "Nom Test",
           prenom: "Prénom Test",
-          user: { nom: "Nom Test", prenom: "Prénom Test" },
+          user: { 
+            user_id: userId,
+            nom: "Nom Test",
+            prenom: "Prénom Test",
+            email: "",
+            localite: "",
+            adresse: "",
+            codePostal: "",
+            numeroTelephone: "",
+            role: "prive",
+            statut: "approved",
+            dateCreation: ""
+          },
           conjoints: [],
           enfants: [],
-          autresPersonnesACharge: [],
+          autres_personnes_a_charge: [],
           banques: [],
-          interetDettes: [],
+          interet_dettes: [],
           immobiliers: [],
-          indemniteAssurances: [],
+          indemnite_assurances: [],
           revenus: [],
           titres: [],
           deductions: [],
-          autresInformations: [],
+          autres_informations: [],
         }
 
         setFormulaireData(fallbackData)
@@ -511,7 +620,7 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                         <Input
                           id="prenom"
                           name="prenom"
-                          value={editedPersonalInfo?.prenom || formulaireData.user?.prenom || ""}
+                          value={editedPersonalInfo?.prenom || formulaireData.user?.nom || ""}
                           onChange={handlePersonalInfoChange}
                           disabled
                         />
@@ -593,7 +702,7 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       </div>
                       <div className="grid grid-cols-2">
                         <span className="text-muted-foreground">Prénom:</span>
-                        <span>{formulaireData.prenom || formulaireData.user?.prenom || "Non spécifié"}</span>
+                        <span>{formulaireData.prenom || formulaireData.user?.nom || "Non spécifié"}</span>
                       </div>
                       <div className="grid grid-cols-2">
                         <span className="text-muted-foreground">Date de naissance:</span>
@@ -824,7 +933,7 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                 </div>
               </div>
 
-              {formulaireData.autresInformations && formulaireData.autresInformations.length > 0 && (
+              {formulaireData.autres_informations && formulaireData.autres_informations.length > 0 && (
                 <>
                   <Separator className="my-6" />
                   <h3 className="font-medium mb-4">Autres informations</h3>
@@ -837,11 +946,12 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {formulaireData.autresInformations.map((info) => (
-                        <TableRow key={info.id}>
-                          <TableCell>{info.type}</TableCell>
-                          <TableCell>{info.description}</TableCell>
-                          <TableCell>{formatDate(info.dateCreation)}</TableCell>
+                      {formulaireData.autres_informations?.map((info) => (
+                        <TableRow key={info.autre_informations_id}>
+                          <TableCell>{info.fo_versementBoursesEtudes ? "Bourses d'études" : "-"}</TableCell>
+                          <TableCell>{info.fo_prestationsAVSSPC ? "Prestations AVS/SPC" : "-"}</TableCell>
+                          <TableCell>{info.fo_prestationsVilleCommune ? "Prestations Ville/Commune" : "-"}</TableCell>
+                          {/* Ajoute d'autres champs si besoin */}
                         </TableRow>
                       ))}
                     </TableBody>
@@ -874,19 +984,17 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                             <TableHead>Nationalité</TableHead>
                             <TableHead>État civil</TableHead>
                             <TableHead>Profession</TableHead>
-                            <TableHead>Revenu annuel</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {formulaireData.conjoints.map((conjoint) => (
-                            <TableRow key={conjoint.id}>
+                            <TableRow key={conjoint.conjoint_id}>
                               <TableCell>{conjoint.nom}</TableCell>
                               <TableCell>{conjoint.prenom}</TableCell>
                               <TableCell>{formatDate(conjoint.dateNaissance)}</TableCell>
                               <TableCell>{conjoint.nationalite || "Non spécifié"}</TableCell>
                               <TableCell>{conjoint.etatCivil || "Non spécifié"}</TableCell>
-                              <TableCell>{conjoint.profession || "Non spécifié"}</TableCell>
-                              <TableCell>{formatMontant(conjoint.revenuAnnuel)}</TableCell>
+                              <TableCell>{conjoint.professionExercee || "Non spécifié"}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -902,57 +1010,28 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                   <AccordionTrigger>Enfant(s) ({formulaireData.enfants?.length || 0})</AccordionTrigger>
                   <AccordionContent>
                     {formulaireData.enfants && formulaireData.enfants.length > 0 ? (
-                      <div className="space-y-6">
-                        {formulaireData.enfants.map((enfant) => (
-                          <div key={enfant.id} className="border rounded-md p-4">
-                            <h4 className="font-medium mb-2">
-                              {enfant.prenom} {enfant.nom}
-                            </h4>
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-                              <div className="space-y-2">
-                                <div className="grid grid-cols-2">
-                                  <span className="text-muted-foreground">Date de naissance:</span>
-                                  <span>{formatDate(enfant.dateNaissance)}</span>
-                                </div>
-                                <div className="grid grid-cols-2">
-                                  <span className="text-muted-foreground">École:</span>
-                                  <span>{enfant.ecole || "Non spécifié"}</span>
-                                </div>
-                                <div className="grid grid-cols-2">
-                                  <span className="text-muted-foreground">Garde:</span>
-                                  <span>{enfant.garde || "Non spécifié"}</span>
-                                </div>
-                              </div>
-                            </div>
-
-                            {enfant.pensionsAlimentaires && enfant.pensionsAlimentaires.length > 0 && (
-                              <>
-                                <h5 className="font-medium mb-2">Pensions alimentaires</h5>
-                                <Table>
-                                  <TableHeader>
-                                    <TableRow>
-                                      <TableHead>Montant</TableHead>
-                                      <TableHead>Date de début</TableHead>
-                                      <TableHead>Date de fin</TableHead>
-                                    </TableRow>
-                                  </TableHeader>
-                                  <TableBody>
-                                    {enfant.pensionsAlimentaires.map((pension) => (
-                                      <TableRow key={pension.id}>
-                                        <TableCell>{formatMontant(pension.montant)}</TableCell>
-                                        <TableCell>{formatDate(pension.dateDebut)}</TableCell>
-                                        <TableCell>
-                                          {pension.dateFin ? formatDate(pension.dateFin) : "En cours"}
-                                        </TableCell>
-                                      </TableRow>
-                                    ))}
-                                  </TableBody>
-                                </Table>
-                              </>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                      <Table>
+                        <TableHeader>
+                          <TableRow>
+                            <TableHead>Nom</TableHead>
+                            <TableHead>Prénom</TableHead>
+                            <TableHead>Date de naissance</TableHead>
+                            <TableHead>Revenu brut</TableHead>
+                            <TableHead>Fortune nette</TableHead>
+                          </TableRow>
+                        </TableHeader>
+                        <TableBody>
+                          {formulaireData.enfants.map((enfant) => (
+                            <TableRow key={enfant.enfant_id}>
+                              <TableCell>{enfant.nom}</TableCell>
+                              <TableCell>{enfant.prenom}</TableCell>
+                              <TableCell>{formatDate(enfant.dateNaissance)}</TableCell>
+                              <TableCell>{formatMontant(enfant.revenuBrut)}</TableCell>
+                              <TableCell>{formatMontant(enfant.fortuneNet ?? 0)}</TableCell>
+                            </TableRow>
+                          ))}
+                        </TableBody>
+                      </Table>
                     ) : (
                       <p className="text-muted-foreground">Aucun enfant enregistré</p>
                     )}
@@ -962,10 +1041,10 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                 {/* Autres personnes à charge */}
                 <AccordionItem value="autres-personnes">
                   <AccordionTrigger>
-                    Autres personnes à charge ({formulaireData.autresPersonnesACharge?.length || 0})
+                    Autres personnes à charge ({formulaireData.autres_personnes_a_charge?.length || 0})
                   </AccordionTrigger>
                   <AccordionContent>
-                    {formulaireData.autresPersonnesACharge && formulaireData.autresPersonnesACharge.length > 0 ? (
+                    {formulaireData.autres_personnes_a_charge && formulaireData.autres_personnes_a_charge.length > 0 ? (
                       <Table>
                         <TableHeader>
                           <TableRow>
@@ -977,13 +1056,13 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {formulaireData.autresPersonnesACharge.map((personne) => (
-                            <TableRow key={personne.id}>
+                          {formulaireData.autres_personnes_a_charge.map((personne) => (
+                            <TableRow key={personne.autre_personne_id}>
                               <TableCell>{personne.nom}</TableCell>
                               <TableCell>{personne.prenom}</TableCell>
                               <TableCell>{formatDate(personne.dateNaissance)}</TableCell>
-                              <TableCell>{personne.lien}</TableCell>
-                              <TableCell>{formatMontant(personne.montantSoutien)}</TableCell>
+                              <TableCell>{personne.degreParente}</TableCell>
+                              <TableCell>{formatMontant(Number(personne.montantVerseAPersonneACharge))}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -1014,21 +1093,15 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Banque</TableHead>
-                            <TableHead>Numéro de compte</TableHead>
-                            <TableHead>Solde</TableHead>
-                            <TableHead>Date d&apos;ouverture</TableHead>
+                            <TableHead>Nombre de compte</TableHead>
+                            <TableHead>Attestation fin d&apos;année</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {formulaireData.banques.map((banque) => (
-                            <TableRow key={banque.id}>
-                              <TableCell>{banque.nomBanque}</TableCell>
-                              <TableCell>{banque.numeroCpte}</TableCell>
-                              <TableCell>{formatMontant(banque.solde)}</TableCell>
-                              <TableCell>
-                                {banque.dateOuverture ? formatDate(banque.dateOuverture) : "Non spécifié"}
-                              </TableCell>
+                            <TableRow key={banque.banque_id}>
+                              <TableCell>{banque.nb_compte || "Non spécifié"}</TableCell>
+                              <TableCell>{banque.fo_attestationFinAnnee ? "Oui" : "Non"}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -1041,29 +1114,23 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
 
                 {/* Dettes et intérêts */}
                 <AccordionItem value="dettes">
-                  <AccordionTrigger>Dettes et intérêts ({formulaireData.interetDettes?.length || 0})</AccordionTrigger>
+                  <AccordionTrigger>Dettes et intérêts ({formulaireData.interet_dettes?.length || 0})</AccordionTrigger>
                   <AccordionContent>
-                    {formulaireData.interetDettes && formulaireData.interetDettes.length > 0 ? (
+                    {formulaireData.interet_dettes && formulaireData.interet_dettes.length > 0 ? (
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Créancier</TableHead>
-                            <TableHead>Montant de la dette</TableHead>
-                            <TableHead>Taux d&apos;intérêt</TableHead>
-                            <TableHead>Date de début</TableHead>
-                            <TableHead>Date de fin</TableHead>
-                            <TableHead>Montant des intérêts</TableHead>
+                            <TableHead>Attestation Emprunt</TableHead>
+                            <TableHead>Attestation Carte Crédit</TableHead>
+                            <TableHead>Attestation Hypothèque</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {formulaireData.interetDettes.map((dette) => (
-                            <TableRow key={dette.id}>
-                              <TableCell>{dette.creancier}</TableCell>
-                              <TableCell>{formatMontant(dette.montantDette)}</TableCell>
-                              <TableCell>{dette.tauxInteret}%</TableCell>
-                              <TableCell>{formatDate(dette.dateDebut)}</TableCell>
-                              <TableCell>{dette.dateFin ? formatDate(dette.dateFin) : "En cours"}</TableCell>
-                              <TableCell>{formatMontant(dette.montantInteret)}</TableCell>
+                          {formulaireData.interet_dettes.map((dette) => (
+                            <TableRow key={dette.dettes_id}>
+                              <TableCell>{dette.fo_attestationEmprunt ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{dette.fo_attestationCarteCredit ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{dette.fo_attestationHypotheque ? "Oui" : "Non"}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -1082,23 +1149,17 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Adresse</TableHead>
-                            <TableHead>Valeur fiscale</TableHead>
-                            <TableHead>Valeur locative</TableHead>
-                            <TableHead>Date d&apos;acquisition</TableHead>
-                            <TableHead>Prix d&apos;acquisition</TableHead>
+                            <TableHead>Adresse complète</TableHead>
+                            <TableHead>Valeur locative brute</TableHead>
+                            <TableHead>Prix d&apos;achat</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {formulaireData.immobiliers.map((immobilier) => (
-                            <TableRow key={immobilier.id}>
-                              <TableCell>{immobilier.adresse}</TableCell>
-                              <TableCell>{formatMontant(immobilier.valeurFiscale)}</TableCell>
-                              <TableCell>{formatMontant(immobilier.valeurLocative)}</TableCell>
-                              <TableCell>
-                                {immobilier.dateAcquisition ? formatDate(immobilier.dateAcquisition) : "Non spécifié"}
-                              </TableCell>
-                              <TableCell>{formatMontant(immobilier.prixAcquisition)}</TableCell>
+                            <TableRow key={immobilier.immobilier_id}>
+                              <TableCell>{immobilier.adresseComplete}</TableCell>
+                              <TableCell>{formatMontant(immobilier.valeurLocativeBrut)}</TableCell>
+                              <TableCell>{formatMontant(immobilier.prixAchat)}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -1117,23 +1178,17 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Nom du titre</TableHead>
-                            <TableHead>Quantité</TableHead>
-                            <TableHead>Valeur unitaire</TableHead>
-                            <TableHead>Valeur totale</TableHead>
-                            <TableHead>Date d&apos;acquisition</TableHead>
+                            <TableHead>Compte bancaire/postale</TableHead>
+                            <TableHead>Action ou part sociale</TableHead>
+                            <TableHead>Autre élément fortune</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {formulaireData.titres.map((titre) => (
-                            <TableRow key={titre.id}>
-                              <TableCell>{titre.nomTitre}</TableCell>
-                              <TableCell>{titre.quantite}</TableCell>
-                              <TableCell>{formatMontant(titre.valeurUnitaire)}</TableCell>
-                              <TableCell>{formatMontant(titre.quantite * titre.valeurUnitaire)}</TableCell>
-                              <TableCell>
-                                {titre.dateAcquisition ? formatDate(titre.dateAcquisition) : "Non spécifié"}
-                              </TableCell>
+                            <TableRow key={titre.titre_id}>
+                              <TableCell>{titre.compteBancairePostale ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{titre.actionOuPartSociale ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{titre.autreElementFortune ? "Oui" : "Non"}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -1164,19 +1219,17 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Source</TableHead>
-                            <TableHead>Montant</TableHead>
-                            <TableHead>Année</TableHead>
-                            <TableHead>Description</TableHead>
+                            <TableHead>Indemnités</TableHead>
+                            <TableHead>Activité indépendante</TableHead>
+                            <TableHead>Subsides assurance maladie</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {formulaireData.revenus.map((revenu) => (
-                            <TableRow key={revenu.id}>
-                              <TableCell>{revenu.source}</TableCell>
-                              <TableCell>{formatMontant(revenu.montant)}</TableCell>
-                              <TableCell>{revenu.annee}</TableCell>
-                              <TableCell>{revenu.description || "Non spécifié"}</TableCell>
+                            <TableRow key={revenu.revenu_id}>
+                              <TableCell>{revenu.indemnites ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{revenu.activiteIndependante ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{revenu.subsidesAssuranceMaladie ? "Oui" : "Non"}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -1189,27 +1242,25 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
 
                 {/* Rentier */}
                 <AccordionItem value="rentier">
-                  <AccordionTrigger>Rentes</AccordionTrigger>
+                  <AccordionTrigger>Rentes ({formulaireData.rentier?.length || 0})</AccordionTrigger>
                   <AccordionContent>
-                    {formulaireData.rentier ? (
+                    {formulaireData.rentier && formulaireData.rentier.length > 0 ? (
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Source de revenu</TableHead>
-                            <TableHead>Montant annuel</TableHead>
-                            <TableHead>Date de début</TableHead>
-                            <TableHead>Date de fin</TableHead>
+                            <TableHead>Attestation Rente AVS/AI</TableHead>
+                            <TableHead>Attestation Rente Prévoyance</TableHead>
+                            <TableHead>Autres rentes</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          <TableRow>
-                            <TableCell>{formulaireData.rentier.sourceRevenu}</TableCell>
-                            <TableCell>{formatMontant(formulaireData.rentier.montantAnnuel)}</TableCell>
-                            <TableCell>{formatDate(formulaireData.rentier.dateDebut)}</TableCell>
-                            <TableCell>
-                              {formulaireData.rentier.dateFin ? formatDate(formulaireData.rentier.dateFin) : "En cours"}
-                            </TableCell>
-                          </TableRow>
+                          {formulaireData.rentier.map((r) => (
+                            <TableRow key={r.rentier_id}>
+                              <TableCell>{r.fo_attestationRenteAVSAI ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{r.fo_attestationRentePrevoyance ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{r.fo_autresRentes ? "Oui" : "Non"}</TableCell>
+                            </TableRow>
+                          ))}
                         </TableBody>
                       </Table>
                     ) : (
@@ -1238,19 +1289,17 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Type</TableHead>
-                            <TableHead>Montant</TableHead>
-                            <TableHead>Année</TableHead>
-                            <TableHead>Description</TableHead>
+                            <TableHead>Rachat LPP</TableHead>
+                            <TableHead>Attestation 3e pilier A</TableHead>
+                            <TableHead>Attestation 3e pilier B</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {formulaireData.deductions.map((deduction) => (
-                            <TableRow key={deduction.id}>
-                              <TableCell>{deduction.type}</TableCell>
-                              <TableCell>{formatMontant(deduction.montant)}</TableCell>
-                              <TableCell>{deduction.annee}</TableCell>
-                              <TableCell>{deduction.description || "Non spécifié"}</TableCell>
+                            <TableRow key={deduction.autre_deduction_id}>
+                              <TableCell>{deduction.fo_rachatLPP ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{deduction.fo_attestation3emePilierA ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{deduction.fo_attestation3emePilierB ? "Oui" : "Non"}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -1263,27 +1312,25 @@ export default function FormulairePrive({ userId, onSubmitSuccess }: FormulaireP
 
                 {/* Assurances */}
                 <AccordionItem value="assurances">
-                  <AccordionTrigger>Assurances ({formulaireData.indemniteAssurances?.length || 0})</AccordionTrigger>
+                  <AccordionTrigger>Assurances ({formulaireData.indemnite_assurances?.length || 0})</AccordionTrigger>
                   <AccordionContent>
-                    {formulaireData.indemniteAssurances && formulaireData.indemniteAssurances.length > 0 ? (
+                    {formulaireData.indemnite_assurances && formulaireData.indemnite_assurances.length > 0 ? (
                       <Table>
                         <TableHeader>
                           <TableRow>
-                            <TableHead>Compagnie</TableHead>
-                            <TableHead>Type d'assurance</TableHead>
-                            <TableHead>Montant de la prime</TableHead>
-                            <TableHead>Date de début</TableHead>
-                            <TableHead>Date de fin</TableHead>
+                            <TableHead>Chômage</TableHead>
+                            <TableHead>Maladie</TableHead>
+                            <TableHead>Accident</TableHead>
+                            <TableHead>Maternité/Militaire/PC</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {formulaireData.indemniteAssurances.map((assurance) => (
-                            <TableRow key={assurance.id}>
-                              <TableCell>{assurance.compagnie}</TableCell>
-                              <TableCell>{assurance.typeAssurance}</TableCell>
-                              <TableCell>{formatMontant(assurance.montantPrime)}</TableCell>
-                              <TableCell>{formatDate(assurance.dateDebut)}</TableCell>
-                              <TableCell>{assurance.dateFin ? formatDate(assurance.dateFin) : "En cours"}</TableCell>
+                          {formulaireData.indemnite_assurances.map((assurance) => (
+                            <TableRow key={assurance.indemnite_assurance_id}>
+                              <TableCell>{assurance.fo_chomage ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{assurance.fo_maladie ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{assurance.fo_accident ? "Oui" : "Non"}</TableCell>
+                              <TableCell>{assurance.fo_materniteMilitairePC ? "Oui" : "Non"}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>

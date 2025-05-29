@@ -1264,23 +1264,33 @@ export default function ClientDetail() {
                         <option value="archived">Archivé</option>
                       </select>
                     </div>
-                    <Button
-                      onClick={handleUserUpdate}
-                      disabled={isSaving}
-                      className="w-full"
-                    >
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Enregistrement...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="h-4 w-4 mr-2" />
-                          Enregistrer
-                        </>
-                      )}
-                    </Button>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        onClick={handleUserUpdate}
+                        disabled={isSaving}
+                        className="w-full"
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Enregistrement...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Enregistrer
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => setIsEditingUser(false)}
+                        variant="outline"
+                        className="w-full"
+                        disabled={isSaving}
+                      >
+                        Annuler
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
