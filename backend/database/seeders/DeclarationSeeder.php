@@ -11,7 +11,7 @@ class DeclarationSeeder extends Seeder
     {
         DB::table('declaration')->insert([
             [
-                // prive4@example.com
+                // prive@example.com
                 'user_id' => 4,
                 'impots' => '2000 CHF',
                 'titre' => 'Déclaration',
@@ -20,7 +20,7 @@ class DeclarationSeeder extends Seeder
                 'dateCreation' => now(),
             ],
             [
-                // prive4@example.com
+                // prive@example.com
                 'user_id' => 4,
                 'impots' => null,
                 'titre' => 'Déclaration',

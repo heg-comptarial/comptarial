@@ -7,6 +7,7 @@ import { Accordion } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Loader2, Save } from "lucide-react";
 import { toast, Toaster } from "sonner";
+import Link from "next/link";
 import ProtectedRoutePrive from "@/components/routes/ProtectedRouteApproved";
 import { useParams, useSearchParams } from "next/navigation";
 import { foFields } from "@/utils/foFields";
@@ -366,6 +367,23 @@ export default function DeclarationsClientPage() {
       <div className="flex items-center justify-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
         <span className="ml-2">Chargement...</span>
+      </div>
+    );
+  }
+
+  if (userDeclarations.length === 0 && !loading) {
+    return (
+      <div className="flex flex-col items-center justify-center h-screen text-center px-4">
+        <h2 className="text-xl font-semibold mb-4">
+          Aucune déclaration trouvée
+        </h2>
+        <p className="text-gray-600 max-w-md">
+          Vous n’avez pas encore créé de déclaration. Veuillez en créer une
+          nouvelle pour commencer.
+        </p>
+        <Link href={`/new-declaration/${userId}`}>
+          <Button className="mt-6">Créer une nouvelle déclaration</Button>
+        </Link>
       </div>
     );
   }
