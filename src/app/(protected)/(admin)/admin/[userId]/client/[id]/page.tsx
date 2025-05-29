@@ -260,6 +260,7 @@ export default function ClientDetail() {
         if (!data.success) {
           throw new Error(data.message || "Erreur lors de la récupération des données")
         }
+          console.log(data)
 
         setUserDetails(data.data)
         setEditedUser(data.data)
@@ -1129,19 +1130,92 @@ export default function ClientDetail() {
                         </select>
                       </div>
                     </div>
-                    <Button onClick={handleUserUpdate} disabled={isSaving} className="w-full">
-                      {isSaving ? (
-                        <>
-                          <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                          Enregistrement...
-                        </>
-                      ) : (
-                        <>
-                          <Save className="h-4 w-4 mr-2" />
-                          Enregistrer
-                        </>
-                      )}
-                    </Button>
+                    <div>
+                      <label className="text-sm font-medium">Email</label>
+                      <Input
+                        name="email"
+                        value={editedUser?.email || ""}
+                        onChange={handleInputChange}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Téléphone</label>
+                      <Input
+                        name="numeroTelephone"
+                        value={editedUser?.numeroTelephone || ""}
+                        onChange={handleInputChange}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Adresse</label>
+                      <Input
+                        name="adresse"
+                        value={editedUser?.adresse || ""}
+                        onChange={handleInputChange}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Code Postal</label>
+                      <Input
+                        name="codePostal"
+                        value={editedUser?.codePostal || ""}
+                        onChange={handleInputChange}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Localité</label>
+                      <Input
+                        name="localite"
+                        value={editedUser?.localite || ""}
+                        onChange={handleInputChange}
+                        className="mt-1"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-sm font-medium">Statut</label>
+                      <select
+                        name="statut"
+                        value={editedUser?.statut || ""}
+                        onChange={handleInputChange}
+                        className="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-700 sm:text-sm h-10"
+                      >
+                        <option value="approved">Validé</option>
+                        <option value="pending">En attente</option>
+                        <option value="rejected">Refusé</option>
+                        <option value="archived">Archivé</option>
+                      </select>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <Button
+                        onClick={handleUserUpdate}
+                        disabled={isSaving}
+                        className="w-full"
+                      >
+                        {isSaving ? (
+                          <>
+                            <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                            Enregistrement...
+                          </>
+                        ) : (
+                          <>
+                            <Save className="h-4 w-4 mr-2" />
+                            Enregistrer
+                          </>
+                        )}
+                      </Button>
+                      <Button
+                        onClick={() => setIsEditingUser(false)}
+                        variant="outline"
+                        className="w-full"
+                        disabled={isSaving}
+                      >
+                        Annuler
+                      </Button>
+                    </div>
                   </div>
                 ) : (
                   <div className="space-y-4">
@@ -1262,7 +1336,7 @@ export default function ClientDetail() {
                 <TabsTrigger value="documents" className="text-xs sm:text-sm">
                   Documents
                 </TabsTrigger>
-                <TabsTrigger value="formilaire" className="text-xs sm:text-sm">
+                <TabsTrigger value="formulaire" className="text-xs sm:text-sm">
                   Formulaire
                 </TabsTrigger>
               </TabsList>
@@ -1825,7 +1899,7 @@ export default function ClientDetail() {
                 </Card>
               </TabsContent>
 
-              <TabsContent value="formilaire" className="space-y-6">
+              <TabsContent value="formulaire">
                 <Card>
                   <CardHeader>
                     <CardTitle className="text-lg">Formulaire de {userDetails.nom}</CardTitle>
@@ -1835,7 +1909,7 @@ export default function ClientDetail() {
                       <FormulairePrive userId={userDetails.user_id} onSubmitSuccess={handleFormSubmitSuccess} />
                     ) : (
                       <div className="text-center py-8">
-                        <p>Ce client n'a pas de profil privé associé.</p>
+                        <p>Ce client n&apos;a pas de profil privé associé.</p>
                       </div>
                     )}
                   </CardContent>
