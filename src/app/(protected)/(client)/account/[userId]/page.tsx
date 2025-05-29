@@ -201,7 +201,7 @@ export default function AccountPage() {
 
     if (authentifie === null) {
     // Affiche un loader ou rien du tout pendant le chargement
-    return null;
+    return;
     }
 
     if (!authentifie) {

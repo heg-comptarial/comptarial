@@ -1154,7 +1154,7 @@ export default function ClientDetail() {
 
   // Bloc d'authentification à placer juste avant le rendu
   if (authentifie === null) {
-    return null;
+    return;
   }
 
   if (!authentifie) {

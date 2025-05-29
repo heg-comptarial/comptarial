@@ -44,12 +44,7 @@ export default function DeclarationsClientPage() {
 
 
   const FormulaireDeclaration = dynamic(() => import("../../formulaire/[userId]/page"), {
-    ssr: false,
-    loading: () => (
-      <div className="flex justify-center items-center min-h-[400px]">
-        <Loader2 className="h-8 w-8 animate-spin" />
-      </div>
-    ),
+    ssr: false
   });
 
   useEffect(() => {

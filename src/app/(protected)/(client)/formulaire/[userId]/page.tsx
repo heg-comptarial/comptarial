@@ -2021,22 +2021,6 @@ for (const foKey of deleteFoKeys) {
     }
   }
 
-  // Afficher un écran de chargement pendant la récupération des données
-  if (isDataLoading) {
-    return (
-        <div className="container max-w-3xl py-8">
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-2xl font-bold">Chargement de vos données</CardTitle>
-            </CardHeader>
-            <CardContent className="flex flex-col items-center justify-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin mb-4" />
-              <p>Récupération de vos informations en cours...</p>
-            </CardContent>
-          </Card>
-        </div>
-    )
-  }
 
   // Rendu de l'étape 1: Informations de base
   const renderStep1 = () => (
