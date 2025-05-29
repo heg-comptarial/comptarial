@@ -127,6 +127,23 @@ class DeclarationController extends Controller
             ], 500);
         }
     }
+    public function getLastDeclaration($userId)
+{
+    $lastDeclaration = Declaration::where('user_id', $userId)
+        ->where('titre', 'Déclaration') // Titre par défaut
+        ->orderByDesc('annee')
+        ->with('rubriques')
+        ->first();
+
+    if (!$lastDeclaration) {
+        return response()->json([
+            'message' => 'Aucune déclaration trouvée pour cet utilisateur.'
+        ], 404);
+    }
+
+    return response()->json($lastDeclaration);
+}
+
 
 
 }

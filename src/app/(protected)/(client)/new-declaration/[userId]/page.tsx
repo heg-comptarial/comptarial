@@ -154,23 +154,12 @@ export default function NouvelleDeclaration() {
       const declarationData = {
         ...formData,
         user_id: userId,
-        titre: `Déclaration ${currentYear}`,
+        titre: `Déclaration`,
         statut: "pending",
         annee: currentYear,
         dateCreation: new Date().toISOString(),
       };
   
-      await axios.post(
-        "http://127.0.0.1:8000/api/declarations",
-        declarationData,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
       // Créer la déclaration
       const response = await axios.post("http://127.0.0.1:8000/api/declarations", declarationData, {
         headers: {
@@ -181,6 +170,9 @@ export default function NouvelleDeclaration() {
 
       // Récupérer l'ID de la déclaration créée
       const declarationId = response.data.declaration_id
+
+
+
 
       // Envoyer une notification aux administrateurs
       try {
@@ -207,35 +199,79 @@ export default function NouvelleDeclaration() {
     return true;
   };
 
-  useEffect(() => {
-    const createNewDeclarationFromPrive = async () => {
-      try {
-        const token = localStorage.getItem("auth_token");
-        if (!token || !priveId) {
-          router.push("/login");
-          return;
-        }
-
-        const response = await axios.get(
-          `http://127.0.0.1:8000/api/prives/${priveId}`,
-          {
-            headers: { Authorization: `Bearer ${token}` },
-          }
-        );
-
-        if (response.data) {
-          await createDeclaration(response.data);
-        }
-      } catch (error) {
-        console.error("Erreur récupération privé:", error);
-        setError("Une erreur est survenue. Veuillez réessayer.");
-      }
-    };
-
+useEffect(() => {
+  const createNewDeclarationFromPrive = async () => {
     if (hasChanges === "non" && priveId) {
-      createNewDeclarationFromPrive();
+      try {
+        await createDeclarationAndCopyRubriques(priveId);
+      } catch (error) {
+        console.error("Erreur lors de la création de déclaration et copie des rubriques :", error);
+        setError("Une erreur est survenue lors de la création de la déclaration.");
+      }
     }
-  }, [hasChanges, priveId, router]);
+  };
+
+  createNewDeclarationFromPrive();
+}, [hasChanges, priveId, router]);
+
+const createDeclarationAndCopyRubriques = async (priveId: number) => {
+  try {
+    const token = localStorage.getItem("auth_token");
+    if (!token) {
+      router.push("/login");
+      return;
+    }
+
+    // 1. Récupérer la dernière déclaration de l'utilisateur (avec ses rubriques)
+    const lastDeclarationResponse = await axios.get(
+      `http://127.0.0.1:8000/api/users/${userId}/declarations/last`,
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    const lastDeclarations = lastDeclarationResponse.data;
+    
+    const rubriquesToCopy = lastDeclarations.rubriques || []
+
+    // 2. Créer la nouvelle déclaration
+    const newDeclarationResponse = await axios.post(
+      "http://127.0.0.1:8000/api/declarations",
+      {
+        user_id: userId,
+        titre: "Déclaration", // titre fixe
+        statut: "pending",
+        annee: new Date().getFullYear().toString(),
+        // autres champs si nécessaire
+      },
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+
+    const newDeclaration = newDeclarationResponse.data;
+
+    // 3. Poster les rubriques copiées vers la nouvelle déclaration
+    for (const rubrique of rubriquesToCopy) {
+      await axios.post(
+        "http://127.0.0.1:8000/api/rubriques",
+        {
+          declaration_id: newDeclaration.declaration_id,
+          titre: rubrique.titre,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+    }
+
+    console.log("Déclaration créée et rubriques copiées avec succès.");
+    toast.success("Déclaration créée avec succès.");
+    router.push(`/declarations-client/${userId}`);
+
+  } catch (error) {
+    console.error("Erreur dans createDeclarationAndCopyRubriques :", error);
+    setError("Erreur lors de la création de la déclaration et des rubriques.");
+  }
+};
+
+
+
+
+
 
   // === RENDER ===
 

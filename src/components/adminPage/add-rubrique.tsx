@@ -42,6 +42,7 @@ export default function AddRubriqueDialog({
 
   const [rubriqueData, setRubriqueData] = useState({
     titre: "",
+    type:"",
   })
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -56,7 +57,8 @@ export default function AddRubriqueDialog({
           const response = await axios.get(`${API_URL}/rubriques/${rubriqueId}`)
           if (response.data) {
             setRubriqueData({
-              titre: response.data.titre || ""
+              titre: response.data.titre || "",
+              type:response.data.type || "",
             })
           }
         } catch (error) {
@@ -68,7 +70,8 @@ export default function AddRubriqueDialog({
       } else {
         // Réinitialiser le formulaire si on n'est pas en mode édition
         setRubriqueData({
-          titre: ""
+          titre: "",
+          type:"",
         })
       }
     }
@@ -95,7 +98,8 @@ export default function AddRubriqueDialog({
       // Préparer les données pour l'API
       const data = {
         declaration_id: declarationId,
-        titre: rubriqueData.titre
+        titre: rubriqueData.titre,
+        type: ""
       }
 
       let response
@@ -114,7 +118,8 @@ export default function AddRubriqueDialog({
 
       // Réinitialiser le formulaire
       setRubriqueData({
-        titre: ""
+        titre: "",
+        type:""
       })
 
       // Fermer la boîte de dialogue

@@ -33,7 +33,6 @@ import { integer } from "aws-sdk/clients/cloudfront"
 interface Rubrique {
   rubrique_id?: number
   declaration_id: number |null;
-  type: string
   titre: string
 }
 // Interfaces pour les différents types de données
@@ -513,7 +512,6 @@ export default function FormulaireDeclaration({ onSubmitSuccess, priveId = null,
                       Authorization: `Bearer ${token}`,
                     },
                   })
-                  console.log("bhbhbhb "+JSON.stringify(conjointResponse.data[0].contributionReligieuse))
 
                   if (conjointResponse.data && conjointResponse.data.length > 0) {
                     const conjoint = conjointResponse.data[0]
@@ -1674,8 +1672,7 @@ if (banquesData) {
         }
         console.log("rubrique")
           //rubrique
-          if (mode === "create") {
-  // Mode création : on crée uniquement les rubriques nécessaires à partir de formSections
+if (mode === "create") {
   const rubriquesMapping: Record<string, string> = {
     fo_enfants: "Enfants",
     fo_banques: "Banques",
@@ -1688,27 +1685,29 @@ if (banquesData) {
     fo_autresDeductions: "Autres déductions",
     fo_autresInformations: "Autres informations",
     fo_titres: "Titres",
-  }
+  };
 
-  const rubriquesToCreate: Rubrique[] = []
+  const rubriquesToCreate: Rubrique[] = [];
 
+  // Création des rubriques à partir des sections activées
   for (const [foKey, foValue] of Object.entries(formSections)) {
     if (foValue && rubriquesMapping[foKey]) {
       rubriquesToCreate.push({
         declaration_id: declarationId,
-        type: foKey,
         titre: rubriquesMapping[foKey],
-      })
+      });
     }
   }
-  if(priveData.etatCivil == "marie" || priveData.etatCivil=="pacse"){
+
+  // Ajout du Conjoint(e) si état civil concerné
+  if (priveData.etatCivil === "marie" || priveData.etatCivil === "pacse") {
     rubriquesToCreate.push({
-        declaration_id: declarationId,
-        type: priveData.etatCivil,
-        titre: "Conjoint(e)",    })
+      declaration_id: declarationId,
+      titre: "Conjoint(e)",
+    });
   }
 
-  // Création des rubriques en backend
+  // Envoi au backend
   for (const rubriqueData of rubriquesToCreate) {
     try {
       await axios.post("http://127.0.0.1:8000/api/rubriques", rubriqueData, {
@@ -1716,39 +1715,31 @@ if (banquesData) {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      })
-      console.log(`Rubrique créée : ${rubriqueData.titre}`)
+      });
+      console.log(`Rubrique créée : ${rubriqueData.titre}`);
     } catch (err) {
-      console.error(`Erreur lors de la création de ${rubriqueData.titre}`, err)
+      console.error(`Erreur lors de la création de ${rubriqueData.titre}`, err);
     }
   }
-
-  console.log(`${rubriquesToCreate.length} rubriques créées.`)
-
-} else if(mode=="edit"){
-  let rubriquesResponse
-  let existingRubriques: Rubrique[] = []
+  console.log(`${rubriquesToCreate.length} rubriques créées.`);
+} else if (mode === "edit") {
+  let existingRubriques: Rubrique[] = [];
 
   try {
-    rubriquesResponse = await axios.get(
+    const rubriquesResponse = await axios.get(
       `http://127.0.0.1:8000/api/rubriques/declaration/${declarationId}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      },
-    )
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
 
     if (Array.isArray(rubriquesResponse.data)) {
-      existingRubriques = rubriquesResponse.data
+      existingRubriques = rubriquesResponse.data;
     } else {
-      console.warn("Réponse inattendue lors de la récupération des rubriques", rubriquesResponse.data)
+      console.warn("Réponse inattendue lors de la récupération des rubriques", rubriquesResponse.data);
     }
   } catch (err) {
-    console.warn("Erreur lors de la récupération des rubriques, on suppose aucune rubrique existante", err)
-    // existingRubriques reste []
+    console.warn("Erreur lors de la récupération des rubriques, on suppose aucune rubrique existante", err);
   }
-  
-  // Cas spécial: pas de rubriques existantes (comme en mode création)
-  if (existingRubriques.length === 0){
+
   const rubriquesMapping: Record<string, string> = {
     fo_enfants: "Enfants",
     fo_banques: "Banques",
@@ -1761,39 +1752,40 @@ if (banquesData) {
     fo_autresDeductions: "Autres déductions",
     fo_autresInformations: "Autres informations",
     fo_titres: "Titres",
-    marie:"Conjoint(e)",
-    pacse:"Conjoint(e)"
+    marie: "Conjoint(e)",
+    pacse: "Conjoint(e)",
+  };
+
+  // Mapping par titre (car on ne garde plus type)
+  const existingRubriquesMap: Record<string, Rubrique> = {};
+  existingRubriques.forEach((rubrique) => {
+    existingRubriquesMap[rubrique.titre] = rubrique;
+  });
+
+  const rubriquesToCreate: Rubrique[] = [];
+
+  // Création des rubriques manquantes selon formSections
+  for (const [foKey, foValue] of Object.entries(formSections)) {
+    const titre = rubriquesMapping[foKey];
+    if (foValue && titre && !existingRubriquesMap[titre]) {
+      rubriquesToCreate.push({
+        declaration_id: declarationId,
+        titre: titre,
+      });
+    }
   }
 
-    const rubriquesToCreate: Rubrique[] = [];
+  // Ajout spécifique pour conjoint si marié/pacsé
+  const etatCivil = priveData.etatCivil;
+  const conjointTitre = rubriquesMapping[etatCivil];
+  if ((etatCivil === "marie" || etatCivil === "pacse") && conjointTitre && !existingRubriquesMap[conjointTitre] && !rubriquesToCreate.some(r => r.titre === conjointTitre)) {
+    rubriquesToCreate.push({
+      declaration_id: declarationId,
+      titre: conjointTitre,
+    });
+  }
 
-    // 1. Création basée sur formSections
-    for (const [foKey, foValue] of Object.entries(formSections)) {
-      if (foValue && rubriquesMapping[foKey]) {
-        rubriquesToCreate.push({
-          declaration_id: declarationId,
-          type: foKey,
-          titre: rubriquesMapping[foKey]
-        });
-      }
-    }
-   // 2. Gestion spécifique état civil - Vérification avant création
-    const etatCivil = priveData.etatCivil;
-    if (etatCivil === "marie" || etatCivil === "pacse") {
-      const conjointRubriqueExists = existingRubriques.some(
-        r => r.type === etatCivil || r.titre === "Conjoint(e)"
-      );
-      
-      if (!conjointRubriqueExists) {
-        rubriquesToCreate.push({
-          declaration_id: declarationId,
-          type: etatCivil,
-          titre: rubriquesMapping[etatCivil]
-        });
-      }
-    }
-console.log("TTT "+JSON.stringify(rubriquesToCreate))
-  // Création des rubriques en backend
+  // Création des rubriques manquantes
   for (const rubriqueData of rubriquesToCreate) {
     try {
       await axios.post("http://127.0.0.1:8000/api/rubriques", rubriqueData, {
@@ -1801,141 +1793,65 @@ console.log("TTT "+JSON.stringify(rubriquesToCreate))
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      })
-      console.log(`Rubrique créée : ${rubriqueData.titre}`)
+      });
+      console.log(`Rubrique créée : ${rubriqueData.titre}`);
     } catch (err) {
-      console.error(`Erreur lors de la création de ${rubriqueData.titre}`, err)
+      console.error(`Erreur création ${rubriqueData.titre}`, err);
     }
   }
 
-  console.log(`${rubriquesToCreate.length} rubriques créées.`)
+  // Suppression des rubriques désactivées
+  const rubriquesToDelete: Rubrique[] = [];
 
-          }else{          console.log("existe "+rubriquesResponse)
-          
+  for (const rubrique of existingRubriques) {
+    const titre = rubrique.titre;
 
-          // Créer un mapping des rubriques existantes par type pour faciliter la recherche
-          const existingRubriquesMap: Record<string, Rubrique> = {}
-          existingRubriques.forEach((rubrique) => {
-            existingRubriquesMap[rubrique.type] = rubrique
-          })
+    // Ne pas supprimer les rubriques protégées (conjoint, enfants, autres personnes à charge) si état civil marié/pacsé
+    const isProtectedRubrique =
+      (etatCivil === "marie" || etatCivil === "pacse") &&
+      (titre === "Conjoint(e)" || titre === "Enfants" || titre === "Autres personnes à charge");
 
-          // 2. Mapper les fo_* aux types de rubriques
-          const rubriquesMapping: Record<string, string> = {
-            fo_enfants: "Enfants",
-            fo_banques: "Banques",
-            fo_dettes: "Dettes",
-            fo_immobiliers: "Immobiliers",
-            fo_revenu: "Revenu",
-            fo_autrePersonneCharge: "Autres personnes à charge",
-            fo_rentier: "Rentier",
-            fo_assurances: "Assurances",
-            fo_autresDeductions: "Autres déductions",
-            fo_autresInformations: "Autres informations",
-            fo_titres: "Titres",
-    marie:"Conjoint(e)",
-    pacse:"Conjoint(e)"          }
-
-          // 3. Créer ou mettre à jour les rubriques en fonction des fo_* activés
-          const rubriquesToCreate: Rubrique[] = []
-
-          for (const [foKey, foValue] of Object.entries(formSections)) {
-  if (foValue && rubriquesMapping[foKey]) {
-    const rubriqueName = rubriquesMapping[foKey]
-    
-    if (!existingRubriquesMap[foKey]) {
-      rubriquesToCreate.push({
-        declaration_id: declarationId,
-        type: foKey,
-        titre: rubriqueName
-      })
+    // Vérifier si rubrique doit être supprimée (pas dans formSections)
+    const foKey = Object.entries(rubriquesMapping).find(([, mappedTitre]) => mappedTitre === titre)?.[0];
+    if (!isProtectedRubrique && foKey && !formSections[foKey]) {
+      rubriquesToDelete.push(rubrique);
     }
   }
-}
 
-// 3. Ajout spécifique pour état civil
-const etatCivil = priveData.etatCivil;
-if ((etatCivil === "marie" || etatCivil === "pacse") && 
-    !existingRubriquesMap[etatCivil] && 
-    !rubriquesToCreate.some(r => r.type === etatCivil)) {
-  rubriquesToCreate.push({
-    declaration_id: declarationId,
-    type: etatCivil,
-    titre: rubriquesMapping[etatCivil]
-  })
-}
-          console.log(rubriquesToCreate)
+  if (rubriquesToDelete.length > 0) {
+    console.log(`${rubriquesToDelete.length} rubriques à supprimer :`);
+    for (const rubrique of rubriquesToDelete) {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/rubriques/${rubrique.rubrique_id}`, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        console.log(`Rubrique supprimée : ${rubrique.titre}`);
+      } catch (error) {
+        console.error(`Erreur suppression ${rubrique.titre}:`, error);
+      }
+    }
+  }
 
-          // 4. Créer les nouvelles rubriques
-          if (rubriquesToCreate.length > 0) {
-            for (const rubriqueData of rubriquesToCreate) {
-              console.log(rubriqueData)
-               axios.post("http://127.0.0.1:8000/api/rubriques", rubriqueData, {
-                headers: {
-                  Authorization: `Bearer ${token}`,
-                  "Content-Type": "application/json",
-                },
-              })
-            }
-            console.log(`${rubriquesToCreate.length} nouvelles rubriques créées`)
-          }
-
-          // 5. Identifier les rubriques à supprimer (celles qui existent mais dont le fo_* n'est plus activé)
-          const rubriquesToDelete = []
-
-for (const rubrique of existingRubriques) {
-  const correspondingFoKey = rubrique.type;
-  
-  // Vérifier si la rubrique doit être exclue de la suppression
-  const isProtectedRubrique = (
-    (priveData.etatCivil === "marie" || priveData.etatCivil === "pacse") && 
-    (correspondingFoKey === "fo_enfants" || correspondingFoKey === "fo_autrePersonneCharge")
+  // Suppression des données fo_* désactivées
+  const deleteFoKeys = Object.keys(formSections).filter(
+    (key) => !formSections[key] && foToApiMap[key]
   );
 
-  if (correspondingFoKey && !formSections[correspondingFoKey] && !isProtectedRubrique) {
-    rubriquesToDelete.push(rubrique);
-  }
-}
-
-// 6. Supprimer les rubriques qui ne sont plus nécessaires
-if (rubriquesToDelete.length > 0) {
-  console.log(`${rubriquesToDelete.length} rubriques à supprimer:`);
-for (const rubrique of existingRubriques) {
-  const correspondingFoKey = rubrique.type;
-  const isConjointRubrique = rubrique.type === "marie" || rubrique.type === "pacse";
-  const isProtected = (etatCivil === "marie" || etatCivil === "pacse") && 
-                     (isConjointRubrique || correspondingFoKey === "fo_enfants" || 
-                      correspondingFoKey === "fo_autrePersonneCharge");
-
-  if (!isProtected && correspondingFoKey && !formSections[correspondingFoKey]) {
+  for (const foKey of deleteFoKeys) {
+    const endpoint = foToApiMap[foKey];
     try {
-      await axios.delete(`http://127.0.0.1:8000/api/rubriques/${rubrique.rubrique_id}`, {
-        headers: { Authorization: `Bearer ${token}` }
+      await axios.delete(`http://127.0.0.1:8000/api/${endpoint}/prives/${priveId}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-    } catch (error) {
-      console.error(`Erreur suppression ${rubrique.titre}:`, error);
+      console.log(`Données supprimées pour ${foKey}`);
+    } catch (err) {
+      console.error(`Erreur suppression ${foKey}:`, err);
     }
   }
 }
-}
-          const deleteFoKeys = Object.keys(formSections).filter(
-  (key) => !formSections[key] && foToApiMap[key]
-)
 
-for (const foKey of deleteFoKeys) {
-  const endpoint = foToApiMap[foKey]
-  try {
-    await axios.delete(`http://127.0.0.1:8000/api/${endpoint}/prives/${priveId}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-    console.log(`Données supprimées pour ${foKey}`)
-  } catch (err) {
-    console.error(`Erreur suppression ${foKey}:`, err)
-  }
-}}
-
-}
           
     // Supprimer le conjoint si l'état civil n'est plus marié ou pacsé
     if (priveData.etatCivil !== "marie" && priveData.etatCivil !== "pacse") {
@@ -2442,41 +2358,28 @@ const renderStep3 = () => {
               <AccordionContent>
                 <div className="space-y-2">
                   <p>
-                    <strong>Nom:</strong> {conjointInfo.nom}
+                    <strong>Nom:</strong> {conjointData?.nom}
                   </p>
                   <p>
-                    <strong>Prénom:</strong> {conjointInfo.prenom}
+                    <strong>Prénom:</strong> {conjointData?.prenom}
                   </p>
                   <p>
-                    <strong>Date de naissance:</strong> {conjointInfo.dateNaissance}
+                    <strong>Date de naissance:</strong> {conjointData?.dateNaissance}
                   </p>
                   <p>
-                    <strong>Nationalité:</strong> {conjointInfo.nationalite}
+                    <strong>Nationalité:</strong> {conjointData?.nationalite}
                   </p>
-                  <p>
-                    <strong>Situation professionnelle:</strong>{" "}
-                    {conjointInfo.situationProfessionnelle === "salarie"
-                      ? "Salarié(e)"
-                      : conjointInfo.situationProfessionnelle === "independant"
-                        ? "Indépendant(e)"
-                        : conjointInfo.situationProfessionnelle === "retraite"
-                          ? "Retraité(e)"
-                          : conjointInfo.situationProfessionnelle === "chomage"
-                            ? "En recherche d'emploi"
-                            : conjointInfo.situationProfessionnelle === "etudiant"
-                              ? "Étudiant(e)"
-                              : "Autre"}
-                  </p>
-                  {conjointInfo.adresse && (
+
+                  {conjointData?.adresse && (
                     <>
                       <p>
-                        <strong>Adresse:</strong> {conjointInfo.adresse}
+                        <strong>Adresse:</strong> {conjointData?.adresse}
                       </p>
                       <p>
-                        <strong>Localité:</strong> {conjointInfo.localite}
+                        <strong>Localité:</strong> {conjointData?.localite}
                       </p>
                       <p>
-                        <strong>Code postal:</strong> {conjointInfo.codePostal}
+                        <strong>Code postal:</strong> {conjointData?.codePostal}
                       </p>
                     </>
                   )}
@@ -2541,19 +2444,19 @@ const renderStep3 = () => {
               </AccordionContent>
             </AccordionItem>
           )}
-
+/**LALALa */
           <AccordionItem value="rubriques">
             <AccordionTrigger>Rubriques sélectionnées</AccordionTrigger>
             <AccordionContent>
               <ul className="list-disc pl-5 space-y-1">
-                {formSections.fo_revenu && <li>Salarié</li>}
-                {formSections.fo_independant && <li>Indépendant</li>}
+                {formSections.fo_revenu && <li>Revenu</li>}
                 {formSections.fo_rentier && <li>Rentier</li>}
                 {formSections.fo_banques && <li>Banques</li>}
                 {formSections.fo_immobiliers && <li>Immobiliers</li>}
                 {formSections.fo_dettes && <li>Dettes</li>}
                 {formSections.fo_assurances && <li>Assurances</li>}
                 {formSections.fo_autrePersonneCharge && <li>Autres personnes à charge</li>}
+                {formSections.fo_titres && <li>Titres/Élement de fortunue</li>}
                 {formSections.fo_autresDeductions && <li>Autres déductions</li>}
                 {formSections.fo_autresInformations && <li>Autres informations</li>}
               </ul>

@@ -20,7 +20,7 @@ class RubriqueController extends Controller
         $request->validate([
             'declaration_id' => 'required|exists:declaration,declaration_id',
             'titre' => 'required|string|max:255',
-            'type' => 'required|string|max:255',
+            'type' => 'nullable|string|max:255',
         ]);
     
         // Vérifie s'il existe déjà une rubrique avec le même titre pour cette déclaration

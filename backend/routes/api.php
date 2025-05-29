@@ -90,6 +90,8 @@ Route::get('/rubriques/declaration/{declarationID}', [RubriqueController::class,
 
 // Routes pour les déclarations
 Route::apiResource('declarations', DeclarationController::class);
+Route::get('/users/{userId}/declarations/last', [DeclarationController::class, 'getLastDeclaration'])->middleware("auth:sanctum");
+
 
 // Mettre à jour le statut d'une déclaration
 Route::get('/declarations/{id}/check-documents', [DeclarationController::class, 'checkDocuments']);
