@@ -768,7 +768,10 @@ export default function Home() {
                         className="text-sm text-gray-600"
                       >
                         En sélectionnant cette option, vous acceptez notre{" "}
-                        <Link href="/privacy" className="text-black underline">
+                        <Link
+                          href="/privacy-policy"
+                          className="text-black underline"
+                        >
                           Politique de confidentialité
                         </Link>
                         .
@@ -807,10 +810,10 @@ export default function Home() {
                     />
                   </div>
                 </div>
-                <p className="text-gray-400">
+                {/* <p className="text-gray-400">
                   Solutions comptables et fiduciaires innovantes pour les
                   entreprises modernes.
-                </p>
+                </p> */}
               </div>
 
               <div>
@@ -862,30 +865,6 @@ export default function Home() {
                       Comptabilité en ligne
                     </a>
                   </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      Gestion de la paie
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      Conseil fiscal
-                    </a>
-                  </li>
-                  <li>
-                    <a
-                      href="#"
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      Déclarations fiscales
-                    </a>
-                  </li>
                 </ul>
               </div>
 
@@ -894,34 +873,10 @@ export default function Home() {
                 <ul className="space-y-2">
                   <li>
                     <Link
-                      href="/terms"
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      Conditions d&apos;utilisation
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/privacy"
+                      href="/privacy-policy"
                       className="text-gray-400 hover:text-white transition-colors"
                     >
                       Politique de confidentialité
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/cookies"
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      Politique de cookies
-                    </Link>
-                  </li>
-                  <li>
-                    <Link
-                      href="/mentions"
-                      className="text-gray-400 hover:text-white transition-colors"
-                    >
-                      Mentions légales
                     </Link>
                   </li>
                 </ul>
@@ -931,6 +886,15 @@ export default function Home() {
             <div className="border-t border-gray-800 mt-12 pt-8 text-center">
               <p className="text-gray-400">
                 © {new Date().getFullYear()} Comptarial. Tous droits réservés.
+              </p>
+              <p className="text-gray-500 text-sm mt-2">
+                <a
+                  href="https://www.uid.admin.ch/Detail.aspx?uid_id=CHE239928457"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  CHE-239.928.457
+                </a>
               </p>
             </div>
           </div>
