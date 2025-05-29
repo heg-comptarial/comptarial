@@ -205,6 +205,10 @@ export default function ClientDetail() {
   );
   const [isImpotsDialogOpen, setIsImpotsDialogOpen] = useState(false);
 
+  // État pour gérer l'envoi de notifications
+  const [lastNotificationSentAt, setLastNotificationSentAt] =
+    useState<Date | null>(null);
+
   // Liste des titres possibles pour une déclaration
   const TITLES = [
     "Déclaration, Comptabilité",
@@ -891,16 +895,25 @@ export default function ClientDetail() {
         contenu: `Vos documents ont été enregistrés avec succès.`,
       });
 
-      // Envoi de la notification à l'utilisateur
-      await fetch(`${API_URL}/documents/admin-upload-notification`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          user_id: userDetails?.user_id,
-          title: activeDeclaration?.titre,
-          year: activeDeclaration?.annee,
-        }),
-      });
+      // Envoi de la notification à l'utilisateur (max 1 fois toutes les 10 minutes)
+      const now = new Date();
+      if (
+        lastNotificationSentAt &&
+        now.getTime() - lastNotificationSentAt.getTime() < 10 * 60 * 1000
+      ) {
+        console.log("Notification déjà envoyée récemment, skip.");
+      } else {
+        await fetch(`${API_URL}/documents/admin-upload-notification`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            user_id: userDetails?.user_id,
+            title: activeDeclaration?.titre,
+            year: activeDeclaration?.annee,
+          }),
+        });
+        setLastNotificationSentAt(now);
+      }
 
       toast.success("Documents enregistrés avec succès");
       setAdminSelectedFiles([]);
