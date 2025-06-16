@@ -126,6 +126,24 @@ class DeclarationSeeder extends Seeder
                 'statut' => 'pending',
                 'annee' => '2024',
                 'dateCreation' => now(),
+            ],
+            [
+                // entreprise@example.com
+                'user_id' => 3,
+                'impots' => null,
+                'titre' => 'Comptabilité',
+                'statut' => 'pending',
+                'annee' => '2024',
+                'dateCreation' => now(),
+            ],
+            [
+                // entreprise@example.com
+                'user_id' => 9,
+                'impots' => null,
+                'titre' => 'Comptabilité',
+                'statut' => 'pending',
+                'annee' => '2025',
+                'dateCreation' => now(),
             ]
         ]);
     }

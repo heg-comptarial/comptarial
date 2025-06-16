@@ -421,7 +421,7 @@ export default function DeclarationsClientPage() {
           </h1>
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2">
             {declaration?.statut && getStatusBadge(declaration.statut)}
-            {declaration?.statut === "pending" && (
+            {declaration?.statut === "pending" && role === "prive" && (
               <Button
                 variant="outline"
                 size="sm"
@@ -435,7 +435,7 @@ export default function DeclarationsClientPage() {
             )}
           </div>
         </div>
-        {showForm && declaration?.statut === "pending" && (
+        {showForm && declaration?.statut === "pending" && role === "prive" && (
           <div className="my-6">
             <FormulaireDeclaration
               mode="edit"
