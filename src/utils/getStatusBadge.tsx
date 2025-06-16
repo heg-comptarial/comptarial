@@ -11,6 +11,8 @@ export function getStatusBadge(status: string): ReactElement {
       );
     case "rejected":
       return <Badge className="bg-red-200 text-red-800">Rejeté</Badge>;
+    case "archived":
+      return <Badge className="bg-gray-200 text-gray-800">Archivé</Badge>;
     default:
       return <Badge>Inconnu</Badge>;
   }
