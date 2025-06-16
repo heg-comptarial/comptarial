@@ -39,6 +39,7 @@ interface User {
 }
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api";
+const token = localStorage.getItem("auth_token");
 
 // Configuration par défaut pour les requêtes fetch
 const fetchConfig = {
@@ -196,6 +197,10 @@ export default function Dashboard() {
       const response = await fetch(`${API_URL}/users/${userId}`, {
         method: "DELETE",
         ...fetchConfig,
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
       toast.success("Utilisateur supprimé", {
