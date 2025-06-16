@@ -27,7 +27,7 @@ export function useFileUpload({
       if (!allowedFileTypes.includes(file.type)) {
         toast.error(`Type de fichier non autorisé: ${file.name}`, {
           description:
-            "Seuls les documents PDF, Word, Excel et les images sont autorisés.",
+            "Seuls les documents PDF et les images sont autorisés.",
         });
         return;
       }

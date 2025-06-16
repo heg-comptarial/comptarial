@@ -69,7 +69,7 @@ export default function DocumentUpload({
             className="hidden"
             onChange={handleFileSelect}
             multiple
-            accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg"
+            accept=".pdf,.png,.jpg,.jpeg"
           />
         </div>
 
